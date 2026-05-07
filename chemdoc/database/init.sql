@@ -319,33 +319,24 @@ CREATE TABLE `order_item` (
 -- ================================================
 DROP TABLE IF EXISTS `purchase_order`;
 CREATE TABLE `purchase_order` (
-    `purchase_order_id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '采购单ID',
-    `purchase_no` VARCHAR(50) NOT NULL COMMENT '采购单编号',
+    `purchase_id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '采购单ID',
+    `order_no` VARCHAR(50) NOT NULL COMMENT '采购单编号',
     `supplier_id` INT UNSIGNED NOT NULL COMMENT '供应商ID',
-    `order_id` INT UNSIGNED DEFAULT NULL COMMENT '关联订单ID',
+    `contact` VARCHAR(100) DEFAULT NULL COMMENT '联系人',
+    `phone` VARCHAR(20) DEFAULT NULL COMMENT '联系电话',
     `total_amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT '采购单总金额',
-    `discount_amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT '优惠金额',
-    `actual_amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT '实际金额',
-    `order_time` DATETIME NOT NULL COMMENT '下单时间',
-    `expect_arrival_date` DATE DEFAULT NULL COMMENT '预计到货日期',
-    `actual_arrival_date` DATETIME DEFAULT NULL COMMENT '实际到货日期',
-    `purchase_status` TINYINT(3) NOT NULL DEFAULT 1 COMMENT '采购状态',
-    `invoice_status` TINYINT(3) NOT NULL DEFAULT 1 COMMENT '发票状态',
-    `invoice_amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT '已收票金额',
-    `invoice_attachment` JSON DEFAULT NULL COMMENT '发票附件',
-    `warehouse` VARCHAR(100) DEFAULT NULL COMMENT '收货仓库',
+    `expected_date` DATE DEFAULT NULL COMMENT '预计到货日期',
+    `receive_date` DATETIME DEFAULT NULL COMMENT '实际到货日期',
+    `status` TINYINT(3) NOT NULL DEFAULT 1 COMMENT '状态：1-草稿，2-已提交，3-已确认，4-已入库，5-已完成，6-已取消',
     `remark` TEXT COMMENT '采购单备注',
     `create_user_id` INT UNSIGNED DEFAULT NULL COMMENT '创建人ID',
     `create_time` DATETIME DEFAULT NULL COMMENT '创建时间',
     `update_time` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `delete_time` DATETIME DEFAULT NULL COMMENT '删除时间（软删除）',
-    PRIMARY KEY (`purchase_order_id`),
-    UNIQUE KEY `uk_purchase_no` (`purchase_no`),
+    PRIMARY KEY (`purchase_id`),
+    UNIQUE KEY `uk_order_no` (`order_no`),
     KEY `idx_supplier` (`supplier_id`),
-    KEY `idx_order` (`order_id`),
-    KEY `idx_purchase_status` (`purchase_status`),
-    KEY `idx_invoice_status` (`invoice_status`),
-    KEY `idx_order_time` (`order_time`),
+    KEY `idx_status` (`status`),
     KEY `idx_create_user` (`create_user_id`),
     KEY `idx_delete_time` (`delete_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='采购单主表';
@@ -353,23 +344,26 @@ CREATE TABLE `purchase_order` (
 -- ================================================
 -- 14. 采购单明细表
 -- ================================================
-DROP TABLE IF EXISTS `purchase_order_item`;
-CREATE TABLE `purchase_order_item` (
-    `purchase_item_id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '采购明细ID',
-    `purchase_order_id` INT UNSIGNED NOT NULL COMMENT '采购单ID',
+DROP TABLE IF EXISTS `purchase_item`;
+CREATE TABLE `purchase_item` (
+    `item_id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '采购明细ID',
+    `purchase_id` INT UNSIGNED NOT NULL COMMENT '采购单ID',
     `product_id` INT UNSIGNED NOT NULL COMMENT '产品ID',
     `product_name` VARCHAR(200) NOT NULL COMMENT '产品名称（冗余）',
     `product_spec` VARCHAR(100) DEFAULT NULL COMMENT '产品规格（冗余）',
     `product_unit` VARCHAR(20) DEFAULT NULL COMMENT '产品单位（冗余）',
     `unit_price` DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '采购单价',
-    `quantity` DECIMAL(10,3) NOT NULL DEFAULT 0.000 COMMENT '采购数量',
-    `arrived_quantity` DECIMAL(10,3) NOT NULL DEFAULT 0.000 COMMENT '已到货数量',
+    `quantity` DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '采购数量',
     `subtotal` DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT '小计金额',
     `create_time` DATETIME DEFAULT NULL COMMENT '创建时间',
-    PRIMARY KEY (`purchase_item_id`),
-    KEY `idx_purchase_order` (`purchase_order_id`),
+    PRIMARY KEY (`item_id`),
+    KEY `idx_purchase` (`purchase_id`),
     KEY `idx_product` (`product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='采购单明细表';
+
+-- 添加外键约束
+ALTER TABLE `purchase_item` ADD CONSTRAINT `fk_purchase_item_purchase` FOREIGN KEY (`purchase_id`) REFERENCES `purchase_order` (`purchase_id`) ON DELETE CASCADE;
+ALTER TABLE `purchase_item` ADD CONSTRAINT `fk_purchase_item_product` FOREIGN KEY (`product_id`) REFERENCES `product` (`product_id`) ON DELETE RESTRICT;
 
 -- ================================================
 -- 15. 操作日志表
