@@ -15,5 +15,19 @@ export function getLogDetail(id) {
   })
 }
 
-export const deleteLog = getLogList
-export const batchDeleteLog = batchDeleteLog
+export function deleteLog(id) {
+  return request({
+    url: `/log/${id}`,
+    method: 'delete'
+  })
+}
+
+export function batchDeleteLog(data) {
+  return request({
+    url: '/log/batch-delete',
+    method: 'post',
+    data
+  })
+}
+
+export const getList = getLogList

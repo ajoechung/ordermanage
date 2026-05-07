@@ -3,7 +3,7 @@ namespace app\service;
 
 class Result
 {
-    const SUCCESS = 1;
+    const SUCCESS = 200;
     const ERROR = 0;
     const UNAUTHORIZED = 401;
     const FORBIDDEN = 403;

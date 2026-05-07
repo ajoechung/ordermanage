@@ -3,30 +3,22 @@
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="客户名称">
-          <el-input v-model="searchForm.name" placeholder="请输入客户名称" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="searchForm.keyword" placeholder="请输入客户名称" clearable @keyup.enter="handleSearch" />
         </el-form-item>
-        <el-form-item label="客户类型">
-          <el-select v-model="searchForm.customer_type" placeholder="请选择" clearable>
-            <el-option label="潜在客户" value="potential" />
-            <el-option label="正式客户" value="formal" />
-            <el-option label="VIP客户" value="vip" />
-            <el-option label="失效客户" value="inactive" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="客户来源">
-          <el-select v-model="searchForm.source" placeholder="请选择" clearable>
-            <el-option label="网络推广" value="network" />
-            <el-option label="电话营销" value="phone" />
-            <el-option label="客户介绍" value="referral" />
-            <el-option label="展会活动" value="exhibition" />
-            <el-option label="其他" value="other" />
-          </el-select>
+        <el-form-item label="行业">
+          <el-input v-model="searchForm.industry" placeholder="请输入行业" clearable />
         </el-form-item>
         <el-form-item label="客户等级">
-          <el-select v-model="searchForm.level" placeholder="请选择" clearable>
-            <el-option label="A类客户" value="A" />
-            <el-option label="B类客户" value="B" />
-            <el-option label="C类客户" value="C" />
+          <el-select v-model="searchForm.level" placeholder="请选择" clearable style="width: 150px">
+            <el-option label="普通客户" :value="1" />
+            <el-option label="重要客户" :value="2" />
+            <el-option label="核心客户" :value="3" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 120px">
+            <el-option label="正常" :value="1" />
+            <el-option label="禁用" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -51,61 +43,31 @@
               <el-icon><Plus /></el-icon>
               新增客户
             </el-button>
-            <el-button type="success" @click="handleExport">
-              <el-icon><Download /></el-icon>
-              导出数据
-            </el-button>
           </div>
         </div>
       </template>
 
-      <el-table
-        v-loading="tableLoading"
-        :data="customerList"
-        stripe
-        border
-        @selection-change="handleSelectionChange"
-      >
-        <el-table-column type="selection" width="50" />
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="name" label="客户名称" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="customer_type" label="客户类型" width="100">
-          <template #default="{ row }">
-            <el-tag :type="getCustomerTypeTag(row.customer_type)">
-              {{ getCustomerTypeText(row.customer_type) }}
-            </el-tag>
-          </template>
-        </el-table-column>
+      <el-table v-loading="tableLoading" :data="customerList" stripe border>
+        <el-table-column prop="customer_id" label="ID" width="80" />
+        <el-table-column prop="name" label="客户名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="code" label="客户编码" width="120" />
         <el-table-column prop="industry" label="行业" width="100" />
-        <el-table-column prop="level" label="等级" width="80">
+        <el-table-column prop="level" label="等级" width="100">
           <template #default="{ row }">
             <el-tag :type="getLevelTag(row.level)" size="small">
-              {{ row.level }}类
+              {{ getLevelText(row.level) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="contact" label="联系人" width="120" />
-        <el-table-column prop="phone" label="联系电话" width="130" />
-        <el-table-column prop="source" label="客户来源" width="100">
+        <el-table-column prop="source" label="客户来源" width="100" />
+        <el-table-column prop="address" label="地址" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="owner_name" label="负责人" width="100" />
+        <el-table-column prop="create_time" label="创建时间" width="160" />
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            {{ getSourceText(row.source) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="owner_user_name" label="负责人" width="100" />
-        <el-table-column label="操作" width="280" fixed="right">
-          <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="handleView(row)">
-              查看
-            </el-button>
-            <el-button type="primary" link size="small" @click="handleEdit(row)">
-              编辑
-            </el-button>
-            <el-button type="primary" link size="small" @click="handleFollow(row)">
-              跟进
-            </el-button>
-            <el-button type="danger" link size="small" @click="handleDelete(row)">
-              删除
-            </el-button>
+            <el-button type="primary" link size="small" @click="handleView(row)">查看</el-button>
+            <el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -123,19 +85,8 @@
       </div>
     </el-card>
 
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="700px"
-      :close-on-click-modal="false"
-      @close="handleDialogClose"
-    >
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="100px"
-      >
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="700px" :close-on-click-modal="false" @close="handleDialogClose">
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="客户名称" prop="name">
@@ -143,13 +94,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="客户类型" prop="customer_type">
-              <el-select v-model="formData.customer_type" placeholder="请选择" style="width: 100%">
-                <el-option label="潜在客户" value="potential" />
-                <el-option label="正式客户" value="formal" />
-                <el-option label="VIP客户" value="vip" />
-                <el-option label="失效客户" value="inactive" />
-              </el-select>
+            <el-form-item label="客户编码" prop="code">
+              <el-input v-model="formData.code" placeholder="请输入客户编码" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -161,90 +107,70 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
+            <el-form-item label="客户来源" prop="source">
+              <el-input v-model="formData.source" placeholder="请输入客户来源" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
             <el-form-item label="客户等级" prop="level">
               <el-select v-model="formData.level" placeholder="请选择" style="width: 100%">
-                <el-option label="A类客户" value="A" />
-                <el-option label="B类客户" value="B" />
-                <el-option label="C类客户" value="C" />
+                <el-option label="普通客户" :value="1" />
+                <el-option label="重要客户" :value="2" />
+                <el-option label="核心客户" :value="3" />
               </el-select>
             </el-form-item>
           </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="联系人" prop="contact">
-              <el-input v-model="formData.contact" placeholder="请输入联系人" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="联系电话" prop="phone">
-              <el-input v-model="formData.phone" placeholder="请输入联系电话" />
+            <el-form-item label="客户规模" prop="scale">
+              <el-input v-model="formData.scale" placeholder="请输入客户规模" />
             </el-form-item>
           </el-col>
         </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="电子邮箱" prop="email">
-              <el-input v-model="formData.email" placeholder="请输入邮箱" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="客户来源" prop="source">
-              <el-select v-model="formData.source" placeholder="请选择" style="width: 100%">
-                <el-option label="网络推广" value="network" />
-                <el-option label="电话营销" value="phone" />
-                <el-option label="客户介绍" value="referral" />
-                <el-option label="展会活动" value="exhibition" />
-                <el-option label="其他" value="other" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-form-item label="地区" prop="region">
-          <el-cascader
-            v-model="formData.region"
-            :options="regionOptions"
-            placeholder="请选择地区"
-            style="width: 100%"
-          />
-        </el-form-item>
 
         <el-form-item label="详细地址" prop="address">
           <el-input v-model="formData.address" type="textarea" :rows="2" placeholder="请输入详细地址" />
         </el-form-item>
 
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="formData.remark" type="textarea" :rows="3" placeholder="请输入备注信息" />
+        <el-form-item label="客户描述" prop="description">
+          <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入客户描述" />
         </el-form-item>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="状态" prop="status">
+              <el-radio-group v-model="formData.status">
+                <el-radio :label="1">正常</el-radio>
+                <el-radio :label="0">禁用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
 
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
-          确定
-        </el-button>
+        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
 
     <el-dialog v-model="detailVisible" title="客户详情" width="800px">
       <el-descriptions :column="2" border>
         <el-descriptions-item label="客户名称">{{ currentCustomer.name }}</el-descriptions-item>
-        <el-descriptions-item label="客户类型">
-          {{ getCustomerTypeText(currentCustomer.customer_type) }}
-        </el-descriptions-item>
+        <el-descriptions-item label="客户编码">{{ currentCustomer.code }}</el-descriptions-item>
         <el-descriptions-item label="行业">{{ currentCustomer.industry }}</el-descriptions-item>
-        <el-descriptions-item label="客户等级">{{ currentCustomer.level }}类</el-descriptions-item>
-        <el-descriptions-item label="联系人">{{ currentCustomer.contact }}</el-descriptions-item>
-        <el-descriptions-item label="联系电话">{{ currentCustomer.phone }}</el-descriptions-item>
-        <el-descriptions-item label="电子邮箱">{{ currentCustomer.email }}</el-descriptions-item>
-        <el-descriptions-item label="客户来源">{{ getSourceText(currentCustomer.source) }}</el-descriptions-item>
-        <el-descriptions-item label="地区" :span="2">{{ currentCustomer.region }}</el-descriptions-item>
+        <el-descriptions-item label="客户等级">
+          <el-tag :type="getLevelTag(currentCustomer.level)" size="small">
+            {{ getLevelText(currentCustomer.level) }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="客户来源">{{ currentCustomer.source }}</el-descriptions-item>
+        <el-descriptions-item label="客户规模">{{ currentCustomer.scale }}</el-descriptions-item>
         <el-descriptions-item label="详细地址" :span="2">{{ currentCustomer.address }}</el-descriptions-item>
-        <el-descriptions-item label="备注" :span="2">{{ currentCustomer.remark }}</el-descriptions-item>
-        <el-descriptions-item label="负责人">{{ currentCustomer.owner_user_name }}</el-descriptions-item>
+        <el-descriptions-item label="客户描述" :span="2">{{ currentCustomer.description }}</el-descriptions-item>
+        <el-descriptions-item label="负责人">{{ currentCustomer.owner_name }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ currentCustomer.create_time }}</el-descriptions-item>
       </el-descriptions>
     </el-dialog>
@@ -253,27 +179,23 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, Download } from '@element-plus/icons-vue'
-import { getList, create, update, deleteCustomer, getAll } from '@/api/modules/customer'
-
-const router = useRouter()
+import { Search, Refresh, Plus } from '@element-plus/icons-vue'
+import { getList, create, update, deleteCustomer } from '@/api/modules/customer'
 
 const searchForm = reactive({
-  name: '',
-  customer_type: '',
-  source: '',
-  level: ''
+  keyword: '',
+  industry: '',
+  level: '',
+  status: ''
 })
 
 const tableLoading = ref(false)
 const customerList = ref([])
-const selectedRows = ref([])
 
 const pagination = reactive({
   page: 1,
-  pageSize: 10,
+  pageSize: 20,
   total: 0
 })
 
@@ -285,52 +207,24 @@ const formRef = ref(null)
 const currentCustomer = ref({})
 
 const formData = reactive({
-  id: null,
+  customer_id: null,
   name: '',
-  customer_type: '',
+  code: '',
   industry: '',
-  level: '',
-  contact: '',
-  phone: '',
-  email: '',
   source: '',
-  region: [],
+  level: 1,
+  scale: '',
   address: '',
-  remark: ''
+  description: '',
+  status: 1
 })
 
 const formRules = {
-  name: [{ required: true, message: '请输入客户名称', trigger: 'blur' }],
-  customer_type: [{ required: true, message: '请选择客户类型', trigger: 'change' }],
-  level: [{ required: true, message: '请选择客户等级', trigger: 'change' }]
+  name: [{ required: true, message: '请输入客户名称', trigger: 'blur' }]
 }
 
-const regionOptions = [
-  { value: '华北', label: '华北', children: [{ value: '北京', label: '北京' }, { value: '天津', label: '天津' }] },
-  { value: '华东', label: '华东', children: [{ value: '上海', label: '上海' }, { value: '江苏', label: '江苏' }] },
-  { value: '华南', label: '华南', children: [{ value: '广东', label: '广东' }, { value: '深圳', label: '深圳' }] },
-  { value: '西南', label: '西南', children: [{ value: '四川', label: '四川' }, { value: '重庆', label: '重庆' }] }
-]
-
-const customerTypeMap = {
-  potential: { text: '潜在客户', tag: 'info' },
-  formal: { text: '正式客户', tag: 'success' },
-  vip: { text: 'VIP客户', tag: 'warning' },
-  inactive: { text: '失效客户', tag: 'danger' }
-}
-
-const sourceMap = {
-  network: '网络推广',
-  phone: '电话营销',
-  referral: '客户介绍',
-  exhibition: '展会活动',
-  other: '其他'
-}
-
-const getCustomerTypeText = (type) => customerTypeMap[type]?.text || type
-const getCustomerTypeTag = (type) => customerTypeMap[type]?.tag || 'info'
-const getLevelTag = (level) => ({ A: 'danger', B: 'warning', C: 'info' }[level] || 'info')
-const getSourceText = (source) => sourceMap[source] || source
+const getLevelText = (level) => ({ 1: '普通', 2: '重要', 3: '核心' }[level] || '未知')
+const getLevelTag = (level) => ({ 1: '', 2: 'warning', 3: 'danger' }[level] || 'info')
 
 const loadData = async () => {
   tableLoading.value = true
@@ -340,11 +234,16 @@ const loadData = async () => {
       page_size: pagination.pageSize,
       ...searchForm
     }
-    
+    Object.keys(params).forEach(key => {
+      if (params[key] === '' || params[key] === null) delete params[key]
+    })
+
     const res = await getList(params)
     if (res.code === 200) {
       customerList.value = res.data.list || []
       pagination.total = res.data.total || 0
+    } else {
+      ElMessage.error(res.msg || '获取数据失败')
     }
   } catch (error) {
     console.error('获取客户列表失败:', error)
@@ -360,9 +259,7 @@ const handleSearch = () => {
 }
 
 const handleReset = () => {
-  Object.keys(searchForm).forEach(key => {
-    searchForm[key] = ''
-  })
+  Object.assign(searchForm, { keyword: '', industry: '', level: '', status: '' })
   pagination.page = 1
   loadData()
 }
@@ -374,17 +271,15 @@ const handleAdd = () => {
 
 const handleEdit = (row) => {
   dialogTitle.value = '编辑客户'
-  Object.assign(formData, row)
+  Object.keys(formData).forEach(key => {
+    formData[key] = row[key] ?? formData[key]
+  })
   dialogVisible.value = true
 }
 
 const handleView = (row) => {
   currentCustomer.value = row
   detailVisible.value = true
-}
-
-const handleFollow = (row) => {
-  router.push({ path: '/customer/follow', query: { customer_id: row.id } })
 }
 
 const handleDelete = async (row) => {
@@ -394,40 +289,39 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
-    const res = await deleteCustomer(row.id)
+
+    const res = await deleteCustomer(row.customer_id)
     if (res.code === 200) {
       ElMessage.success('删除成功')
       loadData()
+    } else {
+      ElMessage.error(res.msg || '删除失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
       console.error('删除客户失败:', error)
-      ElMessage.error('删除客户失败')
     }
   }
 }
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    
+
     submitLoading.value = true
     try {
       const submitData = { ...formData }
-      if (submitData.region) {
-        submitData.region = submitData.region.join(',')
+      if (submitData.customer_id) {
+        await update(submitData.customer_id, submitData)
+      } else {
+        delete submitData.customer_id
+        await create(submitData)
       }
-      
-      const res = submitData.id ? await update(submitData) : await create(submitData)
-      
-      if (res.code === 200) {
-        ElMessage.success(submitData.id ? '编辑成功' : '新增成功')
-        dialogVisible.value = false
-        loadData()
-      }
+      ElMessage.success(submitData.customer_id ? '编辑成功' : '新增成功')
+      dialogVisible.value = false
+      loadData()
     } catch (error) {
       console.error('提交失败:', error)
       ElMessage.error('操作失败')
@@ -440,27 +334,17 @@ const handleSubmit = async () => {
 const handleDialogClose = () => {
   formRef.value?.resetFields()
   Object.assign(formData, {
-    id: null,
+    customer_id: null,
     name: '',
-    customer_type: '',
+    code: '',
     industry: '',
-    level: '',
-    contact: '',
-    phone: '',
-    email: '',
     source: '',
-    region: [],
+    level: 1,
+    scale: '',
     address: '',
-    remark: ''
+    description: '',
+    status: 1
   })
-}
-
-const handleSelectionChange = (rows) => {
-  selectedRows.value = rows
-}
-
-const handleExport = () => {
-  ElMessage.info('导出功能开发中')
 }
 
 const handleSizeChange = (size) => {
@@ -485,10 +369,6 @@ onMounted(() => {
 
 .search-card {
   margin-bottom: 20px;
-}
-
-.search-form {
-  margin-bottom: 0;
 }
 
 .table-card {
@@ -520,9 +400,5 @@ onMounted(() => {
 
 :deep(.el-table) {
   font-size: 14px;
-}
-
-:deep(.el-form-item) {
-  margin-bottom: 18px;
 }
 </style>
