@@ -1,8 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/store/modules/user'
-import { usePermissionStore } from '@/store/modules/permission'
 import { ElMessage } from 'element-plus'
-import Layout from '@/components/layout/index.vue'
 
 export const constantRoutes = [
   {
@@ -18,6 +16,12 @@ export const constantRoutes = [
     meta: { title: '404', hidden: true }
   },
   {
+    path: '/403',
+    name: 'Forbidden',
+    component: () => import('@/views/error/403.vue'),
+    meta: { title: '无权限', hidden: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/404',
     meta: { hidden: true }
@@ -27,7 +31,7 @@ export const constantRoutes = [
 export const asyncRoutes = [
   {
     path: '/',
-    component: Layout,
+    component: () => import('@/components/layout/index.vue'),
     redirect: '/dashboard',
     children: [
       {
@@ -40,7 +44,7 @@ export const asyncRoutes = [
   },
   {
     path: '/customer',
-    component: Layout,
+    component: () => import('@/components/layout/index.vue'),
     redirect: '/customer/list',
     meta: { title: '客户管理', icon: 'OfficeBuilding', permission: ['customer', 'admin'] },
     children: [
@@ -66,7 +70,7 @@ export const asyncRoutes = [
   },
   {
     path: '/product',
-    component: Layout,
+    component: () => import('@/components/layout/index.vue'),
     redirect: '/product/category',
     meta: { title: '产品管理', icon: 'Goods', permission: ['product', 'admin'] },
     children: [
@@ -86,7 +90,7 @@ export const asyncRoutes = [
   },
   {
     path: '/supplier',
-    component: Layout,
+    component: () => import('@/components/layout/index.vue'),
     redirect: '/supplier/list',
     meta: { title: '供应商管理', icon: 'Box', permission: ['supplier', 'admin'] },
     children: [
@@ -100,7 +104,7 @@ export const asyncRoutes = [
   },
   {
     path: '/order',
-    component: Layout,
+    component: () => import('@/components/layout/index.vue'),
     redirect: '/order/list',
     meta: { title: '订单管理', icon: 'Document', permission: ['order', 'admin'] },
     children: [
@@ -114,7 +118,7 @@ export const asyncRoutes = [
   },
   {
     path: '/purchase',
-    component: Layout,
+    component: () => import('@/components/layout/index.vue'),
     redirect: '/purchase/list',
     meta: { title: '采购单管理', icon: 'ShoppingCart', permission: ['purchase', 'admin'] },
     children: [
@@ -128,7 +132,7 @@ export const asyncRoutes = [
   },
   {
     path: '/statistics',
-    component: Layout,
+    component: () => import('@/components/layout/index.vue'),
     redirect: '/statistics/customer',
     meta: { title: '数据统计', icon: 'DataAnalysis', permission: ['statistics', 'admin'] },
     children: [
@@ -148,7 +152,7 @@ export const asyncRoutes = [
   },
   {
     path: '/system',
-    component: Layout,
+    component: () => import('@/components/layout/index.vue'),
     redirect: '/system/user',
     meta: { title: '系统管理', icon: 'Setting', permission: ['system', 'admin'] },
     children: [
@@ -168,7 +172,7 @@ export const asyncRoutes = [
   },
   {
     path: '/log',
-    component: Layout,
+    component: () => import('@/components/layout/index.vue'),
     redirect: '/log/list',
     meta: { title: '操作日志', icon: 'Operation', permission: ['operation', 'admin'] },
     children: [
@@ -229,7 +233,6 @@ function getRouteNames(route) {
 
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
-  const permissionStore = usePermissionStore()
   const hasToken = userStore.token
 
   if (hasToken) {
@@ -247,39 +250,34 @@ router.beforeEach(async (to, from, next) => {
         }
       }
 
-      if (permissionStore.routes.length === 0) {
-        const permissions = userStore.permissions || []
-        const filteredRoutes = filterAsyncRoutes(asyncRoutes, permissions)
-        
-        filteredRoutes.forEach(route => {
-          router.addRoute(route)
-        })
-        
-        permissionStore.routes = filteredRoutes
-        
-        if (to.path === '/' || to.path === '/login') {
-          next({ path: '/dashboard' })
-          return
-        }
-        
-        if (router.getRoutes().some(r => r.path === to.path)) {
-          next({ ...to, replace: true })
-          return
-        }
-        
-        next({ path: to.path, replace: true })
-        return
-      }
-
       if (to.meta.permission) {
         const hasPermission = to.meta.permission.some((p) => 
           userStore.permissions.includes(p) || userStore.groups.includes(1)
         )
         if (!hasPermission) {
-          ElMessage.error('无权限访问该页面')
-          next({ path: '/403' })
+          if (to.path !== '/403') {
+            next({ path: '/403' })
+          } else {
+            next()
+          }
           return
         }
+      }
+
+      const addedRoutes = router.getRoutes().map(r => r.path)
+      if (!addedRoutes.includes(to.path) && to.path !== '/') {
+        const permissions = userStore.permissions || []
+        const filteredRoutes = filterAsyncRoutes(asyncRoutes, permissions)
+        
+        filteredRoutes.forEach(route => {
+          if (!router.hasRoute(route.name)) {
+            router.addRoute(route)
+          }
+        })
+        
+        const fullPath = router.resolve(to.path).matched.length > 0 ? to.path : to.fullPath
+        next({ path: fullPath, replace: true })
+        return
       }
 
       next()
