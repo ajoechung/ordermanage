@@ -71,8 +71,20 @@ class Customer extends Base
                 'update_time' => date('Y-m-d H:i:s')
             ];
             
-            if (empty($data['customer_name']) || empty($data['user_id'])) {
-                return json(['code' => 0, 'msg' => '请填写完整信息']);
+            // 必填项验证
+            if (empty($data['customer_name'])) {
+                return json(['code' => 0, 'msg' => '请填写客户名称']);
+            }
+            if (empty($data['user_id'])) {
+                return json(['code' => 0, 'msg' => '请选择负责人']);
+            }
+            
+            // 检查重复客户
+            $exists = db('customer')
+                ->where('customer_name', $data['customer_name'])
+                ->find();
+            if ($exists) {
+                return json(['code' => 0, 'msg' => '该客户名称已存在']);
             }
             
             db('customer')->insert($data);
@@ -107,8 +119,21 @@ class Customer extends Base
                 'update_time' => date('Y-m-d H:i:s')
             ];
             
-            if (empty($data['customer_name']) || empty($data['user_id'])) {
-                return json(['code' => 0, 'msg' => '请填写完整信息']);
+            // 必填项验证
+            if (empty($data['customer_name'])) {
+                return json(['code' => 0, 'msg' => '请填写客户名称']);
+            }
+            if (empty($data['user_id'])) {
+                return json(['code' => 0, 'msg' => '请选择负责人']);
+            }
+            
+            // 检查重复客户（排除自身）
+            $exists = db('customer')
+                ->where('customer_name', $data['customer_name'])
+                ->where('id', '<>', $id)
+                ->find();
+            if ($exists) {
+                return json(['code' => 0, 'msg' => '该客户名称已存在']);
             }
             
             db('customer')->where('id', $id)->update($data);
@@ -130,9 +155,16 @@ class Customer extends Base
     {
         $id = input('post.id/d', 0);
         
-        db('customer')->where('id', $id)->delete();
+        // 检查是否有关联订单
+        $orderCount = db('orders')->where('customer_id', $id)->count();
+        if ($orderCount > 0) {
+            return json(['code' => 0, 'msg' => '该客户下存在 ' . $orderCount . ' 个订单，无法直接删除']);
+        }
+        
+        // 级联删除关联数据
         db('linkman')->where('customer_id', $id)->delete();
         db('customer_follow')->where('customer_id', $id)->delete();
+        db('customer')->where('id', $id)->delete();
         
         $this->writeLog('客户管理', '删除客户ID：' . $id, '删除');
         
@@ -189,5 +221,41 @@ class Customer extends Base
         $this->assign('orders', $orders);
         
         return $this->fetch();
+    }
+    
+    public function addFollow()
+    {
+        if ($this->request->isPost()) {
+            $data = [
+                'customer_id' => input('post.customer_id/d', 0),
+                'follow_type' => input('post.follow_type/s', ''),
+                'follow_time' => input('post.follow_time/s', '') ?: date('Y-m-d H:i:s'),
+                'content' => input('post.content/s', ''),
+                'next_time' => input('post.next_time/s', ''),
+                'user_id' => $this->adminUserId,
+                'create_time' => date('Y-m-d H:i:s')
+            ];
+            
+            if (empty($data['customer_id']) || empty($data['content'])) {
+                return json(['code' => 0, 'msg' => '请填写完整信息']);
+            }
+            
+            db('customer_follow')->insert($data);
+            
+            $this->writeLog('客户管理', '新增跟进记录，客户ID：' . $data['customer_id'], '新增');
+            
+            return json(['code' => 1, 'msg' => '添加成功']);
+        }
+    }
+    
+    public function deleteFollow()
+    {
+        $id = input('post.id/d', 0);
+        
+        db('customer_follow')->where('id', $id)->delete();
+        
+        $this->writeLog('客户管理', '删除跟进记录ID：' . $id, '删除');
+        
+        return json(['code' => 1, 'msg' => '删除成功']);
     }
 }

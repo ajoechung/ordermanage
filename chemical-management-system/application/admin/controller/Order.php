@@ -93,8 +93,19 @@ class Order extends Base
                 'update_time' => date('Y-m-d H:i:s')
             ];
             
+            // 验证客户存在性
+            $customer = db('customer')->find($data['customer_id']);
+            if (!$customer) {
+                return json(['code' => 0, 'msg' => '所选客户不存在']);
+            }
+            
             if (empty($data['customer_id']) || empty($data['amount']) || empty($data['order_time'])) {
                 return json(['code' => 0, 'msg' => '请填写完整信息']);
+            }
+            
+            // 验证金额
+            if ($data['amount'] <= 0) {
+                return json(['code' => 0, 'msg' => '订单金额必须大于0']);
             }
             
             $exists = db('orders')->where('order_no', $data['order_no'])->find();
@@ -156,8 +167,19 @@ class Order extends Base
                 'update_time' => date('Y-m-d H:i:s')
             ];
             
+            // 验证客户存在性
+            $customer = db('customer')->find($data['customer_id']);
+            if (!$customer) {
+                return json(['code' => 0, 'msg' => '所选客户不存在']);
+            }
+            
             if (empty($data['customer_id']) || empty($data['amount']) || empty($data['order_time'])) {
                 return json(['code' => 0, 'msg' => '请填写完整信息']);
+            }
+            
+            // 验证金额
+            if ($data['amount'] <= 0) {
+                return json(['code' => 0, 'msg' => '订单金额必须大于0']);
             }
             
             db('orders')->where('id', $id)->update($data);
@@ -261,5 +283,95 @@ class Order extends Base
     private function generateOrderNo()
     {
         return 'ORD' . date('YmdHis') . mt_rand(1000, 9999);
+    }
+    
+    public function export()
+    {
+        $customerId = input('get.customer_id/d', 0);
+        $fulfillStatus = input('get.fulfill_status/s', '');
+        $startTime = input('get.start_time/s', '');
+        $endTime = input('get.end_time/s', '');
+        
+        $where = [];
+        if ($customerId) {
+            $where['o.customer_id'] = $customerId;
+        }
+        if ($fulfillStatus !== '') {
+            $where['o.fulfill_status'] = $fulfillStatus;
+        }
+        if ($startTime) {
+            $where['o.order_time'] = ['>=', $startTime];
+        }
+        if ($endTime) {
+            $where['o.order_time'] = ['<=', $endTime . ' 23:59:59'];
+        }
+        
+        $list = db('orders')
+            ->alias('o')
+            ->join('customer c', 'c.id = o.customer_id', 'LEFT')
+            ->join('admin_user u', 'u.id = o.user_id', 'LEFT')
+            ->field('o.*, c.customer_name, u.realname as user_name')
+            ->where($where)
+            ->order('o.id DESC')
+            ->select();
+        
+        $statusMap = [
+            1 => '待确认',
+            2 => '已确认',
+            3 => '生产中',
+            4 => '已发货',
+            5 => '已完成',
+            6 => '已取消'
+        ];
+        
+        $invoiceMap = [
+            1 => '未开',
+            2 => '已申请',
+            3 => '已开具',
+            4 => '已寄出'
+        ];
+        
+        // 设置响应头
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="orders_' . date('YmdHis') . '.csv"');
+        header('Cache-Control: max-age=0');
+        
+        $output = fopen('php://output', 'w');
+        
+        // 写入BOM头，防止中文乱码
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // 写入表头
+        fputcsv($output, [
+            '订单号',
+            '客户名称',
+            '订单金额',
+            '订单时间',
+            '履约状态',
+            '发票状态',
+            '负责人',
+            '备注',
+            '创建时间'
+        ]);
+        
+        foreach ($list as $row) {
+            fputcsv($output, [
+                $row['order_no'],
+                $row['customer_name'],
+                $row['amount'],
+                $row['order_time'],
+                isset($statusMap[$row['fulfill_status']]) ? $statusMap[$row['fulfill_status']] : '未知',
+                isset($invoiceMap[$row['invoice_status']]) ? $invoiceMap[$row['invoice_status']] : '未知',
+                $row['user_name'],
+                $row['remark'],
+                $row['create_time']
+            ]);
+        }
+        
+        fclose($output);
+        
+        $this->writeLog('订单管理', '导出订单数据', '导出');
+        
+        exit;
     }
 }

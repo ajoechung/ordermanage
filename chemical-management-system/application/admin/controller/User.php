@@ -152,6 +152,23 @@ class User extends Base
             return json(['code' => 0, 'msg' => '不能删除超级管理员']);
         }
         
+        // 检查是否有关联数据
+        $hasCustomer = db('customer')->where('user_id', $id)->count();
+        if ($hasCustomer > 0) {
+            return json(['code' => 0, 'msg' => '该用户下存在客户数据，无法删除']);
+        }
+        
+        $hasOrder = db('orders')->where('user_id', $id)->count();
+        if ($hasOrder > 0) {
+            return json(['code' => 0, 'msg' => '该用户下存在订单数据，无法删除']);
+        }
+        
+        $hasPurchase = db('purchase')->where('user_id', $id)->count();
+        if ($hasPurchase > 0) {
+            return json(['code' => 0, 'msg' => '该用户下存在采购单数据，无法删除']);
+        }
+        
+        // 删除用户及关联角色
         db('admin_user')->where('id', $id)->delete();
         db('admin_user_role')->where('user_id', $id)->delete();
         
