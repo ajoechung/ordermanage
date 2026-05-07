@@ -3,19 +3,19 @@
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="订单号">
-          <el-input v-model="searchForm.order_no" placeholder="请输入订单号" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="searchForm.keyword" placeholder="请输入订单号" clearable @keyup.enter="handleSearch" />
         </el-form-item>
         <el-form-item label="客户名称">
           <el-input v-model="searchForm.customer_name" placeholder="请输入客户名称" clearable @keyup.enter="handleSearch" />
         </el-form-item>
         <el-form-item label="订单状态">
-          <el-select v-model="searchForm.status" placeholder="请选择" clearable>
-            <el-option label="草稿" value="draft" />
-            <el-option label="待审核" value="pending" />
-            <el-option label="已审核" value="approved" />
-            <el-option label="已发货" value="shipped" />
-            <el-option label="已完成" value="completed" />
-            <el-option label="已取消" value="cancelled" />
+          <el-select v-model="searchForm.order_status" placeholder="请选择" clearable>
+            <el-option label="待确认" :value="1" />
+            <el-option label="已确认" :value="2" />
+            <el-option label="生产中" :value="3" />
+            <el-option label="已发货" :value="4" />
+            <el-option label="已完成" :value="5" />
+            <el-option label="已取消" :value="6" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -40,21 +40,23 @@
         <el-table-column prop="contact_name" label="联系人" width="100" />
         <el-table-column prop="contact_phone" label="联系电话" width="130" />
         <el-table-column label="订单金额" width="120" align="right">
-          <template #default="{ row }"><span class="amount">¥{{ Number(row.total_amount || 0).toLocaleString() }}</span></template>
+          <template #default="{ row }"><span class="amount">¥{{ Number(row.actual_amount || 0).toLocaleString() }}</span></template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="order_status" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
+            <el-tag :type="getStatusType(row.order_status)">{{ getStatusText(row.order_status) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="create_time" label="创建时间" width="160" />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleView(row)">查看</el-button>
-            <el-button v-if="row.status === 'draft'" type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button v-if="['draft', 'cancelled'].includes(row.status)" type="success" link size="small" @click="handleChangeStatus(row, 'pending')">提交</el-button>
-            <el-button v-if="row.status === 'pending' && isAdmin" type="success" link size="small" @click="handleChangeStatus(row, 'approved')">审核</el-button>
-            <el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+            <el-button v-if="row.order_status === 1" type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-if="row.order_status === 1" type="success" link size="small" @click="handleChangeStatus(row, 2)">确认</el-button>
+            <el-button v-if="row.order_status === 2" type="success" link size="small" @click="handleChangeStatus(row, 3)">生产</el-button>
+            <el-button v-if="row.order_status === 3" type="success" link size="small" @click="handleChangeStatus(row, 4)">发货</el-button>
+            <el-button v-if="row.order_status === 4" type="success" link size="small" @click="handleChangeStatus(row, 5)">完成</el-button>
+            <el-button v-if="[1, 2].includes(row.order_status)" type="danger" link size="small" @click="handleChangeStatus(row, 6)">取消</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -112,10 +114,10 @@
               </template>
             </el-table-column>
             <el-table-column label="规格" width="100">
-              <template #default="{ row }">{{ row.spec || '-' }}</template>
+              <template #default="{ row }">{{ row.product_spec || '-' }}</template>
             </el-table-column>
             <el-table-column label="单价" width="100" align="right">
-              <template #default="{ row }">¥{{ Number(row.price || 0).toFixed(2) }}</template>
+              <template #default="{ row }">¥{{ Number(row.unit_price || 0).toFixed(2) }}</template>
             </el-table-column>
             <el-table-column label="数量" width="140">
               <template #default="{ row, $index }">
@@ -126,16 +128,21 @@
               <template #default="{ row }">¥{{ Number(row.subtotal || 0).toFixed(2) }}</template>
             </el-table-column>
             <el-table-column label="操作" width="60" align="center">
-              <template #default="{ $index }"><el-button type="danger" link size="small" @click="removeItem($index)">删</el-button>
+              <template #default="{ $index }">
+                <el-button type="danger" link size="small" @click="removeItem($index)">删</el-button>
               </template>
             </el-table-column>
           </el-table>
-          <div style="margin-top: 10px"><el-button type="primary" link size="small" @click="addItem"><Plus />添加产品</el-button></div>
+          <div style="margin-top: 10px">
+            <el-button type="primary" link size="small" @click="addItem"><Plus />添加产品</el-button>
+          </div>
         </el-form-item>
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="产品总额"><el-input :value="`¥${Number(orderAmount).toFixed(2)}`" disabled /></el-form-item>
+            <el-form-item label="产品总额">
+              <el-input :model-value="`¥${Number(orderAmount).toFixed(2)}`" disabled />
+            </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="优惠金额">
@@ -144,8 +151,13 @@
           </el-col>
         </el-row>
 
-        <el-form-item label="订单总额"><el-input :value="`¥${Number(formData.total_amount).toFixed(2)}`" disabled class="order-amount" /></el-form-item>
-        <el-form-item label="备注"><el-input v-model="formData.remark" type="textarea" :rows="3" placeholder="请输入备注" /></el-form-item>
+        <el-form-item label="订单总额">
+          <el-input :model-value="`¥${Number(formData.actual_amount || 0).toFixed(2)}`" disabled class="order-amount" />
+        </el-form-item>
+
+        <el-form-item label="备注">
+          <el-input v-model="formData.remark" type="textarea" :rows="3" placeholder="请输入备注" />
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -157,12 +169,16 @@
     <el-dialog v-model="detailVisible" title="订单详情" width="800px">
       <el-descriptions :column="2" border>
         <el-descriptions-item label="订单号">{{ currentOrder.order_no }}</el-descriptions-item>
-        <el-descriptions-item label="状态"><el-tag :type="getStatusType(currentOrder.status)">{{ getStatusText(currentOrder.status) }}</el-tag></el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag :type="getStatusType(currentOrder.order_status)">{{ getStatusText(currentOrder.order_status) }}</el-tag>
+        </el-descriptions-item>
         <el-descriptions-item label="客户名称">{{ currentOrder.customer_name }}</el-descriptions-item>
         <el-descriptions-item label="联系人">{{ currentOrder.contact_name }}</el-descriptions-item>
         <el-descriptions-item label="联系电话">{{ currentOrder.contact_phone }}</el-descriptions-item>
         <el-descriptions-item label="收货地址" :span="2">{{ currentOrder.delivery_address }}</el-descriptions-item>
-        <el-descriptions-item label="订单总额" :span="2"><span class="amount">¥{{ Number(currentOrder.total_amount || 0).toFixed(2) }}</span></el-descriptions-item>
+        <el-descriptions-item label="订单总额" :span="2">
+          <span class="amount">¥{{ Number(currentOrder.actual_amount || 0).toFixed(2) }}</span>
+        </el-descriptions-item>
         <el-descriptions-item label="备注" :span="2">{{ currentOrder.remark }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ currentOrder.create_time }}</el-descriptions-item>
       </el-descriptions>
@@ -174,14 +190,14 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
-import { getList, create, update, deleteOrder, getAll as getCustomerList } from '@/api/modules/order'
+import { getList, create, update, deleteOrder, updateOrderStatus } from '@/api/modules/order'
+import { getAll as getCustomerList } from '@/api/modules/customer'
 import { getAll as getProductList } from '@/api/modules/product'
 import { useUserStore } from '@/store/modules/user'
 
 const userStore = useUserStore()
-const isAdmin = computed(() => userStore.groups?.includes(1))
 
-const searchForm = reactive({ order_no: '', customer_name: '', status: '' })
+const searchForm = reactive({ keyword: '', customer_name: '', order_status: '' })
 const tableLoading = ref(false)
 const orderList = ref([])
 const customerList = ref([])
@@ -204,7 +220,7 @@ const formData = reactive({
   contact_phone: '',
   delivery_address: '',
   discount_amount: 0,
-  total_amount: 0,
+  actual_amount: 0,
   items: [],
   remark: ''
 })
@@ -214,9 +230,17 @@ const formRules = {
   contact_name: [{ required: true, message: '请输入联系人', trigger: 'blur' }]
 }
 
-const statusMap = { draft: { text: '草稿', type: 'info' }, pending: { text: '待审核', type: 'warning' }, approved: { text: '已审核', type: 'success' }, shipped: { text: '已发货', type: 'primary' }, completed: { text: '已完成', type: 'success' }, cancelled: { text: '已取消', type: 'danger' } }
-const getStatusText = (s) => statusMap[s]?.text || s
-const getStatusType = (s) => statusMap[s]?.type || 'info'
+const statusMap = {
+  1: { text: '待确认', type: 'warning' },
+  2: { text: '已确认', type: 'primary' },
+  3: { text: '生产中', type: 'info' },
+  4: { text: '已发货', type: 'success' },
+  5: { text: '已完成', type: 'success' },
+  6: { text: '已取消', type: 'danger' }
+}
+
+const getStatusText = (status) => statusMap[status]?.text || '未知'
+const getStatusType = (status) => statusMap[status]?.type || 'info'
 
 const orderAmount = computed(() => formData.items.reduce((sum, item) => sum + (item.subtotal || 0), 0))
 
@@ -224,95 +248,233 @@ const loadData = async () => {
   tableLoading.value = true
   try {
     const params = { page: pagination.page, page_size: pagination.pageSize }
-    if (searchForm.order_no) params.order_no = searchForm.order_no
-    if (searchForm.customer_name) params.customer_name = searchForm.customer_name
-    if (searchForm.status) params.status = searchForm.status
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.customer_name) params.keyword = searchForm.customer_name
+    if (searchForm.order_status !== '') params.order_status = searchForm.order_status
 
     const res = await getList(params)
-    if (res.code === 200) { orderList.value = res.data.list || []; pagination.total = res.data.total || 0 }
-  } catch (error) { console.error('获取订单列表失败:', error); ElMessage.error('获取订单列表失败') }
-  finally { tableLoading.value = false }
+    if (res.code === 200) {
+      orderList.value = res.data.list || []
+      pagination.total = res.data.total || 0
+    }
+  } catch (error) {
+    console.error('获取订单列表失败:', error)
+    ElMessage.error('获取订单列表失败')
+  } finally {
+    tableLoading.value = false
+  }
 }
 
 const loadCustomers = async () => {
-  try { const res = await getCustomerList(); if (res.code === 200) customerList.value = res.data || [] }
-  catch (error) { console.error('获取客户列表失败:', error) }
+  try {
+    const res = await getCustomerList()
+    if (res.code === 200) customerList.value = res.data || []
+  } catch (error) {
+    console.error('获取客户列表失败:', error)
+  }
 }
 
 const loadProducts = async () => {
-  try { const res = await getProductList(); if (res.code === 200) productList.value = res.data || [] }
-  catch (error) { console.error('获取产品列表失败:', error) }
+  try {
+    const res = await getProductList()
+    if (res.code === 200) productList.value = res.data || []
+  } catch (error) {
+    console.error('获取产品列表失败:', error)
+  }
 }
 
 const handleSearch = () => { pagination.page = 1; loadData() }
-const handleReset = () => { Object.assign(searchForm, { order_no: '', customer_name: '', status: '' }); pagination.page = 1; loadData() }
-const handleAdd = () => { dialogTitle.value = '新增订单'; dialogVisible.value = true }
-const handleEdit = (row) => {
-  dialogTitle.value = '编辑订单'
-  Object.keys(formData).forEach(key => { formData[key] = row[key] ?? formData[key] })
+const handleReset = () => {
+  Object.assign(searchForm, { keyword: '', customer_name: '', order_status: '' })
+  pagination.page = 1
+  loadData()
+}
+
+const handleAdd = () => {
+  dialogTitle.value = '新增订单'
   dialogVisible.value = true
 }
-const handleView = (row) => { currentOrder.value = row; detailVisible.value = true }
+
+const handleEdit = (row) => {
+  dialogTitle.value = '编辑订单'
+  Object.keys(formData).forEach(key => {
+    formData[key] = row[key] ?? formData[key]
+  })
+  if (row.items) {
+    formData.items = row.items.map(item => ({
+      product_id: item.product_id,
+      product_name: item.product_name,
+      product_spec: item.product_spec,
+      unit_price: item.unit_price,
+      quantity: item.quantity,
+      subtotal: item.subtotal
+    }))
+  }
+  dialogVisible.value = true
+}
+
+const handleView = (row) => {
+  currentOrder.value = row
+  detailVisible.value = true
+}
 
 const handleChangeStatus = async (row, status) => {
+  const statusText = { 2: '确认', 3: '开始生产', 4: '确认发货', 5: '确认完成', 6: '取消' }
   try {
-    await ElMessageBox.confirm(`确定要${status === 'pending' ? '提交' : '审核通过'}该订单吗？`, '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
-    const res = await update(row.order_id, { status })
-    if (res.code === 200) { ElMessage.success('操作成功'); loadData() }
-  } catch (error) { if (error !== 'cancel') console.error('操作失败:', error) }
+    await ElMessageBox.confirm(`确定要${statusText[status]}该订单吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    const res = await updateOrderStatus({ id: row.order_id, status: status })
+    if (res.code === 200) {
+      ElMessage.success('操作成功')
+      loadData()
+    } else {
+      ElMessage.error(res.msg || '操作失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') console.error('操作失败:', error)
+  }
 }
 
 const handleDelete = async (row) => {
   try {
-    await ElMessageBox.confirm(`确定要删除订单"${row.order_no}"吗？`, '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+    await ElMessageBox.confirm(`确定要删除订单"${row.order_no}"吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
     const res = await deleteOrder(row.order_id)
-    if (res.code === 200) { ElMessage.success('删除成功'); loadData() }
-  } catch (error) { if (error !== 'cancel') console.error('删除失败:', error) }
+    if (res.code === 200) {
+      ElMessage.success('删除成功')
+      loadData()
+    } else {
+      ElMessage.error(res.msg || '删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') console.error('删除失败:', error)
+  }
 }
 
 const handleCustomerChange = (id) => {
   const c = customerList.value.find(x => x.customer_id === id)
-  if (c) { formData.customer_name = c.name; formData.contact_name = c.contact || ''; formData.contact_phone = c.phone || ''; formData.delivery_address = c.address || '' }
+  if (c) {
+    formData.customer_name = c.name
+    formData.delivery_address = c.address || ''
+  }
 }
 
 const handleProductChange = (id, index) => {
   const p = productList.value.find(x => x.product_id === id)
-  if (p) { formData.items[index].product_name = p.name; formData.items[index].spec = p.spec || ''; formData.items[index].unit = p.unit || ''; formData.items[index].price = p.price || 0; calculateAmount(index) }
+  if (p) {
+    formData.items[index].product_name = p.name
+    formData.items[index].product_spec = p.spec || ''
+    formData.items[index].unit_price = p.price || 0
+    calculateAmount(index)
+  }
 }
 
-const calculateAmount = (index) => { formData.items[index].subtotal = (formData.items[index].price || 0) * (formData.items[index].quantity || 0); calculateTotalAmount() }
-const calculateTotalAmount = () => { formData.total_amount = orderAmount.value - (formData.discount_amount || 0) }
+const calculateAmount = (index) => {
+  formData.items[index].subtotal = (formData.items[index].unit_price || 0) * (formData.items[index].quantity || 0)
+  calculateTotalAmount()
+}
 
-const addItem = () => { formData.items.push({ product_id: null, product_name: '', spec: '', unit: '', price: 0, quantity: 1, subtotal: 0 }) }
-const removeItem = (index) => { formData.items.splice(index, 1); calculateTotalAmount() }
+const calculateTotalAmount = () => {
+  formData.actual_amount = orderAmount.value - (formData.discount_amount || 0)
+}
+
+const addItem = () => {
+  formData.items.push({
+    product_id: null,
+    product_name: '',
+    product_spec: '',
+    unit_price: 0,
+    quantity: 1,
+    subtotal: 0
+  })
+}
+
+const removeItem = (index) => {
+  formData.items.splice(index, 1)
+  calculateTotalAmount()
+}
 
 const handleSubmit = async () => {
   if (!formRef.value) return
+
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    if (formData.items.length === 0) { ElMessage.warning('请添加订单产品'); return }
+    if (formData.items.length === 0) {
+      ElMessage.warning('请添加订单产品')
+      return
+    }
+
     submitLoading.value = true
     try {
-      const submitData = { ...formData }
-      if (submitData.order_id) { await update(submitData.order_id, submitData) }
-      else { delete submitData.order_id; await create(submitData) }
-      ElMessage.success(submitData.order_id ? '编辑成功' : '新增成功')
+      const submitData = {
+        customer_id: formData.customer_id,
+        contact_name: formData.contact_name,
+        contact_phone: formData.contact_phone,
+        delivery_address: formData.delivery_address,
+        discount_amount: formData.discount_amount || 0,
+        actual_amount: formData.actual_amount,
+        items: formData.items.map(item => ({
+          product_id: item.product_id,
+          unit_price: item.unit_price,
+          quantity: item.quantity
+        })),
+        remark: formData.remark
+      }
+
+      if (formData.order_id) {
+        await update(formData.order_id, submitData)
+      } else {
+        await create(submitData)
+      }
+      ElMessage.success(formData.order_id ? '编辑成功' : '新增成功')
       dialogVisible.value = false
       loadData()
-    } catch (error) { console.error('提交失败:', error); ElMessage.error('操作失败') }
-    finally { submitLoading.value = false }
+    } catch (error) {
+      console.error('提交失败:', error)
+      ElMessage.error('操作失败')
+    } finally {
+      submitLoading.value = false
+    }
   })
 }
 
 const handleDialogClose = () => {
   formRef.value?.resetFields()
-  Object.assign(formData, { order_id: null, customer_id: null, customer_name: '', contact_name: '', contact_phone: '', delivery_address: '', discount_amount: 0, total_amount: 0, items: [], remark: '' })
+  Object.assign(formData, {
+    order_id: null,
+    customer_id: null,
+    customer_name: '',
+    contact_name: '',
+    contact_phone: '',
+    delivery_address: '',
+    discount_amount: 0,
+    actual_amount: 0,
+    items: [],
+    remark: ''
+  })
 }
 
-const handleSizeChange = (size) => { pagination.pageSize = size; loadData() }
-const handlePageChange = (page) => { pagination.page = page; loadData() }
+const handleSizeChange = (size) => {
+  pagination.pageSize = size
+  loadData()
+}
 
-onMounted(() => { loadData(); loadCustomers(); loadProducts() })
+const handlePageChange = (page) => {
+  pagination.page = page
+  loadData()
+}
+
+onMounted(() => {
+  loadData()
+  loadCustomers()
+  loadProducts()
+})
 </script>
 
 <style scoped>

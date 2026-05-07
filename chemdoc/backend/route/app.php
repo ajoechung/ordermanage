@@ -20,6 +20,10 @@ Route::group('api', function () {
     Route::put('contact/:id', 'api.Contact/update');
     Route::delete('contact/:id', 'api.Contact/delete');
 
+    Route::get('follow', 'api.Follow/index');
+    Route::post('follow', 'api.Follow/save');
+    Route::delete('follow/:id', 'api.Follow/delete');
+
     Route::get('order', 'api.Order/index');
     Route::get('order/:id', 'api.Order/read');
     Route::post('order', 'api.Order/save');
@@ -33,6 +37,13 @@ Route::group('api', function () {
     Route::put('supplier/:id', 'api.Supplier/update');
     Route::delete('supplier/:id', 'api.Supplier/delete');
 
+    Route::get('purchase', 'api.Purchase/index');
+    Route::get('purchase/:id', 'api.Purchase/read');
+    Route::post('purchase', 'api.Purchase/save');
+    Route::put('purchase/:id', 'api.Purchase/update');
+    Route::delete('purchase/:id', 'api.Purchase/delete');
+    Route::post('purchase/status', 'api.Purchase/status');
+
     Route::get('product', 'api.Product/index');
     Route::get('product/:id', 'api.Product/read');
     Route::post('product', 'api.Product/save');
@@ -42,10 +53,6 @@ Route::group('api', function () {
     Route::post('product/category', 'api.Product/createCategory');
     Route::put('product/category/:id', 'api.Product/updateCategory');
     Route::delete('product/category/:id', 'api.Product/deleteCategory');
-
-    Route::get('follow', 'api.Follow/index');
-    Route::post('follow', 'api.Follow/save');
-    Route::delete('follow/:id', 'api.Follow/delete');
 
     Route::get('statistics/customer', 'api.Statistics/customer');
     Route::get('statistics/order', 'api.Statistics/order');

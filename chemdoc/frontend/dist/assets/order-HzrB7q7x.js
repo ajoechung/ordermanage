@@ -1,1 +1,0 @@
-import{s as r}from"./index-Dw4HtCOU.js";function t(e){return r({url:"/order",method:"get",params:e})}function d(e){return r({url:"/order",method:"post",data:e})}function n(e,o){return r({url:`/order/${e}`,method:"put",data:o})}function s(e){return r({url:`/order/${e}`,method:"delete"})}const c=t,a=d,i=n,l=t;export{l as a,a as c,s as d,c as g,i as u};
