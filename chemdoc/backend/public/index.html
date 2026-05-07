@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>化工单据管理系统 - API服务</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; background: linear-gradient(135deg, #1A5C9E 0%, #409EFF 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { background: #fff; padding: 48px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 600px; width: 90%; }
+        h1 { font-size: 28px; color: #303133; margin-bottom: 16px; text-align: center; }
+        p { color: #606266; margin-bottom: 24px; text-align: center; }
+        .info { background: #F5F7FA; padding: 20px; border-radius: 8px; margin-bottom: 24px; }
+        .info h2 { font-size: 16px; color: #303133; margin-bottom: 12px; }
+        .info p { text-align: left; color: #606266; margin-bottom: 8px; font-size: 14px; }
+        code { background: #E4E7ED; padding: 2px 6px; border-radius: 4px; color: #1A5C9E; font-family: Consolas, monospace; }
+        .btn { display: inline-block; padding: 12px 24px; background: #1A5C9E; color: #fff; text-decoration: none; border-radius: 6px; transition: all 0.3s; }
+        .btn:hover { background: #1470CC; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏭 化工单据管理系统</h1>
+        <p>API 服务已启动</p>
+        
+        <div class="info">
+            <h2>接口信息</h2>
+            <p>接口地址：<code>/api</code></p>
+            <p>接口文档：<code>/api/doc</code></p>
+            <p>默认端口：<code>8080</code></p>
+        </div>
+        
+        <div class="info">
+            <h2>环境信息</h2>
+            <p>PHP 版本：<code><?= PHP_VERSION ?></code></p>
+            <p>ThinkPHP 版本：<code>8.1</code></p>
+            <p>数据库：<code>MySQL 8.0</code></p>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="/api" class="btn">访问 API</a>
+        </div>
+    </div>
+</body>
+</html>
