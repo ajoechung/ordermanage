@@ -22,3 +22,9 @@ export function getOrderStats(params) {
     params
   })
 }
+
+export const getDashboardStatistics = getDashboard
+export const getSalesTrend = getOrderStats
+export const getCustomerDistribution = getCustomerStats
+export const getCustomerStatistics = getCustomerStats
+export const getOrderStatistics = getOrderStats

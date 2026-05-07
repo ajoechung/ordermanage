@@ -3,18 +3,6 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
-import { usePermissionStore } from '@/store/modules/permission'
-import { useUserStore } from '@/store/modules/user'
-
-const permissionStore = usePermissionStore()
-const userStore = useUserStore()
-
-onMounted(async () => {
-  if (userStore.token) {
-    await permissionStore.generateRoutes()
-  }
-})
 </script>
 
 <style>

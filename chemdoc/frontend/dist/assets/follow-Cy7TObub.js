@@ -1,0 +1,1 @@
+import{s as t}from"./index-DcaRdf0A.js";function l(o){return t({url:"/follow",method:"get",params:o})}function e(o){return t({url:"/follow",method:"post",data:o})}function s(o){return t({url:`/follow/${o}`,method:"delete"})}const n=l,u=e,a=e;export{n as a,u as c,s as d,l as g,a as u};

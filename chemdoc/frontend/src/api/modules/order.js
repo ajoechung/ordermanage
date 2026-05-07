@@ -45,3 +45,8 @@ export function updateOrderStatus(data) {
     data
   })
 }
+
+export const getList = getOrderList
+export const create = createOrder
+export const update = updateOrder
+export const getAll = getOrderList

@@ -37,3 +37,7 @@ export function deleteContact(id) {
     method: 'delete'
   })
 }
+
+export const getList = getContactList
+export const create = createContact
+export const update = updateContact

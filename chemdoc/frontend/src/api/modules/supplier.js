@@ -37,3 +37,10 @@ export function deleteSupplier(id) {
     method: 'delete'
   })
 }
+
+export const getList = getSupplierList
+export const create = createSupplier
+export const update = updateSupplier
+export const getPurchaseList = getSupplierList
+export const createPurchase = createSupplier
+export const updatePurchase = updateSupplier

@@ -22,3 +22,7 @@ export function deleteFollow(id) {
     method: 'delete'
   })
 }
+
+export const getList = getFollowList
+export const create = createFollow
+export const update = createFollow

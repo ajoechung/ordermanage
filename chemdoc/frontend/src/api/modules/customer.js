@@ -37,3 +37,9 @@ export function deleteCustomer(id) {
     method: 'delete'
   })
 }
+
+export const getList = getCustomerList
+export const getAll = getCustomerList
+export const create = createCustomer
+export const update = updateCustomer
+export const getDetail = getCustomerDetail

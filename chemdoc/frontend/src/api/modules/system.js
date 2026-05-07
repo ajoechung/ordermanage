@@ -91,3 +91,6 @@ export function clearLogs() {
     method: 'post'
   })
 }
+
+export const getRoleList = getList
+export const deleteLog = getList

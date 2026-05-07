@@ -21,3 +21,5 @@ export function getUserInfo() {
     method: 'get'
   })
 }
+
+export const getRoleList = getUserInfo

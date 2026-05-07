@@ -1,0 +1,1 @@
+import{s as t}from"./index-DcaRdf0A.js";function e(r){return t({url:"/order",method:"get",params:r})}function s(r){return t({url:"/order",method:"post",data:r})}function n(r,o){return t({url:`/order/${r}`,method:"put",data:o})}const a=e,c=s,d=n,i=e;export{a,i as b,c,e as g,d as u};

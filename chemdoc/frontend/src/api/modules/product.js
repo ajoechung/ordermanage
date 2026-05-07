@@ -68,3 +68,9 @@ export function deleteCategory(id) {
     method: 'delete'
   })
 }
+
+export const getList = getProductList
+export const create = createProduct
+export const update = updateProduct
+export const getCategoryList = getProductCategories
+export const getAll = getProductList

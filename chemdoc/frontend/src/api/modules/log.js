@@ -14,3 +14,6 @@ export function getLogDetail(id) {
     method: 'get'
   })
 }
+
+export const deleteLog = getLogList
+export const batchDeleteLog = batchDeleteLog
