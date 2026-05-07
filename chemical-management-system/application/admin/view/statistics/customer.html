@@ -1,0 +1,170 @@
+{extend name="public/layout" /}
+{block name="content-header"}
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0">{$breadcrumb|default='客户统计'}</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{:url('admin/index/index')}">首页</a></li>
+            <li class="breadcrumb-item active">{$breadcrumb|default='客户统计'}</li>
+        </ol>
+    </div>
+</div>
+{/block}
+
+{block name="content"}
+<div class="row">
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-info">
+            <div class="inner">
+                <h3>{$totalCustomers}</h3>
+                <p>客户总数</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-success">
+            <div class="inner">
+                <h3>{$newCustomers}</h3>
+                <p>本月新增</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-warning">
+            <div class="inner">
+                <h3>{$completedCustomers}</h3>
+                <p>本月成交</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-handshake"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger">
+            <div class="inner">
+                <h3>{$totalDealRate}%</h3>
+                <p>成交率</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">客户行业分布</h3>
+            </div>
+            <div class="card-body">
+                <div id="industryChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">客户状态分布</h3>
+            </div>
+            <div class="card-body">
+                <div id="statusChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">最新客户</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>客户名称</th>
+                            <th>行业</th>
+                            <th>负责人</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {volist name="recentCustomers" id="customer"}
+                        <tr>
+                            <td>{$customer.customer_name}</td>
+                            <td>{$customer.industry|default='-'}</td>
+                            <td>{$customer.user_name|default='-'}</td>
+                            <td>
+                                {switch name="customer.status"}
+                                    {case value="1"}<span class="badge badge-success">正常</span>{/case}
+                                    {case value="2"}<span class="badge badge-warning">潜在</span>{/case}
+                                    {case value="3"}<span class="badge badge-danger">流失</span>{/case}
+                                {/switch}
+                            </td>
+                            <td>{$customer.create_time}</td>
+                        </tr>
+                        {/volist}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{/block}
+
+{block name="script"}
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.1/echarts.min.js"></script>
+<script>
+$(function() {
+    var industryData = {$customerByIndustry|raw};
+    var industryChart = echarts.init(document.getElementById('industryChart'));
+    var industryOption = {
+        tooltip: {trigger: 'item'},
+        series: [{
+            type: 'pie',
+            radius: '60%',
+            data: industryData.map(function(item) {
+                return {name: item.industry || '未知', value: item.count};
+            })
+        }]
+    };
+    industryChart.setOption(industryOption);
+    
+    var statusData = {$customerByStatus|raw};
+    var statusChart = echarts.init(document.getElementById('statusChart'));
+    var statusOption = {
+        tooltip: {trigger: 'item'},
+        series: [{
+            type: 'pie',
+            radius: '60%',
+            data: statusData.map(function(item) {
+                return {name: item.status_text, value: item.count};
+            })
+        }]
+    };
+    statusChart.setOption(statusOption);
+    
+    $(window).on('resize', function() {
+        industryChart.resize();
+        statusChart.resize();
+    });
+});
+</script>
+{/block}

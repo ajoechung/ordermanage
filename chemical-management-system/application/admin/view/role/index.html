@@ -1,0 +1,77 @@
+{extend name="public/layout" /}
+{block name="content-header"}
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0">{$breadcrumb|default='角色管理'}</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{:url('admin/index/index')}">首页</a></li>
+            <li class="breadcrumb-item active">{$breadcrumb|default='角色管理'}</li>
+        </ol>
+    </div>
+</div>
+{/block}
+
+{block name="content"}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">角色列表</h3>
+        <div class="card-tools">
+            <a href="{:url('add')}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> 新增角色
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th width="10%">ID</th>
+                    <th width="20%">角色名称</th>
+                    <th width="15%">角色标识</th>
+                    <th width="25%">描述</th>
+                    <th width="10%">用户数</th>
+                    <th width="20%">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {volist name="list" id="item"}
+                <tr>
+                    <td>{$item.id}</td>
+                    <td>{$item.role_name}</td>
+                    <td><code>{$item.role_code}</code></td>
+                    <td>{$item.description|default='-'}</td>
+                    <td><span class="badge badge-info">{$item.user_count}</span></td>
+                    <td>
+                        <a href="{:url('edit', ['id'=>$item.id])}" class="btn btn-primary btn-xs">
+                            <i class="fas fa-edit"></i> 编辑
+                        </a>
+                        {if condition="$item.id != 1"}
+                        <a href="javascript:void(0);" onclick="deleteItem('{$item.id}')" class="btn btn-danger btn-xs">
+                            <i class="fas fa-trash"></i> 删除
+                        </a>
+                        {/if}
+                    </td>
+                </tr>
+                {/volist}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function deleteItem(id) {
+    if (confirm('确定要删除这个角色吗？')) {
+        $.post('{:url("delete")}', {id: id}, function(res) {
+            if (res.code === 1) {
+                alert(res.msg);
+                location.reload();
+            } else {
+                alert(res.msg);
+            }
+        }, 'json');
+    }
+}
+</script>
+{/block}

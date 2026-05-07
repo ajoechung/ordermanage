@@ -1,0 +1,81 @@
+{extend name="public/layout" /}
+{block name="content-header"}
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0">{$breadcrumb|default='权限配置'}</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{:url('admin/index/index')}">首页</a></li>
+            <li class="breadcrumb-item active">{$breadcrumb|default='权限配置'}</li>
+        </ol>
+    </div>
+</div>
+{/block}
+
+{block name="content"}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">权限列表</h3>
+        <div class="card-tools">
+            <a href="{:url('add')}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> 新增权限
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th width="10%">ID</th>
+                    <th width="30%">权限名称</th>
+                    <th width="25%">权限标识</th>
+                    <th width="10%">类型</th>
+                    <th width="10%">排序</th>
+                    <th width="15%">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {volist name="auths" id="auth"}
+                <tr>
+                    <td>{$auth.id}</td>
+                    <td>{:str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $auth.level)}{$auth.auth_name}</td>
+                    <td><code>{$auth.auth_code}</code></td>
+                    <td>
+                        {switch name="auth.auth_type"}
+                            {case value="1"}<span class="badge badge-info">目录</span>{/case}
+                            {case value="2"}<span class="badge badge-primary">控制器</span>{/case}
+                            {case value="3"}<span class="badge badge-secondary">方法</span>{/case}
+                        {/switch}
+                    </td>
+                    <td>{$auth.sort}</td>
+                    <td>
+                        <a href="{:url('edit', ['id'=>$auth.id])}" class="btn btn-primary btn-xs">
+                            <i class="fas fa-edit"></i> 编辑
+                        </a>
+                        <a href="javascript:void(0);" onclick="deleteItem('{$auth.id}')" class="btn btn-danger btn-xs">
+                            <i class="fas fa-trash"></i> 删除
+                        </a>
+                    </td>
+                </tr>
+                {/volist}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function deleteItem(id) {
+    if (confirm('确定要删除这个权限吗？')) {
+        $.post('{:url("delete")}', {id: id}, function(res) {
+            if (res.code === 1) {
+                alert(res.msg);
+                location.reload();
+            } else {
+                alert(res.msg);
+            }
+        }, 'json');
+    }
+}
+</script>
+{/block}

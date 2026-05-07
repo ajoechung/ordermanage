@@ -1,0 +1,143 @@
+{extend name="public/layout" /}
+
+{block name="content-header"}
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0">{$breadcrumb|default='订单管理'}</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{:url('admin/index/index')}">首页</a></li>
+            <li class="breadcrumb-item active">{$breadcrumb|default='订单管理'}</li>
+        </ol>
+    </div>
+</div>
+{/block}
+
+{block name="content"}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">订单列表</h3>
+        <div class="card-tools">
+            <a href="{:url('add')}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> 新增订单
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="get" class="mb-3">
+            <div class="row">
+                <div class="col-md-3">
+                    <input type="text" name="order_no" class="form-control" placeholder="订单号" value="{$orderNo|default=''}">
+                </div>
+                <div class="col-md-3">
+                    <select name="customer_id" class="form-control">
+                        <option value="">客户名称</option>
+                        {volist name="customers" id="customer"}
+                        <option value="{$customer.id}" {if condition="isset($customerId) && $customerId == $customer.id"}selected{/if}>{$customer.customer_name}</option>
+                        {/volist}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="fulfill_status" class="form-control">
+                        <option value="">履约状态</option>
+                        {volist name="statusMap" id="status" key="key"}
+                        <option value="{$key}" {if condition="isset($fulfillStatus) && $fulfillStatus == $key"}selected{/if}>{$status}</option>
+                        {/volist}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="invoice_status" class="form-control">
+                        <option value="">发票状态</option>
+                        {volist name="invoiceMap" id="invoice" key="key"}
+                        <option value="{$key}" {if condition="isset($invoiceStatus) && $invoiceStatus == $key"}selected{/if}>{$invoice}</option>
+                        {/volist}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fas fa-search"></i> 搜索
+                    </button>
+                    <a href="{:url('index')}" class="btn btn-default">重置</a>
+                </div>
+            </div>
+        </form>
+        
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>订单号</th>
+                    <th>客户名称</th>
+                    <th>订单金额</th>
+                    <th>下单时间</th>
+                    <th>履约状态</th>
+                    <th>发票状态</th>
+                    <th>关联采购单</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {volist name="list" id="item"}
+                <tr>
+                    <td>{$item.id}</td>
+                    <td>{$item.order_no}</td>
+                    <td>{$item.customer_name|default='-'}</td>
+                    <td>¥{$item.amount}</td>
+                    <td>{$item.order_time}</td>
+                    <td>
+                        {switch name="item.fulfill_status"}
+                            {case value="1"}<span class="badge badge-secondary">待确认</span>{/case}
+                            {case value="2"}<span class="badge badge-primary">已确认</span>{/case}
+                            {case value="3"}<span class="badge badge-info">生产中</span>{/case}
+                            {case value="4"}<span class="badge badge-warning">已发货</span>{/case}
+                            {case value="5"}<span class="badge badge-success">已完成</span>{/case}
+                            {case value="6"}<span class="badge badge-danger">已取消</span>{/case}
+                        {/switch}
+                    </td>
+                    <td>
+                        {switch name="item.invoice_status"}
+                            {case value="1"}<span class="badge badge-secondary">未开</span>{/case}
+                            {case value="2"}<span class="badge badge-warning">已申请</span>{/case}
+                            {case value="3"}<span class="badge badge-info">已开具</span>{/case}
+                            {case value="4"}<span class="badge badge-success">已寄出</span>{/case}
+                        {/switch}
+                    </td>
+                    <td>{$item.purchase_no|default='-'}</td>
+                    <td>
+                        <a href="{:url('detail', ['id'=>$item.id])}" class="btn btn-info btn-xs">
+                            <i class="fas fa-eye"></i> 详情
+                        </a>
+                        <a href="{:url('edit', ['id'=>$item.id])}" class="btn btn-primary btn-xs">
+                            <i class="fas fa-edit"></i> 编辑
+                        </a>
+                        <a href="javascript:void(0);" onclick="deleteItem('{$item.id}')" class="btn btn-danger btn-xs">
+                            <i class="fas fa-trash"></i> 删除
+                        </a>
+                    </td>
+                </tr>
+                {/volist}
+            </tbody>
+        </table>
+        
+        <div class="mt-3">
+            {$list->render()|raw}
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteItem(id) {
+    if (confirm('确定要删除这个订单吗？')) {
+        $.post('{:url("delete")}', {id: id}, function(res) {
+            if (res.code === 1) {
+                alert(res.msg);
+                location.reload();
+            } else {
+                alert(res.msg);
+            }
+        }, 'json');
+    }
+}
+</script>
+{/block}

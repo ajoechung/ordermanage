@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{$title|default='化工单据管理系统'}</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+    <link rel="stylesheet" href="__ADMIN__/css/style.css">
+    <block name="head"></block>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-toggle="dropdown" href="#">
+                        <i class="far fa-user"></i> {$adminRealname|default='用户'}
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a href="{:url('login/logout')}" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt mr-2"></i> 退出登录
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <a href="{:url('admin/index/index')}" class="brand-link">
+                <i class="fas fa-flask nav-icon ml-3 mr-2"></i>
+                <span class="brand-text font-weight-light">化工单据系统</span>
+            </a>
+
+            <div class="sidebar">
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <li class="nav-item">
+                            <a href="{:url('admin/index/dashboard')}" class="nav-link {:$menu == 'dashboard' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>仪表盘</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item {:in_array($menu, ['product', 'category']) ? 'menu-open' : ''}">
+                            <a href="#" class="nav-link {:in_array($menu, ['product', 'category']) ? 'active' : ''}">
+                                <i class="nav-icon fas fa-box"></i>
+                                <p>
+                                    产品管理
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{:url('admin/category/index')}" class="nav-link {:$sub_menu == 'category' ? 'active' : ''}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>产品分类</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{:url('admin/product/index')}" class="nav-link {:$sub_menu == 'product' ? 'active' : ''}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>产品信息</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item {:in_array($menu, ['customer', 'linkman']) ? 'menu-open' : ''}">
+                            <a href="#" class="nav-link {:in_array($menu, ['customer', 'linkman']) ? 'active' : ''}">
+                                <i class="nav-icon fas fa-users"></i>
+                                <p>
+                                    客户管理
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{:url('admin/customer/index')}" class="nav-link {:$sub_menu == 'customer' ? 'active' : ''}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>客户列表</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{:url('admin/linkman/index')}" class="nav-link {:$sub_menu == 'linkman' ? 'active' : ''}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>联系人列表</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="{:url('admin/supplier/index')}" class="nav-link {:$menu == 'supplier' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-truck"></i>
+                                <p>供应商管理</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="{:url('admin/order/index')}" class="nav-link {:$menu == 'order' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                                <p>订单管理</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="{:url('admin/purchase/index')}" class="nav-link {:$menu == 'purchase' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-shopping-cart"></i>
+                                <p>采购单管理</p>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item {:in_array($menu, ['statistics']) ? 'menu-open' : ''}">
+                            <a href="#" class="nav-link {:in_array($menu, ['statistics']) ? 'active' : ''}">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <p>
+                                    数据统计
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{:url('admin/statistics/customer')}" class="nav-link {:$sub_menu == 'customer' ? 'active' : ''}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>客户统计</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{:url('admin/statistics/order')}" class="nav-link {:$sub_menu == 'order' ? 'active' : ''}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>订单统计</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item {:in_array($menu, ['system', 'user', 'role', 'auth']) ? 'menu-open' : ''}">
+                            <a href="#" class="nav-link {:in_array($menu, ['system', 'user', 'role', 'auth']) ? 'active' : ''}">
+                                <i class="nav-icon fas fa-cog"></i>
+                                <p>
+                                    系统管理
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{:url('admin/user/index')}" class="nav-link {:$sub_menu == 'user' ? 'active' : ''}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>用户管理</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{:url('admin/role/index')}" class="nav-link {:$sub_menu == 'role' ? 'active' : ''}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>角色管理</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{:url('admin/auth/index')}" class="nav-link {:$sub_menu == 'auth' ? 'active' : ''}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>权限配置</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="{:url('admin/log/index')}" class="nav-link {:$menu == 'log' ? 'active' : ''}">
+                                <i class="nav-icon fas fa-history"></i>
+                                <p>操作日志</p>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <div class="content-wrapper">
+            <div class="content-header">
+                <div class="container-fluid">
+                    <block name="content-header">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 class="m-0">{$pageTitle|default='后台管理'}</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="{:url('admin/index/index')}">首页</a></li>
+                                <li class="breadcrumb-item active">{$breadcrumb|default=''}</li>
+                            </ol>
+                        </div>
+                    </div>
+                    </block>
+                </div>
+            </div>
+
+            <section class="content">
+                <div class="container-fluid">
+                    <block name="content"></block>
+                </div>
+            </section>
+        </div>
+
+        <footer class="main-footer">
+            <div class="float-right d-none d-sm-inline-block">
+                <strong>化工单据管理系统 v1.0</strong>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+    <script src="__ADMIN__/js/common.js"></script>
+    <block name="script"></block>
+</body>
+</html>

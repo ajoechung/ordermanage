@@ -1,0 +1,123 @@
+{extend name="public/layout" /}
+
+{block name="content-header"}
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0">{$breadcrumb|default='客户管理'}</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{:url('admin/index/index')}">首页</a></li>
+            <li class="breadcrumb-item active">{$breadcrumb|default='客户管理'}</li>
+        </ol>
+    </div>
+</div>
+{/block}
+
+{block name="content"}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">客户列表</h3>
+        <div class="card-tools">
+            <a href="{:url('add')}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> 新增客户
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="get" class="mb-3">
+            <div class="row">
+                <div class="col-md-3">
+                    <input type="text" name="customer_name" class="form-control" placeholder="客户名称" value="{$customerName|default=''}">
+                </div>
+                <div class="col-md-2">
+                    <select name="user_id" class="form-control">
+                        <option value="">负责人</option>
+                        {volist name="users" id="user"}
+                        <option value="{$user.id}" {if condition="isset($userId) && $userId == $user.id"}selected{/if}>{$user.realname}</option>
+                        {/volist}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-control">
+                        <option value="">状态</option>
+                        <option value="1" {if condition="isset($status) && $status === '1'"}selected{/if}>正常</option>
+                        <option value="2" {if condition="isset($status) && $status === '2'"}selected{/if}>潜在</option>
+                        <option value="3" {if condition="isset($status) && $status === '3'"}selected{/if}>流失</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fas fa-search"></i> 搜索
+                    </button>
+                    <a href="{:url('index')}" class="btn btn-default">重置</a>
+                </div>
+            </div>
+        </form>
+        
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>客户名称</th>
+                    <th>行业</th>
+                    <th>负责人</th>
+                    <th>联系电话</th>
+                    <th>状态</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {volist name="list" id="item"}
+                <tr>
+                    <td>{$item.id}</td>
+                    <td>{$item.customer_name}</td>
+                    <td>{$item.industry|default='-'}</td>
+                    <td>{$item.user_name|default='-'}</td>
+                    <td>{$item.phone|default='-'}</td>
+                    <td>
+                        {switch name="item.status"}
+                            {case value="1"}<span class="badge badge-success">正常</span>{/case}
+                            {case value="2"}<span class="badge badge-warning">潜在</span>{/case}
+                            {case value="3"}<span class="badge badge-danger">流失</span>{/case}
+                        {/switch}
+                    </td>
+                    <td>{$item.create_time}</td>
+                    <td>
+                        <a href="{:url('detail', ['id'=>$item.id])}" class="btn btn-info btn-xs">
+                            <i class="fas fa-eye"></i> 详情
+                        </a>
+                        <a href="{:url('edit', ['id'=>$item.id])}" class="btn btn-primary btn-xs">
+                            <i class="fas fa-edit"></i> 编辑
+                        </a>
+                        <a href="javascript:void(0);" onclick="deleteItem('{$item.id}')" class="btn btn-danger btn-xs">
+                            <i class="fas fa-trash"></i> 删除
+                        </a>
+                    </td>
+                </tr>
+                {/volist}
+            </tbody>
+        </table>
+        
+        <div class="mt-3">
+            {$list->render()|raw}
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteItem(id) {
+    if (confirm('确定要删除这个客户吗？')) {
+        $.post('{:url("delete")}', {id: id}, function(res) {
+            if (res.code === 1) {
+                alert(res.msg);
+                location.reload();
+            } else {
+                alert(res.msg);
+            }
+        }, 'json');
+    }
+}
+</script>
+{/block}

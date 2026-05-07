@@ -1,0 +1,79 @@
+{extend name="public/layout" /}
+{block name="content-header"}
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0">{$breadcrumb|default='产品分类'}</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{:url('admin/index/index')}">首页</a></li>
+            <li class="breadcrumb-item active">{$breadcrumb|default='产品分类'}</li>
+        </ol>
+    </div>
+</div>
+{/block}
+
+{block name="content"}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">产品分类</h3>
+        <div class="card-tools">
+            <a href="{:url('add')}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> 新增分类
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th width="10%">ID</th>
+                    <th width="40%">分类名称</th>
+                    <th width="15%">排序</th>
+                    <th width="15%">状态</th>
+                    <th width="20%">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {volist name="categories" id="cat"}
+                <tr>
+                    <td>{$cat.id}</td>
+                    <td>{:str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $cat.level)}{$cat.name}</td>
+                    <td>{$cat.sort}</td>
+                    <td>
+                        {if condition="$cat.is_show == 1"}
+                        <span class="badge badge-success">显示</span>
+                        {else/}
+                        <span class="badge badge-secondary">隐藏</span>
+                        {/if}
+                    </td>
+                    <td>
+                        <a href="{:url('edit', ['id'=>$cat.id])}" class="btn btn-primary btn-xs">
+                            <i class="fas fa-edit"></i> 编辑
+                        </a>
+                        <a href="javascript:void(0);" onclick="deleteItem('{$cat.id}')" class="btn btn-danger btn-xs">
+                            <i class="fas fa-trash"></i> 删除
+                        </a>
+                    </td>
+                </tr>
+                {/volist}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function deleteItem(id) {
+    if (confirm('确定要删除这个分类吗？')) {
+        $.post('{:url("delete")}', {id: id}, function(res) {
+            if (res.code === 1) {
+                alert(res.msg);
+                location.reload();
+            } else {
+                alert(res.msg);
+            }
+        }, 'json');
+    }
+}
+</script>
+{/block}

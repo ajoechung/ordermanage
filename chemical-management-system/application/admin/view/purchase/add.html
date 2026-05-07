@@ -1,0 +1,123 @@
+{extend name="public/layout" /}
+{block name="content-header"}
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0">新增采购单</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{:url('admin/index/index')}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{:url('index')}">采购单管理</a></li>
+            <li class="breadcrumb-item active">新增采购单</li>
+        </ol>
+    </div>
+</div>
+{/block}
+
+{block name="content"}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">采购单信息</h3>
+    </div>
+    <div class="card-body">
+        <form id="form" method="POST" class="form-horizontal">
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">采购单号 <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <input type="text" name="purchase_no" class="form-control" value="{$purchaseNo}" readonly>
+                </div>
+                <label class="col-sm-2 col-form-label">供应商 <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <select name="supplier_id" class="form-control" required>
+                        <option value="">请选择供应商</option>
+                        {volist name="suppliers" id="supplier"}
+                        <option value="{$supplier.id}">{$supplier.name}</option>
+                        {/volist}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">金额 <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <input type="number" name="amount" class="form-control" step="0.01" required>
+                </div>
+                <label class="col-sm-2 col-form-label">下单时间 <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <input type="datetime-local" name="purchase_time" class="form-control" value="{:date('Y-m-d\TH:i')}" required>
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">履约状态</label>
+                <div class="col-sm-4">
+                    <select name="fulfill_status" class="form-control">
+                        <option value="1">待确认</option>
+                        <option value="2">已确认</option>
+                        <option value="3">采购中</option>
+                        <option value="4">已到货</option>
+                        <option value="5">已完成</option>
+                        <option value="6">已取消</option>
+                    </select>
+                </div>
+                <label class="col-sm-2 col-form-label">发票状态</label>
+                <div class="col-sm-4">
+                    <select name="invoice_status" class="form-control">
+                        <option value="1">未开</option>
+                        <option value="2">已申请</option>
+                        <option value="3">已开具</option>
+                        <option value="4">已寄出</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">关联订单</label>
+                <div class="col-sm-4">
+                    <input type="text" name="order_id" class="form-control" placeholder="可选">
+                </div>
+                <label class="col-sm-2 col-form-label">发票附件</label>
+                <div class="col-sm-4">
+                    <input type="text" name="invoice_file" class="form-control" placeholder="附件URL">
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">备注</label>
+                <div class="col-sm-10">
+                    <textarea name="remark" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <div class="col-sm-10 offset-sm-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                    <a href="{:url('index')}" class="btn btn-default ml-2">
+                        <i class="fas fa-arrow-left"></i> 返回
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{/block}
+
+{block name="script"}
+<script>
+$(function() {
+    $('#form').on('submit', function(e) {
+        e.preventDefault();
+        $.post('{:url("add")}', $(this).serialize(), function(res) {
+            if (res.code === 1) {
+                alert(res.msg);
+                window.location.href = res.url;
+            } else {
+                alert(res.msg);
+            }
+        }, 'json');
+    });
+});
+</script>
+{/block}

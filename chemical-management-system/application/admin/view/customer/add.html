@@ -1,0 +1,118 @@
+{extend name="public/layout" /}
+{block name="content-header"}
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0">新增客户</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{:url('admin/index/index')}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{:url('index')}">客户管理</a></li>
+            <li class="breadcrumb-item active">新增客户</li>
+        </ol>
+    </div>
+</div>
+{/block}
+
+{block name="content"}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">基本信息</h3>
+    </div>
+    <div class="card-body">
+        <form id="form" method="POST" class="form-horizontal">
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">客户名称 <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <input type="text" name="customer_name" class="form-control" required>
+                </div>
+                <label class="col-sm-2 col-form-label">行业 <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <input type="text" name="industry" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">负责人 <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <select name="user_id" class="form-control" required>
+                        <option value="">请选择负责人</option>
+                        {volist name="users" id="user"}
+                        <option value="{$user.id}">{$user.realname}</option>
+                        {/volist}
+                    </select>
+                </div>
+                <label class="col-sm-2 col-form-label">客户来源</label>
+                <div class="col-sm-4">
+                    <input type="text" name="source" class="form-control">
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">联系电话</label>
+                <div class="col-sm-4">
+                    <input type="text" name="phone" class="form-control">
+                </div>
+                <label class="col-sm-2 col-form-label">邮箱</label>
+                <div class="col-sm-4">
+                    <input type="email" name="email" class="form-control">
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">地址</label>
+                <div class="col-sm-10">
+                    <input type="text" name="address" class="form-control">
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">客户描述</label>
+                <div class="col-sm-10">
+                    <textarea name="description" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">状态</label>
+                <div class="col-sm-4">
+                    <select name="status" class="form-control">
+                        <option value="1">正常</option>
+                        <option value="2">潜在</option>
+                        <option value="3">流失</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <div class="col-sm-10 offset-sm-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                    <a href="{:url('index')}" class="btn btn-default ml-2">
+                        <i class="fas fa-arrow-left"></i> 返回
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{/block}
+
+{block name="script"}
+<script>
+$(function() {
+    $('#form').on('submit', function(e) {
+        e.preventDefault();
+        $.post('{:url("add")}', $(this).serialize(), function(res) {
+            if (res.code === 1) {
+                alert(res.msg);
+                window.location.href = res.url;
+            } else {
+                alert(res.msg);
+            }
+        }, 'json');
+    });
+});
+</script>
+{/block}

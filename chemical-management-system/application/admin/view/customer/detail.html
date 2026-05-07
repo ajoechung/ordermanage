@@ -1,0 +1,169 @@
+{extend name="public/layout" /}
+{block name="content-header"}
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0">客户详情</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{:url('admin/index/index')}">首页</a></li>
+            <li class="breadcrumb-item"><a href="{:url('index')}">客户管理</a></li>
+            <li class="breadcrumb-item active">客户详情</li>
+        </ol>
+    </div>
+</div>
+{/block}
+
+{block name="content"}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">基本信息</h3>
+                <div class="card-tools">
+                    <a href="{:url('edit', ['id'=>$info.id])}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit"></i> 编辑
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <th width="30%">客户名称</th>
+                        <td>{$info.customer_name}</td>
+                    </tr>
+                    <tr>
+                        <th>行业</th>
+                        <td>{$info.industry|default='-'}</td>
+                    </tr>
+                    <tr>
+                        <th>来源</th>
+                        <td>{$info.source|default='-'}</td>
+                    </tr>
+                    <tr>
+                        <th>负责人</th>
+                        <td>{$info.user_name|default='-'}</td>
+                    </tr>
+                    <tr>
+                        <th>联系电话</th>
+                        <td>{$info.phone|default='-'}</td>
+                    </tr>
+                    <tr>
+                        <th>邮箱</th>
+                        <td>{$info.email|default='-'}</td>
+                    </tr>
+                    <tr>
+                        <th>地址</th>
+                        <td>{$info.address|default='-'}</td>
+                    </tr>
+                    <tr>
+                        <th>状态</th>
+                        <td>
+                            {switch name="info.status"}
+                                {case value="1"}<span class="badge badge-success">正常</span>{/case}
+                                {case value="2"}<span class="badge badge-warning">潜在</span>{/case}
+                                {case value="3"}<span class="badge badge-danger">流失</span>{/case}
+                            {/switch}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>创建时间</th>
+                        <td>{$info.create_time}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">描述信息</h3>
+            </div>
+            <div class="card-body">
+                <p>{$info.description|default='暂无描述'}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">联系人列表</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>电话</th>
+                            <th>职位</th>
+                            <th>邮箱</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {volist name="linkmans" id="linkman"}
+                        <tr>
+                            <td>{$linkman.name}</td>
+                            <td>{$linkman.phone}</td>
+                            <td>{$linkman.position|default='-'}</td>
+                            <td>{$linkman.email|default='-'}</td>
+                            <td>
+                                {switch name="linkman.status"}
+                                    {case value="1"}<span class="badge badge-success">正常</span>{/case}
+                                    {case value="2"}<span class="badge badge-secondary">离职</span>{/case}
+                                {/switch}
+                            </td>
+                        </tr>
+                        {/volist}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">订单列表</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>订单金额</th>
+                            <th>下单时间</th>
+                            <th>履约状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {volist name="orders" id="order"}
+                        <tr>
+                            <td>{$order.order_no}</td>
+                            <td>¥{$order.amount}</td>
+                            <td>{$order.order_time}</td>
+                            <td>
+                                {switch name="order.fulfill_status"}
+                                    {case value="1"}<span class="badge badge-secondary">待确认</span>{/case}
+                                    {case value="2"}<span class="badge badge-primary">已确认</span>{/case}
+                                    {case value="3"}<span class="badge badge-info">生产中</span>{/case}
+                                    {case value="4"}<span class="badge badge-warning">已发货</span>{/case}
+                                    {case value="5"}<span class="badge badge-success">已完成</span>{/case}
+                                    {case value="6"}<span class="badge badge-danger">已取消</span>{/case}
+                                {/switch}
+                            </td>
+                        </tr>
+                        {/volist}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{/block}
