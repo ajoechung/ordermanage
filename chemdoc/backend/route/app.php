@@ -2,6 +2,8 @@
 use think\facade\Route;
 
 Route::group('api', function () {
+    Route::get('captcha', 'api.Captcha/index');
+
     Route::post('login', 'api.Login/index');
     Route::post('logout', 'api.Login/logout');
     Route::get('login/userInfo', 'api.Login/userInfo');
