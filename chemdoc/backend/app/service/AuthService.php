@@ -24,10 +24,10 @@ class AuthService
 
         $groups = Db::name('auth_group_access')
             ->alias('aga')
-            ->join('auth_group ag', 'aga.group_id = ag.id')
+            ->join('auth_group ag', 'aga.group_id = ag.id', 'LEFT')
             ->where('aga.uid', $user['user_id'])
             ->where('ag.status', 1)
-            ->column('ag.id');
+            ->column('ag.id') ?: [];
 
         $token = $this->generateToken($user, $groups);
 
@@ -45,8 +45,8 @@ class AuthService
             'user_info' => [
                 'user_id' => $user['user_id'],
                 'username' => $user['username'],
-                'realname' => $user['realname'],
-                'avatar' => $user['avatar'],
+                'realname' => $user['realname'] ?? '',
+                'avatar' => $user['avatar'] ?? '',
                 'groups' => $groups,
             ],
         ], '登录成功');
@@ -74,23 +74,23 @@ class AuthService
 
         $groups = Db::name('auth_group_access')
             ->alias('aga')
-            ->join('auth_group ag', 'aga.group_id = ag.id')
+            ->join('auth_group ag', 'aga.group_id = ag.id', 'LEFT')
             ->where('aga.uid', $userId)
             ->where('ag.status', 1)
             ->select()
-            ->toArray();
+            ->toArray() ?: [];
 
         $groupNames = array_column($groups, 'name');
 
         return Result::success([
             'user_id' => $user['user_id'],
             'username' => $user['username'],
-            'realname' => $user['realname'],
-            'mobile' => $user['mobile'],
-            'email' => $user['email'],
-            'avatar' => $user['avatar'],
+            'realname' => $user['realname'] ?? '',
+            'mobile' => $user['mobile'] ?? '',
+            'email' => $user['email'] ?? '',
+            'avatar' => $user['avatar'] ?? '',
             'groups' => $groupNames,
-            'last_login_time' => $user['last_login_time'],
+            'last_login_time' => $user['last_login_time'] ?? '',
         ]);
     }
 
