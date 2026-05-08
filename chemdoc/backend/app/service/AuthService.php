@@ -18,7 +18,7 @@ class AuthService
             return Result::error('用户不存在或已被禁用');
         }
 
-        if (!password_verify($password . $user['salt'], $user['password'])) {
+        if (!password_verify($password, $user['password'])) {
             return Result::error('密码错误');
         }
 
@@ -58,7 +58,7 @@ class AuthService
         if ($userId > 0) {
             $this->logOperation($userId, '注销', '用户退出系统');
         }
-        
+
         return Result::success(null, '退出成功');
     }
 
@@ -97,7 +97,7 @@ class AuthService
     protected function generateToken(array $user, array $groups): string
     {
         $config = config('jwt.');
-        
+
         $payload = [
             'user_id' => $user['user_id'],
             'username' => $user['username'],

@@ -397,9 +397,9 @@ CREATE TABLE `operation_log` (
 
 -- 管理员用户
 INSERT INTO `admin_user` (`username`, `password`, `salt`, `realname`, `mobile`, `email`, `status`, `create_time`) VALUES
-('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'random_salt_001', '系统管理员', '13800138000', 'admin@chemdoc.com', 1, NOW()),
-('zhangsan', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'random_salt_002', '张三', '13800138001', 'zhangsan@chemdoc.com', 1, NOW()),
-('lisi', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'random_salt_003', '李四', '13800138002', 'lisi@chemdoc.com', 1, NOW());
+('admin', '$2y$10$F95j4zpjbNdhdWRTBdfWNeW9KeGP.ipzGdYgEHH7PuAmKyg6nFR82', 'random_salt_001', '系统管理员', '13800138000', 'admin@chemdoc.com', 1, NOW()),
+('zhangsan', '$2y$10$F95j4zpjbNdhdWRTBdfWNeW9KeGP.ipzGdYgEHH7PuAmKyg6nFR82', 'random_salt_002', '张三', '13800138001', 'zhangsan@chemdoc.com', 1, NOW()),
+('lisi', '$2y$10$F95j4zpjbNdhdWRTBdfWNeW9KeGP.ipzGdYgEHH7PuAmKyg6nFR82', 'random_salt_003', '李四', '13800138002', 'lisi@chemdoc.com', 1, NOW());
 
 -- 权限规则
 INSERT INTO `auth_rule` (`name`, `title`, `type`, `pid`, `status`, `is_menu`, `sort`, `create_time`) VALUES
