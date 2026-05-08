@@ -4,7 +4,7 @@ import router from '@/router'
 import { useUserStore } from '@/store/modules/user'
 
 const service = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
@@ -29,7 +29,7 @@ service.interceptors.response.use(
   (response) => {
     const res = response.data
 
-    if (res.code === 1) {
+    if (res.code === 200) {
       return res
     }
 
