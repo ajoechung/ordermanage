@@ -206,13 +206,15 @@ const loginRules = {
 const refreshCaptcha = async () => {
   captchaLoading.value = true
   try {
-    const captchaApi = await import('@/api/modules/captcha')
-    captchaData.value = await captchaApi.getCaptcha()
-    loginForm.captcha_key = captchaData.value?.key || ''
-    loginForm.captcha = ''
+    const { getCaptcha } = await import('@/api/modules/captcha')
+    const res = await getCaptcha()
+    if (res.code === 200 && res.data) {
+      captchaData.value = res.data
+      loginForm.captcha_key = res.data.key || ''
+      loginForm.captcha = ''
+    }
   } catch (error) {
     console.error('获取验证码失败:', error)
-    ElMessage.error('获取验证码失败')
   } finally {
     captchaLoading.value = false
   }
