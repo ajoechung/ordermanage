@@ -20,11 +20,6 @@ export const constantRoutes = [
     name: 'Forbidden',
     component: () => import('@/views/error/403.vue'),
     meta: { title: '无权限', hidden: true }
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    redirect: '/404',
-    meta: { hidden: true }
   }
 ]
 
@@ -251,7 +246,7 @@ router.beforeEach(async (to, from, next) => {
       }
 
       if (to.meta.permission) {
-        const hasPermission = to.meta.permission.some((p) => 
+        const hasPermission = to.meta.permission.some((p) =>
           userStore.permissions.includes(p) || userStore.groups.includes(1)
         )
         if (!hasPermission) {
@@ -268,13 +263,19 @@ router.beforeEach(async (to, from, next) => {
       if (!addedRoutes.includes(to.path) && to.path !== '/') {
         const permissions = userStore.permissions || []
         const filteredRoutes = filterAsyncRoutes(asyncRoutes, permissions)
-        
+
         filteredRoutes.forEach(route => {
           if (!router.hasRoute(route.name)) {
             router.addRoute(route)
           }
         })
-        
+
+        router.addRoute({
+          path: '/:pathMatch(.*)*',
+          redirect: '/404',
+          meta: { hidden: true }
+        })
+
         const fullPath = router.resolve(to.path).matched.length > 0 ? to.path : to.fullPath
         next({ path: fullPath, replace: true })
         return
@@ -286,7 +287,7 @@ router.beforeEach(async (to, from, next) => {
     if (to.path === '/login') {
       next()
     } else {
-      next(`/login?redirect=${to.path}`)
+      next(`/login`)
     }
   }
 })
