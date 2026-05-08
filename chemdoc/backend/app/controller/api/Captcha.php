@@ -2,10 +2,11 @@
 namespace app\controller\api;
 
 use app\BaseController;
+use think\Response;
 
 class Captcha extends BaseController
 {
-    public function index()
+    public function index(): Response
     {
         $captcha = $this->generateCaptcha();
         $key = $this->generateKey();
@@ -29,6 +30,10 @@ class Captcha extends BaseController
         $height = 40;
 
         $image = imagecreate($width, $height);
+        if (!$image) {
+            return ['code' => '', 'image' => ''];
+        }
+
         $bgColor = imagecolorallocate($image, 255, 255, 255);
         $textColor = imagecolorallocate($image, mt_rand(0, 100), mt_rand(0, 100), mt_rand(0, 150));
 
