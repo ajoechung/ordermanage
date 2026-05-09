@@ -181,9 +181,12 @@ export const asyncRoutes = [
   }
 ]
 
-function hasPermission(permissions, route) {
+function hasPermission(groups, route) {
   if (route.meta && route.meta.permission) {
-    return permissions.some((permission) => route.meta.permission.includes(permission))
+    if (groups.includes(1)) {
+      return true
+    }
+    return route.meta.permission.some((p) => groups.includes(p))
   }
   return true
 }
@@ -246,9 +249,8 @@ router.beforeEach(async (to, from, next) => {
       }
 
       if (to.meta.permission) {
-        const hasPermission = to.meta.permission.some((p) =>
-          userStore.permissions.includes(p) || userStore.groups.includes(1)
-        )
+        const hasPermission = userStore.groups.includes(1) || 
+          to.meta.permission.some((p) => userStore.groups.includes(p))
         if (!hasPermission) {
           if (to.path !== '/403') {
             next({ path: '/403' })
@@ -260,9 +262,11 @@ router.beforeEach(async (to, from, next) => {
       }
 
       const addedRoutes = router.getRoutes().map(r => r.path)
-      if (!addedRoutes.includes(to.path) && to.path !== '/') {
-        const permissions = userStore.permissions || []
-        const filteredRoutes = filterAsyncRoutes(asyncRoutes, permissions)
+      const shouldAddRoutes = !addedRoutes.includes('/dashboard')
+      
+      if (shouldAddRoutes) {
+        const groups = userStore.groups || []
+        const filteredRoutes = filterAsyncRoutes(asyncRoutes, groups)
 
         filteredRoutes.forEach(route => {
           if (!router.hasRoute(route.name)) {
