@@ -125,7 +125,7 @@ class StatisticsService
         }
 
         $monthlyData = Db::name('customer')
-            ->field('FROM_UNIXTIME(create_time, "%Y-%m") as month, count(*) as count')
+            ->field('DATE_FORMAT(create_time, "%Y-%m") as month, count(*) as count')
             ->whereNull('delete_time')
             ->group('month')
             ->order('month', 'desc')
@@ -173,7 +173,7 @@ class StatisticsService
         }
 
         $monthlyData = Db::name('order')
-            ->field('FROM_UNIXTIME(order_time, "%Y-%m") as month, sum(actual_amount) as amount, count(*) as count')
+            ->field('DATE_FORMAT(order_time, "%Y-%m") as month, sum(actual_amount) as amount, count(*) as count')
             ->where('order_status', 5)
             ->whereNull('delete_time')
             ->group('month')
