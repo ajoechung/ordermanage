@@ -43,4 +43,25 @@ class Log extends BaseController
 
         return json(Result::paginate($total, $list, $page, $pageSize));
     }
+
+    public function batchDelete()
+    {
+        $data = $this->request->post();
+        $ids = $data['ids'] ?? [];
+
+        if (empty($ids)) {
+            return json(Result::validateError('请选择要删除的日志'));
+        }
+
+        OperationLogModel::whereIn('log_id', $ids)->delete();
+
+        return json(Result::success(null, '删除成功'));
+    }
+
+    public function clear()
+    {
+        OperationLogModel::where('log_id', '>', 0)->delete();
+
+        return json(Result::success(null, '清空成功'));
+    }
 }

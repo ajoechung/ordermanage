@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function getLogList(params) {
   return request({
-    url: '/log/list',
+    url: '/log',
     method: 'get',
     params
   })
@@ -24,7 +24,7 @@ export function deleteLog(id) {
 
 export function batchDeleteLog(data) {
   return request({
-    url: '/log/batch-delete',
+    url: '/log/batchDelete',
     method: 'post',
     data
   })
