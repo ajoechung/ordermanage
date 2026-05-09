@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace app\model;
 
 use think\Model;
-use think\model\concern\SoftDelete;
+use think\model\traits\SoftDelete;
 
 abstract class BaseModel extends Model
 {
@@ -16,19 +16,13 @@ abstract class BaseModel extends Model
     protected $type = [
         'create_time' => 'datetime',
         'update_time' => 'datetime',
-        'delete_time' => 'datetime',
     ];
 
     protected $hidden = [];
-
     protected $append = [];
-
     protected $auto = [];
-
     protected $insert = [];
-
     protected $update = [];
-
     protected $readonly = [];
 
     public function setCreateTimeAttr($value)
