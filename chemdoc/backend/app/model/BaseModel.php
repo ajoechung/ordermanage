@@ -4,15 +4,9 @@ declare(strict_types=1);
 namespace app\model;
 
 use think\Model;
-use think\model\traits\SoftDelete;
 
 abstract class BaseModel extends Model
 {
-    use SoftDelete;
-
-    protected $deleteTime = 'delete_time';
-    protected $defaultSoftDelete = null;
-
     protected $type = [
         'create_time' => 'datetime',
         'update_time' => 'datetime',
@@ -33,11 +27,6 @@ abstract class BaseModel extends Model
     public function setUpdateTimeAttr($value)
     {
         return date('Y-m-d H:i:s');
-    }
-
-    protected function scopeStatus(array $query = []): void
-    {
-        $this->where('status', '=', 1);
     }
 
     public function getStatusAttr($value): string
