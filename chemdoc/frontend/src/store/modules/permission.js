@@ -1,9 +1,12 @@
 import { defineStore } from 'pinia'
 import router from '@/router/index.js'
 
-function hasPermission(permissions, route) {
+function hasPermission(groups, route) {
   if (route.meta && route.meta.permission) {
-    return permissions.some((permission) => route.meta.permission.includes(permission))
+    if (groups.includes(1)) {
+      return true
+    }
+    return route.meta.permission.some((p) => groups.includes(p))
   }
   return true
 }

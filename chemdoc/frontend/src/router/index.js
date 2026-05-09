@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/store/modules/user'
+import { usePermissionStore } from '@/store/modules/permission'
 import { ElMessage } from 'element-plus'
 
 export const constantRoutes = [
@@ -231,6 +232,7 @@ function getRouteNames(route) {
 
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
+  const permissionStore = usePermissionStore()
   const hasToken = userStore.token
 
   if (hasToken) {
@@ -267,6 +269,8 @@ router.beforeEach(async (to, from, next) => {
       if (shouldAddRoutes) {
         const groups = userStore.groups || []
         const filteredRoutes = filterAsyncRoutes(asyncRoutes, groups)
+
+        await permissionStore.generateRoutes(groups)
 
         filteredRoutes.forEach(route => {
           if (!router.hasRoute(route.name)) {
