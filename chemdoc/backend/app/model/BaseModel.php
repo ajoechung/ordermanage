@@ -4,17 +4,11 @@ declare(strict_types=1);
 namespace app\model;
 
 use think\Model;
-use think\model\concern\Attribute;
-use think\model\concern\RelationShip;
-use think\model\concern\TimeRange;
-use think\model\SoftDelete;
+use think\model\concern\SoftDelete;
 
 abstract class BaseModel extends Model
 {
-    use Attribute;
-    use RelationShip;
     use SoftDelete;
-    use TimeRange;
 
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = null;
