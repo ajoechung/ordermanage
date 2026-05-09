@@ -1,1 +1,0 @@
-import{s as e}from"./index-w7VKvXHY.js";function o(t){return e({url:"/log/list",method:"get",params:t})}function r(t){return e({url:"/log/batch-delete",method:"post",data:t})}const g=o;export{o as a,r as b,g};
