@@ -16,7 +16,7 @@ class SupplierService
         $status = $params['status'] ?? '';
         $rating = $params['rating'] ?? '';
 
-        $query = SupplierModel::query();
+        $query = SupplierModel::where(true);
 
         if (!empty($keyword)) {
             $query->scope('keyword', $keyword);

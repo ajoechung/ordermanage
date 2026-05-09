@@ -56,7 +56,7 @@ class ProductService
         $parentId = (int)($params['parent_id'] ?? 0);
         $isShow = $params['is_show'] ?? true;
 
-        $query = ProductCategoryModel::query();
+        $query = ProductCategoryModel::where(true);
 
         if ($isShow) {
             $query->scope('isShow', true);
