@@ -20,14 +20,7 @@ class OrderService
         $invoiceStatus = $params['invoice_status'] ?? '';
         $dateRange = $params['date_range'] ?? [];
 
-        $query = OrderModel::with([
-            'customer' => function ($q) {
-                $q->field('customer_id,name');
-            },
-            'createUser' => function ($q) {
-                $q->field('user_id,realname');
-            }
-        ]);
+        $query = OrderModel::with(['customer', 'createUser']);
 
         if (!empty($keyword)) {
             $query->scope('keyword', $keyword);
@@ -73,21 +66,7 @@ class OrderService
 
     public function getDetail(int $id): array
     {
-        $order = OrderModel::with([
-            'customer' => function ($q) {
-                $q->field('customer_id,name,industry,address');
-            },
-            'contact' => function ($q) {
-                $q->field('contact_id,customer_id,name,mobile');
-            },
-            'items.product',
-            'createUser' => function ($q) {
-                $q->field('user_id,realname');
-            },
-            'purchaseOrder' => function ($q) {
-                $q->field('purchase_order_id,purchase_no,supplier_id');
-            }
-        ])->find($id);
+        $order = OrderModel::with(['customer', 'contact', 'createUser', 'items.product'])->find($id);
 
         if (!$order) {
             return Result::notFound('订单不存在');
@@ -95,24 +74,31 @@ class OrderService
 
         $data = $order->toArray();
 
-        $data['customer_name'] = $data['customer']['name'] ?? '';
-        $data['customer_industry'] = $data['customer']['industry'] ?? '';
-        $data['customer_address'] = $data['customer']['address'] ?? '';
-        unset($data['customer']);
+        if (isset($data['customer'])) {
+            $data['customer_name'] = $data['customer']['name'] ?? '';
+            unset($data['customer']);
+        }
 
         if (isset($data['contact'])) {
             $data['contact_name'] = $data['contact']['name'] ?? '';
-            $data['contact_mobile'] = $data['contact']['mobile'] ?? '';
+            $data['contact_phone'] = $data['contact']['phone'] ?? '';
             unset($data['contact']);
         }
 
-        if (isset($data['purchase_order'])) {
-            $data['purchase_no'] = $data['purchase_order']['purchase_no'] ?? '';
-            unset($data['purchase_order']);
+        if (isset($data['create_user'])) {
+            $data['create_name'] = $data['create_user']['realname'] ?? '';
+            unset($data['create_user']);
         }
 
-        $data['create_name'] = $data['create_user']['realname'] ?? '';
-        unset($data['create_user']);
+        if (isset($data['items'])) {
+            foreach ($data['items'] as &$item) {
+                if (isset($item['product'])) {
+                    $item['product_name'] = $item['product']['name'] ?? '';
+                    $item['product_code'] = $item['product']['code'] ?? '';
+                    unset($item['product']);
+                }
+            }
+        }
 
         $data['total_amount'] = round((float)$data['total_amount'], 2);
         $data['actual_amount'] = round((float)$data['actual_amount'], 2);
@@ -124,49 +110,32 @@ class OrderService
     {
         Db::startTrans();
         try {
-            $orderNo = $this->generateOrderNo();
-
-            $customer = CustomerModel::find($data['customer_id']);
-            if (!$customer) {
-                throw new \Exception('客户不存在');
-            }
-
             $order = OrderModel::create([
-                'order_no' => $orderNo,
+                'order_no' => $this->generateOrderNo(),
                 'customer_id' => $data['customer_id'],
-                'contact_id' => $data['contact_id'] ?? null,
+                'contact_id' => $data['contact_id'] ?? 0,
                 'total_amount' => $data['total_amount'] ?? 0,
                 'discount_amount' => $data['discount_amount'] ?? 0,
-                'actual_amount' => $data['actual_amount'] ?? 0,
+                'actual_amount' => $data['actual_amount'] ?? $data['total_amount'] ?? 0,
                 'order_time' => $data['order_time'] ?? date('Y-m-d H:i:s'),
                 'expect_delivery_date' => $data['expect_delivery_date'] ?? null,
-                'delivery_address' => $data['delivery_address'] ?? $customer->address,
+                'delivery_address' => $data['delivery_address'] ?? '',
                 'remark' => $data['remark'] ?? '',
-                'order_status' => 1,
-                'invoice_status' => 1,
-                'purchase_order_id' => $data['purchase_order_id'] ?? null,
                 'create_user_id' => request()->user_id ?? 0,
                 'create_time' => date('Y-m-d H:i:s'),
             ]);
 
-            if (!empty($data['items'])) {
+            if (isset($data['items']) && is_array($data['items'])) {
                 foreach ($data['items'] as $item) {
-                    $product = ProductModel::find($item['product_id']);
-                    if (!$product) {
-                        throw new \Exception('产品不存在');
-                    }
-
                     OrderItemModel::create([
                         'order_id' => $order->order_id,
                         'product_id' => $item['product_id'],
-                        'product_name' => $product->name,
-                        'product_spec' => $product->spec,
-                        'product_unit' => $product->unit,
-                        'unit_price' => $item['unit_price'],
-                        'quantity' => $item['quantity'],
-                        'shipped_quantity' => 0,
-                        'subtotal' => $item['quantity'] * $item['unit_price'],
-                        'create_time' => date('Y-m-d H:i:s'),
+                        'product_name' => $item['product_name'] ?? '',
+                        'spec' => $item['spec'] ?? '',
+                        'unit' => $item['unit'] ?? '',
+                        'quantity' => $item['quantity'] ?? 1,
+                        'price' => $item['price'] ?? 0,
+                        'amount' => $item['amount'] ?? 0,
                     ]);
                 }
             }
@@ -178,11 +147,10 @@ class OrderService
                 request()->username ?? '',
                 '订单管理',
                 '新增',
-                '新增订单：' . $orderNo
+                '新增订单：' . $order->order_no
             );
 
-            return Result::success(['order_id' => $order->order_id, 'order_no' => $orderNo], '订单创建成功');
-
+            return Result::success(['order_id' => $order->order_id], '订单创建成功');
         } catch (\Exception $e) {
             Db::rollback();
             return Result::error('订单创建失败：' . $e->getMessage());
@@ -196,113 +164,41 @@ class OrderService
             return Result::notFound('订单不存在');
         }
 
-        if (in_array($order->order_status, [5, 6])) {
-            return Result::error('已完成或已取消的订单无法编辑');
+        if ($order->order_status > 1) {
+            return Result::error('已确认的订单无法修改');
         }
 
-        $updateData = [];
+        Db::startTrans();
+        try {
+            $updateData = [
+                'customer_id' => $data['customer_id'] ?? $order->customer_id,
+                'contact_id' => $data['contact_id'] ?? $order->contact_id,
+                'total_amount' => $data['total_amount'] ?? $order->total_amount,
+                'discount_amount' => $data['discount_amount'] ?? 0,
+                'actual_amount' => $data['actual_amount'] ?? $order->actual_amount,
+                'expect_delivery_date' => $data['expect_delivery_date'] ?? $order->expect_delivery_date,
+                'delivery_address' => $data['delivery_address'] ?? $order->delivery_address,
+                'remark' => $data['remark'] ?? '',
+                'update_time' => date('Y-m-d H:i:s'),
+            ];
 
-        $fields = ['customer_id', 'contact_id', 'discount_amount', 'actual_amount', 'expect_delivery_date', 'delivery_address', 'remark', 'purchase_order_id'];
+            $order->save($updateData);
 
-        foreach ($fields as $field) {
-            if (isset($data[$field])) {
-                $updateData[$field] = $data[$field];
-            }
+            Db::commit();
+
+            OperationLogModel::log(
+                request()->user_id ?? 0,
+                request()->username ?? '',
+                '订单管理',
+                '编辑',
+                '编辑订单：' . $order->order_no
+            );
+
+            return Result::success(null, '订单更新成功');
+        } catch (\Exception $e) {
+            Db::rollback();
+            return Result::error('订单更新失败：' . $e->getMessage());
         }
-
-        if (isset($data['items'])) {
-            OrderItemModel::where('order_id', $id)->delete();
-            foreach ($data['items'] as $item) {
-                $product = ProductModel::find($item['product_id']);
-                if ($product) {
-                    OrderItemModel::create([
-                        'order_id' => $id,
-                        'product_id' => $item['product_id'],
-                        'product_name' => $product->name,
-                        'product_spec' => $product->spec,
-                        'product_unit' => $product->unit,
-                        'unit_price' => $item['unit_price'],
-                        'quantity' => $item['quantity'],
-                        'shipped_quantity' => 0,
-                        'subtotal' => $item['quantity'] * $item['unit_price'],
-                        'create_time' => date('Y-m-d H:i:s'),
-                    ]);
-                }
-            }
-        }
-
-        $updateData['update_time'] = date('Y-m-d H:i:s');
-        $order->save($updateData);
-
-        OperationLogModel::log(
-            request()->user_id ?? 0,
-            request()->username ?? '',
-            '订单管理',
-            '编辑',
-            '编辑订单：' . $order->order_no
-        );
-
-        return Result::success(null, '订单更新成功');
-    }
-
-    public function updateStatus(int $id, int $status): array
-    {
-        $order = OrderModel::find($id);
-        if (!$order) {
-            return Result::notFound('订单不存在');
-        }
-
-        $allowedTransitions = [
-            1 => [2, 6],
-            2 => [3, 6],
-            3 => [4, 6],
-            4 => [5, 6],
-            5 => [],
-            6 => [],
-        ];
-
-        $allowed = $allowedTransitions[$order->order_status] ?? [];
-        if (!in_array($status, $allowed)) {
-            return Result::error('不允许的状态转换');
-        }
-
-        $updateData = ['order_status' => $status, 'update_time' => date('Y-m-d H:i:s')];
-
-        if ($status == 4) {
-            $updateData['actual_delivery_date'] = date('Y-m-d H:i:s');
-        }
-
-        $order->save($updateData);
-
-        OperationLogModel::log(
-            request()->user_id ?? 0,
-            request()->username ?? '',
-            '订单管理',
-            '状态更新',
-            '订单状态变更为：' . $this->getStatusText($status)
-        );
-
-        return Result::success(null, '状态更新成功');
-    }
-
-    protected function getStatusText(int $status): string
-    {
-        $statusMap = [
-            1 => '待确认',
-            2 => '已确认',
-            3 => '生产中',
-            4 => '已发货',
-            5 => '已完成',
-            6 => '已取消',
-        ];
-        return $statusMap[$status] ?? '未知';
-    }
-
-    protected function generateOrderNo(): string
-    {
-        $date = date('Ymd');
-        $count = OrderModel::whereDay('create_time', 'today')->count() + 1;
-        return 'ORD' . $date . str_pad((string)$count, 4, '0', STR_PAD_LEFT);
     }
 
     public function delete(int $id): array
@@ -328,5 +224,43 @@ class OrderService
         );
 
         return Result::success(null, '订单删除成功');
+    }
+
+    public function updateStatus(int $id, int $status): array
+    {
+        $order = OrderModel::find($id);
+        if (!$order) {
+            return Result::notFound('订单不存在');
+        }
+
+        $order->order_status = $status;
+        $order->save();
+
+        OperationLogModel::log(
+            request()->user_id ?? 0,
+            request()->username ?? '',
+            '订单管理',
+            '状态变更',
+            '订单 ' . $order->order_no . ' 状态变更为：' . $this->getStatusText($status)
+        );
+
+        return Result::success(null, '状态更新成功');
+    }
+
+    protected function generateOrderNo(): string
+    {
+        return 'ORD' . date('Ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+    }
+
+    protected function getStatusText(int $status): string
+    {
+        $statusMap = [
+            1 => '待确认',
+            2 => '已确认',
+            3 => '生产中',
+            4 => '已完成',
+            5 => '已取消',
+        ];
+        return $statusMap[$status] ?? '未知';
     }
 }

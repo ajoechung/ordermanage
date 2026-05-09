@@ -3,6 +3,7 @@ namespace app\service;
 
 use app\model\ContactModel;
 use app\model\OperationLogModel;
+use think\facade\Db;
 
 class ContactService
 {
@@ -13,9 +14,7 @@ class ContactService
         $keyword = $params['keyword'] ?? '';
         $customerId = $params['customer_id'] ?? '';
 
-        $query = ContactModel::with(['customer' => function ($q) {
-            $q->field('customer_id,name');
-        }]);
+        $query = ContactModel::with(['customer']);
 
         if (!empty($keyword)) {
             $query->scope('keyword', $keyword);
@@ -43,9 +42,7 @@ class ContactService
 
     public function getDetail(int $id): array
     {
-        $contact = ContactModel::with(['customer' => function ($q) {
-            $q->field('customer_id,name');
-        }])->find($id);
+        $contact = ContactModel::with(['customer'])->find($id);
 
         if (!$contact) {
             return Result::notFound('联系人不存在');
@@ -63,22 +60,18 @@ class ContactService
 
     public function create(array $data): array
     {
-        if (!empty($data['is_default'])) {
-            ContactModel::where('customer_id', $data['customer_id'])->update(['is_default' => 0]);
-        }
-
         $contact = ContactModel::create([
             'customer_id' => $data['customer_id'],
             'name' => $data['name'],
-            'gender' => $data['gender'] ?? null,
             'position' => $data['position'] ?? '',
-            'mobile' => $data['mobile'],
             'phone' => $data['phone'] ?? '',
+            'mobile' => $data['mobile'] ?? '',
             'email' => $data['email'] ?? '',
             'wechat' => $data['wechat'] ?? '',
-            'birthday' => $data['birthday'] ?? null,
+            'qq' => $data['qq'] ?? '',
+            'gender' => $data['gender'] ?? 1,
+            'is_primary' => $data['is_primary'] ?? 0,
             'remark' => $data['remark'] ?? '',
-            'is_default' => $data['is_default'] ?? 0,
             'create_user_id' => request()->user_id ?? 0,
             'create_time' => date('Y-m-d H:i:s'),
         ]);
@@ -101,13 +94,9 @@ class ContactService
             return Result::notFound('联系人不存在');
         }
 
-        if (!empty($data['is_default']) && empty($contact->is_default)) {
-            ContactModel::where('customer_id', $contact->customer_id)->update(['is_default' => 0]);
-        }
-
         $updateData = [];
 
-        $fields = ['customer_id', 'name', 'gender', 'position', 'mobile', 'phone', 'email', 'wechat', 'birthday', 'remark', 'is_default'];
+        $fields = ['customer_id', 'name', 'position', 'phone', 'mobile', 'email', 'wechat', 'qq', 'gender', 'is_primary', 'remark'];
 
         foreach ($fields as $field) {
             if (isset($data[$field])) {
@@ -135,6 +124,11 @@ class ContactService
         $contact = ContactModel::find($id);
         if (!$contact) {
             return Result::notFound('联系人不存在');
+        }
+
+        $hasOrders = Db::name('order')->where('contact_id', $id)->whereNull('delete_time')->count();
+        if ($hasOrders > 0) {
+            return Result::error('该联系人存在关联订单，无法删除');
         }
 
         $contact->delete();

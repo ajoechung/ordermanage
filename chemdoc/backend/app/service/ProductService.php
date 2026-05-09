@@ -16,9 +16,7 @@ class ProductService
         $categoryId = $params['category_id'] ?? '';
         $status = $params['status'] ?? '';
 
-        $query = ProductModel::with(['category' => function ($q) {
-            $q->field('category_id,name');
-        }]);
+        $query = ProductModel::with(['category']);
 
         if (!empty($keyword)) {
             $query->scope('keyword', $keyword);
@@ -59,7 +57,7 @@ class ProductService
         $query = ProductCategoryModel::where(true);
 
         if ($isShow) {
-            $query->scope('isShow', true);
+            $query->where('is_show', 1);
         }
 
         $list = $query->where('parent_id', $parentId)
@@ -155,9 +153,7 @@ class ProductService
 
     public function getDetail(int $id): array
     {
-        $product = ProductModel::with(['category' => function ($q) {
-            $q->field('category_id,name');
-        }])->find($id);
+        $product = ProductModel::with(['category'])->find($id);
 
         if (!$product) {
             return Result::notFound('产品不存在');

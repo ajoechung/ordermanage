@@ -2,9 +2,7 @@
 namespace app\service;
 
 use app\model\PurchaseOrderModel;
-use app\model\PurchaseItemModel;
-use app\model\SupplierModel;
-use app\model\ProductModel;
+use app\model\PurchaseOrderItemModel;
 use app\model\OperationLogModel;
 use think\facade\Db;
 
@@ -17,10 +15,9 @@ class PurchaseService
         $keyword = $params['keyword'] ?? '';
         $supplierId = $params['supplier_id'] ?? '';
         $status = $params['status'] ?? '';
+        $dateRange = $params['date_range'] ?? [];
 
-        $query = PurchaseOrderModel::with(['supplier' => function ($q) {
-            $q->field('supplier_id,name');
-        }]);
+        $query = PurchaseOrderModel::with(['supplier', 'createUser']);
 
         if (!empty($keyword)) {
             $query->where(function ($q) use ($keyword) {
@@ -29,15 +26,19 @@ class PurchaseService
         }
 
         if (!empty($supplierId)) {
-            $query->where('supplier_id', $supplierId);
+            $query->where('supplier_id', (int)$supplierId);
         }
 
-        if (!empty($status)) {
-            $query->where('status', $status);
+        if ($status !== '') {
+            $query->where('status', (int)$status);
+        }
+
+        if (!empty($dateRange) && is_array($dateRange) && count($dateRange) == 2) {
+            $query->whereTime('order_time', 'between', $dateRange);
         }
 
         $total = $query->count();
-        $list = $query->order('purchase_id', 'desc')
+        $list = $query->order('order_id', 'desc')
             ->page($page, $pageSize)
             ->select()
             ->toArray();
@@ -47,6 +48,12 @@ class PurchaseService
                 $item['supplier_name'] = $item['supplier']['name'] ?? '';
                 unset($item['supplier']);
             }
+            if (isset($item['create_user'])) {
+                $item['create_name'] = $item['create_user']['realname'] ?? '';
+                unset($item['create_user']);
+            }
+            $item['total_amount'] = round((float)$item['total_amount'], 2);
+            $item['paid_amount'] = round((float)$item['paid_amount'], 2);
         }
 
         return Result::paginate($total, $list, $page, $pageSize);
@@ -54,12 +61,7 @@ class PurchaseService
 
     public function getDetail(int $id): array
     {
-        $order = PurchaseOrderModel::with([
-            'supplier' => function ($q) {
-                $q->field('supplier_id,name,contact,phone');
-            },
-            'items.product'
-        ])->find($id);
+        $order = PurchaseOrderModel::with(['supplier', 'createUser', 'items.product'])->find($id);
 
         if (!$order) {
             return Result::notFound('采购单不存在');
@@ -69,10 +71,26 @@ class PurchaseService
 
         if (isset($data['supplier'])) {
             $data['supplier_name'] = $data['supplier']['name'] ?? '';
-            $data['contact'] = $data['supplier']['contact'] ?? '';
-            $data['phone'] = $data['supplier']['phone'] ?? '';
             unset($data['supplier']);
         }
+
+        if (isset($data['create_user'])) {
+            $data['create_name'] = $data['create_user']['realname'] ?? '';
+            unset($data['create_user']);
+        }
+
+        if (isset($data['items'])) {
+            foreach ($data['items'] as &$item) {
+                if (isset($item['product'])) {
+                    $item['product_name'] = $item['product']['name'] ?? '';
+                    $item['product_code'] = $item['product']['code'] ?? '';
+                    unset($item['product']);
+                }
+            }
+        }
+
+        $data['total_amount'] = round((float)$data['total_amount'], 2);
+        $data['paid_amount'] = round((float)$data['paid_amount'], 2);
 
         return Result::success($data);
     }
@@ -81,49 +99,32 @@ class PurchaseService
     {
         Db::startTrans();
         try {
-            $orderNo = $this->generateOrderNo();
-
-            $supplier = SupplierModel::find($data['supplier_id']);
-            if (!$supplier) {
-                throw new \Exception('供应商不存在');
-            }
-
-            $totalAmount = 0;
-            if (!empty($data['items'])) {
-                foreach ($data['items'] as $item) {
-                    $totalAmount += ($item['unit_price'] ?? 0) * ($item['quantity'] ?? 0);
-                }
-            }
-
             $order = PurchaseOrderModel::create([
-                'order_no' => $orderNo,
+                'order_no' => $this->generateOrderNo(),
                 'supplier_id' => $data['supplier_id'],
-                'contact' => $data['contact'] ?? $supplier->contact,
-                'phone' => $data['phone'] ?? $supplier->phone,
-                'expected_date' => $data['expected_date'] ?? null,
-                'total_amount' => $totalAmount,
-                'status' => 1,
+                'total_amount' => $data['total_amount'] ?? 0,
+                'paid_amount' => $data['paid_amount'] ?? 0,
+                'order_time' => $data['order_time'] ?? date('Y-m-d H:i:s'),
+                'expect_arrival_date' => $data['expect_arrival_date'] ?? null,
+                'actual_arrival_date' => $data['actual_arrival_date'] ?? null,
                 'remark' => $data['remark'] ?? '',
+                'status' => 1,
                 'create_user_id' => request()->user_id ?? 0,
                 'create_time' => date('Y-m-d H:i:s'),
             ]);
 
-            if (!empty($data['items'])) {
+            if (isset($data['items']) && is_array($data['items'])) {
                 foreach ($data['items'] as $item) {
-                    $product = ProductModel::find($item['product_id']);
-                    if ($product) {
-                        PurchaseItemModel::create([
-                            'purchase_id' => $order->purchase_id,
-                            'product_id' => $item['product_id'],
-                            'product_name' => $product->name,
-                            'product_spec' => $product->spec ?? '',
-                            'product_unit' => $product->unit ?? '',
-                            'unit_price' => $item['unit_price'] ?? 0,
-                            'quantity' => $item['quantity'] ?? 0,
-                            'subtotal' => ($item['unit_price'] ?? 0) * ($item['quantity'] ?? 0),
-                            'create_time' => date('Y-m-d H:i:s'),
-                        ]);
-                    }
+                    PurchaseOrderItemModel::create([
+                        'order_id' => $order->order_id,
+                        'product_id' => $item['product_id'],
+                        'product_name' => $item['product_name'] ?? '',
+                        'spec' => $item['spec'] ?? '',
+                        'unit' => $item['unit'] ?? '',
+                        'quantity' => $item['quantity'] ?? 1,
+                        'price' => $item['price'] ?? 0,
+                        'amount' => $item['amount'] ?? 0,
+                    ]);
                 }
             }
 
@@ -132,13 +133,12 @@ class PurchaseService
             OperationLogModel::log(
                 request()->user_id ?? 0,
                 request()->username ?? '',
-                '采购管理',
+                '采购单管理',
                 '新增',
-                '新增采购单：' . $orderNo
+                '新增采购单：' . $order->order_no
             );
 
-            return Result::success(['purchase_id' => $order->purchase_id, 'order_no' => $orderNo], '采购单创建成功');
-
+            return Result::success(['order_id' => $order->order_id], '采购单创建成功');
         } catch (\Exception $e) {
             Db::rollback();
             return Result::error('采购单创建失败：' . $e->getMessage());
@@ -153,115 +153,37 @@ class PurchaseService
         }
 
         if ($order->status > 1) {
-            return Result::error('已确认的采购单无法编辑');
+            return Result::error('已确认的采购单无法修改');
         }
 
-        $updateData = [];
+        Db::startTrans();
+        try {
+            $updateData = [
+                'supplier_id' => $data['supplier_id'] ?? $order->supplier_id,
+                'total_amount' => $data['total_amount'] ?? $order->total_amount,
+                'paid_amount' => $data['paid_amount'] ?? 0,
+                'expect_arrival_date' => $data['expect_arrival_date'] ?? $order->expect_arrival_date,
+                'remark' => $data['remark'] ?? '',
+                'update_time' => date('Y-m-d H:i:s'),
+            ];
 
-        $fields = ['supplier_id', 'contact', 'phone', 'expected_date', 'remark'];
+            $order->save($updateData);
 
-        foreach ($fields as $field) {
-            if (isset($data[$field])) {
-                $updateData[$field] = $data[$field];
-            }
+            Db::commit();
+
+            OperationLogModel::log(
+                request()->user_id ?? 0,
+                request()->username ?? '',
+                '采购单管理',
+                '编辑',
+                '编辑采购单：' . $order->order_no
+            );
+
+            return Result::success(null, '采购单更新成功');
+        } catch (\Exception $e) {
+            Db::rollback();
+            return Result::error('采购单更新失败：' . $e->getMessage());
         }
-
-        if (isset($data['items'])) {
-            PurchaseItemModel::where('purchase_id', $id)->delete();
-            $totalAmount = 0;
-            foreach ($data['items'] as $item) {
-                $product = ProductModel::find($item['product_id']);
-                if ($product) {
-                    $subtotal = ($item['unit_price'] ?? 0) * ($item['quantity'] ?? 0);
-                    $totalAmount += $subtotal;
-                    PurchaseItemModel::create([
-                        'purchase_id' => $id,
-                        'product_id' => $item['product_id'],
-                        'product_name' => $product->name,
-                        'product_spec' => $product->spec ?? '',
-                        'product_unit' => $product->unit ?? '',
-                        'unit_price' => $item['unit_price'] ?? 0,
-                        'quantity' => $item['quantity'] ?? 0,
-                        'subtotal' => $subtotal,
-                        'create_time' => date('Y-m-d H:i:s'),
-                    ]);
-                }
-            }
-            $updateData['total_amount'] = $totalAmount;
-        }
-
-        $updateData['update_time'] = date('Y-m-d H:i:s');
-        $order->save($updateData);
-
-        OperationLogModel::log(
-            request()->user_id ?? 0,
-            request()->username ?? '',
-            '采购管理',
-            '编辑',
-            '编辑采购单：' . $order->order_no
-        );
-
-        return Result::success(null, '采购单更新成功');
-    }
-
-    public function updateStatus(int $id, int $status): array
-    {
-        $order = PurchaseOrderModel::find($id);
-        if (!$order) {
-            return Result::notFound('采购单不存在');
-        }
-
-        $allowedTransitions = [
-            1 => [2, 6],
-            2 => [3, 6],
-            3 => [4, 6],
-            4 => [5],
-            5 => [],
-            6 => [],
-        ];
-
-        $allowed = $allowedTransitions[$order->status] ?? [];
-        if (!in_array($status, $allowed)) {
-            return Result::error('不允许的状态转换');
-        }
-
-        $updateData = ['status' => $status, 'update_time' => date('Y-m-d H:i:s')];
-
-        if ($status == 5) {
-            $updateData['receive_date'] = date('Y-m-d H:i:s');
-        }
-
-        $order->save($updateData);
-
-        OperationLogModel::log(
-            request()->user_id ?? 0,
-            request()->username ?? '',
-            '采购管理',
-            '状态更新',
-            '采购单状态变更为：' . $this->getStatusText($status)
-        );
-
-        return Result::success(null, '状态更新成功');
-    }
-
-    protected function getStatusText(int $status): string
-    {
-        $statusMap = [
-            1 => '草稿',
-            2 => '已提交',
-            3 => '已确认',
-            4 => '已入库',
-            5 => '已完成',
-            6 => '已取消',
-        ];
-        return $statusMap[$status] ?? '未知';
-    }
-
-    protected function generateOrderNo(): string
-    {
-        $date = date('Ymd');
-        $count = PurchaseOrderModel::whereDay('create_time', 'today')->count() + 1;
-        return 'PO' . $date . str_pad((string)$count, 4, '0', STR_PAD_LEFT);
     }
 
     public function delete(int $id): array
@@ -275,17 +197,59 @@ class PurchaseService
             return Result::error('已确认的采购单无法删除');
         }
 
-        PurchaseItemModel::where('purchase_id', $id)->delete();
+        PurchaseOrderItemModel::where('order_id', $id)->delete();
         $order->delete();
 
         OperationLogModel::log(
             request()->user_id ?? 0,
             request()->username ?? '',
-            '采购管理',
+            '采购单管理',
             '删除',
             '删除采购单：' . $order->order_no
         );
 
         return Result::success(null, '采购单删除成功');
+    }
+
+    public function updateStatus(int $id, int $status): array
+    {
+        $order = PurchaseOrderModel::find($id);
+        if (!$order) {
+            return Result::notFound('采购单不存在');
+        }
+
+        $updateData = ['status' => $status];
+        
+        if ($status == 3 && empty($order->actual_arrival_date)) {
+            $updateData['actual_arrival_date'] = date('Y-m-d H:i:s');
+        }
+
+        $order->save($updateData);
+
+        OperationLogModel::log(
+            request()->user_id ?? 0,
+            request()->username ?? '',
+            '采购单管理',
+            '状态变更',
+            '采购单 ' . $order->order_no . ' 状态变更为：' . $this->getStatusText($status)
+        );
+
+        return Result::success(null, '状态更新成功');
+    }
+
+    protected function generateOrderNo(): string
+    {
+        return 'PO' . date('Ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+    }
+
+    protected function getStatusText(int $status): string
+    {
+        $statusMap = [
+            1 => '待确认',
+            2 => '已确认',
+            3 => '已完成',
+            4 => '已取消',
+        ];
+        return $statusMap[$status] ?? '未知';
     }
 }

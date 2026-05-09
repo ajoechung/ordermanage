@@ -15,14 +15,7 @@ class FollowService
         $method = $params['method'] ?? '';
         $dateRange = $params['date_range'] ?? [];
 
-        $query = CustomerFollowModel::with([
-            'customer' => function ($q) {
-                $q->field('customer_id,name');
-            },
-            'followUser' => function ($q) {
-                $q->field('user_id,realname');
-            }
-        ]);
+        $query = CustomerFollowModel::with(['customer', 'followUser']);
 
         if (!empty($customerId)) {
             $query->scope('customerId', (int)$customerId);
@@ -64,22 +57,21 @@ class FollowService
     {
         $follow = CustomerFollowModel::create([
             'customer_id' => $data['customer_id'],
-            'follow_user_id' => $data['follow_user_id'] ?? (request()->user_id ?? 0),
-            'method' => $data['method'],
-            'content' => $data['content'],
+            'user_id' => request()->user_id ?? 0,
             'follow_time' => $data['follow_time'] ?? date('Y-m-d H:i:s'),
-            'next_follow_time' => $data['next_follow_time'] ?? null,
-            'result' => $data['result'] ?? null,
-            'create_user_id' => request()->user_id ?? 0,
+            'method' => $data['method'] ?? '',
+            'content' => $data['content'] ?? '',
+            'next_plan' => $data['next_plan'] ?? '',
+            'next_time' => $data['next_time'] ?? null,
             'create_time' => date('Y-m-d H:i:s'),
         ]);
 
         OperationLogModel::log(
             request()->user_id ?? 0,
             request()->username ?? '',
-            '客户跟进',
-            '新增',
-            '新增跟进记录'
+            '客户管理',
+            '新增跟进',
+            '新增客户跟进记录'
         );
 
         return Result::success(['follow_id' => $follow->follow_id], '跟进记录创建成功');
@@ -97,9 +89,9 @@ class FollowService
         OperationLogModel::log(
             request()->user_id ?? 0,
             request()->username ?? '',
-            '客户跟进',
-            '删除',
-            '删除跟进记录'
+            '客户管理',
+            '删除跟进',
+            '删除客户跟进记录'
         );
 
         return Result::success(null, '跟进记录删除成功');
