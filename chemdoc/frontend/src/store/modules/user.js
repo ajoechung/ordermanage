@@ -23,14 +23,12 @@ export const useUserStore = defineStore('user', {
       try {
         const res = await loginApi(loginData)
         this.token = res.data.token
-        this.userInfo = res.data.user || {}
-        this.groups = res.data.groups || []
-        this.permissions = res.data.permissions || []
+        this.userInfo = res.data.user_info || {}
+        this.groups = res.data.user_info?.groups || []
 
         localStorage.setItem('token', this.token)
         localStorage.setItem('userInfo', JSON.stringify(this.userInfo))
         localStorage.setItem('groups', JSON.stringify(this.groups))
-        localStorage.setItem('permissions', JSON.stringify(this.permissions))
 
         return res
       } catch (error) {
@@ -42,13 +40,11 @@ export const useUserStore = defineStore('user', {
       try {
         const res = await getUserInfo()
         if (res.code === 200) {
-          this.userInfo = res.data.user || {}
-          this.groups = res.data.groups || []
-          this.permissions = res.data.permissions || []
+          this.userInfo = res.data || {}
+          this.groups = res.data?.groups || []
 
           localStorage.setItem('userInfo', JSON.stringify(this.userInfo))
           localStorage.setItem('groups', JSON.stringify(this.groups))
-          localStorage.setItem('permissions', JSON.stringify(this.permissions))
         }
         return res
       } catch (error) {

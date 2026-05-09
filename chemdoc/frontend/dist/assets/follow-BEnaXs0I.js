@@ -1,1 +1,0 @@
-import{s as t}from"./index-CghZ9IdV.js";function e(o){return t({url:"/follow",method:"get",params:o})}function l(o){return t({url:"/follow",method:"post",data:o})}function n(o){return t({url:`/follow/${o}`,method:"delete"})}const s=e,c=l;export{c,n as d,s as g};
