@@ -2,7 +2,7 @@
 namespace app\service;
 
 use app\model\PurchaseOrderModel;
-use app\model\PurchaseOrderItemModel;
+use app\model\PurchaseItemModel;
 use app\model\OperationLogModel;
 use think\facade\Db;
 
@@ -38,7 +38,7 @@ class PurchaseService
         }
 
         $total = $query->count();
-        $list = $query->order('order_id', 'desc')
+        $list = $query->order('purchase_id', 'desc')
             ->page($page, $pageSize)
             ->select()
             ->toArray();
@@ -115,8 +115,8 @@ class PurchaseService
 
             if (isset($data['items']) && is_array($data['items'])) {
                 foreach ($data['items'] as $item) {
-                    PurchaseOrderItemModel::create([
-                        'order_id' => $order->order_id,
+                    PurchaseItemModel::create([
+                        'purchase_id' => $order->purchase_id,
                         'product_id' => $item['product_id'],
                         'product_name' => $item['product_name'] ?? '',
                         'spec' => $item['spec'] ?? '',
@@ -138,7 +138,7 @@ class PurchaseService
                 '新增采购单：' . $order->order_no
             );
 
-            return Result::success(['order_id' => $order->order_id], '采购单创建成功');
+            return Result::success(['purchase_id' => $order->purchase_id], '采购单创建成功');
         } catch (\Exception $e) {
             Db::rollback();
             return Result::error('采购单创建失败：' . $e->getMessage());
@@ -197,7 +197,7 @@ class PurchaseService
             return Result::error('已确认的采购单无法删除');
         }
 
-        PurchaseOrderItemModel::where('order_id', $id)->delete();
+        PurchaseItemModel::where('purchase_id', $id)->delete();
         $order->delete();
 
         OperationLogModel::log(
@@ -245,10 +245,12 @@ class PurchaseService
     protected function getStatusText(int $status): string
     {
         $statusMap = [
-            1 => '待确认',
-            2 => '已确认',
-            3 => '已完成',
-            4 => '已取消',
+            1 => '草稿',
+            2 => '已提交',
+            3 => '已确认',
+            4 => '已入库',
+            5 => '已完成',
+            6 => '已取消',
         ];
         return $statusMap[$status] ?? '未知';
     }
