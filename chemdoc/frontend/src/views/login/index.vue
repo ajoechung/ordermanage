@@ -239,15 +239,17 @@ const handleLogin = async () => {
 
       if (res.code === 200) {
         userStore.token = res.data.token
-        userStore.userInfo = res.data.user || {}
-        userStore.groups = res.data.groups || []
-        userStore.permissions = res.data.permissions || []
+        userStore.userInfo = res.data.user_info || {}
+        userStore.groups = res.data.user_info?.groups || []
 
         if (loginForm.remember) {
           localStorage.setItem('username', loginForm.username)
         } else {
           localStorage.removeItem('username')
         }
+
+        localStorage.setItem('token', res.data.token)
+        localStorage.setItem('userInfo', JSON.stringify(res.data.user_info || {}))
 
         ElMessage.success('登录成功')
 
