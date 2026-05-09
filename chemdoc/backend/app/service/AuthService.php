@@ -97,16 +97,20 @@ class AuthService
     protected function generateToken(array $user, array $groups): string
     {
         $config = config('jwt.');
+        
+        $secret = $config['secret'] ?? 'chemdoc_jwt_secret_key_2026_secure';
+        $expire = $config['expire'] ?? 7200;
+        $algo = $config['algo'] ?? 'HS256';
 
         $payload = [
             'user_id' => $user['user_id'],
             'username' => $user['username'],
             'groups' => $groups,
             'iat' => time(),
-            'exp' => time() + $config['expire'],
+            'exp' => time() + $expire,
         ];
 
-        return JWT::encode($payload, $config['secret'], $config['algo']);
+        return JWT::encode($payload, $secret, $algo);
     }
 
     protected function logOperation(int $userId, string $action, string $description): void
