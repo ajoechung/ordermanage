@@ -1,5 +1,6 @@
 import request from '@/utils/request'
 
+// 用户相关
 export function getList(params) {
   return request({
     url: '/system/users',
@@ -31,6 +32,39 @@ export function deleteUser(id) {
   })
 }
 
+// 角色相关
+export function getRoleList(params) {
+  return request({
+    url: '/system/groups',
+    method: 'get',
+    params
+  })
+}
+
+export function createRole(data) {
+  return request({
+    url: '/system/group',
+    method: 'post',
+    data
+  })
+}
+
+export function updateRole(data) {
+  return request({
+    url: '/system/group',
+    method: 'put',
+    data
+  })
+}
+
+export function deleteRole(id) {
+  return request({
+    url: `/system/group/${id}`,
+    method: 'delete'
+  })
+}
+
+// 权限相关
 export function assignRole(data) {
   return request({
     url: '/system/assignRole',
@@ -41,42 +75,23 @@ export function assignRole(data) {
 
 export function getPermissionList() {
   return request({
-    url: '/system/permissionList',
+    url: '/system/rules',
     method: 'get'
   })
 }
 
 export function assignPermission(data) {
   return request({
-    url: '/system/assignPermission',
-    method: 'post',
-    data
-  })
-}
-
-export function createRole(data) {
-  return request({
-    url: '/system/role',
-    method: 'post',
-    data
-  })
-}
-
-export function updateRole(data) {
-  return request({
-    url: '/system/role',
+    url: '/system/group',
     method: 'put',
-    data
+    data: {
+      id: data.id,
+      rules: data.rules
+    }
   })
 }
 
-export function deleteRole(id) {
-  return request({
-    url: `/system/role/${id}`,
-    method: 'delete'
-  })
-}
-
+// 日志相关
 export function batchDeleteLog(data) {
   return request({
     url: '/log/batchDelete',
@@ -92,5 +107,4 @@ export function clearLogs() {
   })
 }
 
-export const getRoleList = getList
 export const deleteLog = getList

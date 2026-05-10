@@ -210,8 +210,22 @@ const loadData = async () => {
     
     const res = await getRoleList(params)
     if (res.code === 200) {
-      roleList.value = res.data.list || []
-      pagination.total = res.data.total || 0
+      // 后端返回的是直接的数组，没有包装在 list 和 total 中
+      const allRoles = res.data || []
+      
+      // 处理筛选
+      let filteredRoles = allRoles
+      if (searchForm.name) {
+        filteredRoles = allRoles.filter(role => 
+          role.name && role.name.toLowerCase().includes(searchForm.name.toLowerCase())
+        )
+      }
+      
+      // 分页处理
+      const start = (pagination.page - 1) * pagination.pageSize
+      const end = start + pagination.pageSize
+      roleList.value = filteredRoles.slice(start, end)
+      pagination.total = filteredRoles.length
     }
   } catch (error) {
     console.error('获取角色列表失败:', error)
@@ -355,7 +369,7 @@ const handleSubmit = async () => {
     
     submitLoading.value = true
     try {
-      const res = formData.id ? await update(formData) : await create(formData)
+      const res = formData.id ? await updateRole(formData) : await createRole(formData)
       
       if (res.code === 200) {
         ElMessage.success(formData.id ? '编辑成功' : '新增成功')
