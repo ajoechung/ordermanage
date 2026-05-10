@@ -142,25 +142,35 @@ const menuItems = computed(() => {
   const items = []
   const routes = permissionStore.routes.length > 0 ? permissionStore.routes : constantRoutes
   
-  // 找到根路由 '/'
-  const rootRoute = routes.find(r => r.path === '/')
-  if (!rootRoute || !rootRoute.children) return items
+  let menuRoutes = []
   
-  for (const route of rootRoute.children) {
+  // 检查是否有根路由 '/'（constantRoutes 的结构）
+  const rootRoute = routes.find(r => r.path === '/')
+  if (rootRoute && rootRoute.children) {
+    menuRoutes = rootRoute.children
+  } else {
+    // permissionStore.routes 的结构是扁平化的
+    menuRoutes = routes.filter(r => !r.meta?.hidden && !['/login', '/404', '/403'].includes(r.path))
+  }
+  
+  for (const route of menuRoutes) {
     if (route.meta?.hidden) {
       continue
     }
     
+    // 检查路由路径是否以 '/' 开头
+    const basePath = route.path.startsWith('/') ? route.path : '/' + route.path
+    
     // 检查是否有子路由并且子路由数量大于1
     if (route.children && route.children.length > 1) {
       const children = route.children.map(child => ({
-        path: '/' + route.path + '/' + child.path,
+        path: basePath + '/' + child.path,
         title: child.meta?.title || child.path
       }))
       items.push({
         key: route.path,
         type: 'submenu',
-        path: '/' + route.path,
+        path: basePath,
         title: route.meta?.title || route.path,
         icon: route.meta?.icon || 'Menu',
         children: children
@@ -170,7 +180,7 @@ const menuItems = computed(() => {
       items.push({
         key: route.path,
         type: 'menu',
-        path: '/' + route.path + '/' + child.path,
+        path: basePath + '/' + child.path,
         title: route.meta?.title || child.meta?.title || route.path,
         icon: route.meta?.icon || 'Menu'
       })
@@ -178,7 +188,7 @@ const menuItems = computed(() => {
       items.push({
         key: route.path,
         type: 'menu',
-        path: '/' + route.path,
+        path: basePath,
         title: route.meta?.title || route.path,
         icon: route.meta?.icon || 'Menu'
       })
