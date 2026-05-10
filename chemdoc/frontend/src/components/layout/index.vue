@@ -24,7 +24,7 @@
           <template v-for="menuItem in menuItems" :key="menuItem.key">
             <el-sub-menu v-if="menuItem.type === 'submenu'" :index="menuItem.path">
               <template #title>
-                <el-icon><component :is="menuItem.icon || 'Menu'" /></el-icon>
+                <el-icon><component :is="getIcon(menuItem.icon)" /></el-icon>
                 <span>{{ menuItem.title }}</span>
               </template>
               <el-menu-item
@@ -37,7 +37,7 @@
             </el-sub-menu>
             
             <el-menu-item v-else :index="menuItem.path">
-              <el-icon><component :is="menuItem.icon || 'Menu'" /></el-icon>
+              <el-icon><component :is="getIcon(menuItem.icon)" /></el-icon>
               <span>{{ menuItem.title }}</span>
             </el-menu-item>
           </template>
@@ -102,10 +102,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, markRaw } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Fold, Expand, Box, User, Lock, ArrowDown, SwitchButton, HomeFilled, OfficeBuilding, Goods, ShoppingCart, Document, DataAnalysis, Setting, Operation } from '@element-plus/icons-vue'
+import { Fold, Expand, Box, User, Lock, ArrowDown, SwitchButton, HomeFilled, OfficeBuilding, Goods, ShoppingCart, Document, DataAnalysis, Setting, Operation, Menu } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
 import { usePermissionStore } from '@/store/modules/permission'
 import { logout } from '@/api/modules/auth'
@@ -121,16 +121,21 @@ const keepAliveRoutes = ['CustomerList', 'OrderList', 'ProductList', 'SupplierLi
 
 const userInfo = computed(() => userStore.userInfo || {})
 
-const iconMap = {
-  'HomeFilled': HomeFilled,
-  'OfficeBuilding': OfficeBuilding,
-  'Goods': Goods,
-  'Box': ShoppingCart,
-  'Document': Document,
-  'ShoppingCart': ShoppingCart,
-  'DataAnalysis': DataAnalysis,
-  'Setting': Setting,
-  'Operation': Operation
+const iconComponents = {
+  'HomeFilled': markRaw(HomeFilled),
+  'OfficeBuilding': markRaw(OfficeBuilding),
+  'Goods': markRaw(Goods),
+  'Box': markRaw(ShoppingCart),
+  'Document': markRaw(Document),
+  'ShoppingCart': markRaw(ShoppingCart),
+  'DataAnalysis': markRaw(DataAnalysis),
+  'Setting': markRaw(Setting),
+  'Operation': markRaw(Operation),
+  'Menu': markRaw(Menu)
+}
+
+const getIcon = (iconName) => {
+  return iconComponents[iconName] || Menu
 }
 
 const menuItems = computed(() => {
@@ -142,8 +147,6 @@ const menuItems = computed(() => {
       continue
     }
     
-    const icon = iconMap[route.meta?.icon] || 'Menu'
-    
     if (route.path === '/') {
       if (route.children && route.children.length > 0) {
         const child = route.children[0]
@@ -152,7 +155,7 @@ const menuItems = computed(() => {
           type: 'menu',
           path: '/' + child.path,
           title: child.meta?.title || '首页',
-          icon: icon
+          icon: child.meta?.icon || 'HomeFilled'
         })
       }
     } else if (route.children && route.children.length > 1) {
@@ -165,7 +168,7 @@ const menuItems = computed(() => {
         type: 'submenu',
         path: route.path,
         title: route.meta?.title || route.path,
-        icon: icon,
+        icon: route.meta?.icon || 'Menu',
         children: children
       })
     } else if (route.children && route.children.length === 1) {
@@ -175,7 +178,7 @@ const menuItems = computed(() => {
         type: 'menu',
         path: route.path + '/' + child.path,
         title: route.meta?.title || child.meta?.title || route.path,
-        icon: icon
+        icon: route.meta?.icon || 'Menu'
       })
     } else {
       items.push({
@@ -183,7 +186,7 @@ const menuItems = computed(() => {
         type: 'menu',
         path: route.path,
         title: route.meta?.title || route.path,
-        icon: icon
+        icon: route.meta?.icon || 'Menu'
       })
     }
   }
