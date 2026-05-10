@@ -21,8 +21,8 @@
           text-color="#bfcbd9"
           active-text-color="#409eff"
         >
-          <template v-for="route in permissionRoutes" :key="route.path">
-            <el-sub-menu v-if="route.children && route.children.length > 0" :index="route.path">
+          <template v-for="route in menuRoutes" :key="route.path">
+            <el-sub-menu v-if="route.children && route.children.length > 1" :index="route.path">
               <template #title>
                 <el-icon><component :is="route.meta?.icon || 'Menu'" /></el-icon>
                 <span>{{ route.meta?.title }}</span>
@@ -35,6 +35,11 @@
                 {{ child.meta?.title }}
               </el-menu-item>
             </el-sub-menu>
+            
+            <el-menu-item v-else-if="route.children && route.children.length === 1" :index="resolvePath(route.path, route.children[0].path)">
+              <el-icon><component :is="route.meta?.icon || 'Menu'" /></el-icon>
+              <span>{{ route.children[0].meta?.title }}</span>
+            </el-menu-item>
             
             <el-menu-item v-else :index="route.path">
               <el-icon><component :is="route.meta?.icon || 'Menu'" /></el-icon>
@@ -120,7 +125,11 @@ const isCollapse = ref(false)
 const keepAliveRoutes = ['CustomerList', 'OrderList', 'ProductList', 'SupplierList', 'ContactList']
 
 const userInfo = computed(() => userStore.userInfo || {})
-const permissionRoutes = computed(() => permissionStore.routes.length > 0 ? permissionStore.routes : constantRoutes.filter(r => r.path !== '/login' && r.path !== '/404' && r.path !== '/403' && r.path !== '/'))
+
+const menuRoutes = computed(() => {
+  const routes = permissionStore.routes.length > 0 ? permissionStore.routes : constantRoutes
+  return routes.filter(r => !r.meta?.hidden && r.path !== '/login' && r.path !== '/404' && r.path !== '/403')
+})
 
 onMounted(async () => {
   if (permissionStore.routes.length === 0) {
@@ -131,14 +140,6 @@ onMounted(async () => {
 
 const activeMenu = computed(() => {
   const { path } = route
-  const routes = permissionStore.routes
-  for (const item of routes) {
-    if (item.path === path) return item.path
-    if (item.children) {
-      const child = item.children.find(c => c.path === path || path.includes(c.path))
-      if (child) return resolvePath(item.path, child.path)
-    }
-  }
   return path
 })
 
