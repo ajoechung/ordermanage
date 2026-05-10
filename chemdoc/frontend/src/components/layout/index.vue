@@ -21,29 +21,24 @@
           text-color="#bfcbd9"
           active-text-color="#409eff"
         >
-          <template v-for="route in menuRoutes" :key="route.path">
-            <el-sub-menu v-if="route.children && route.children.length > 1" :index="route.path">
+          <template v-for="menuItem in menuItems" :key="menuItem.key">
+            <el-sub-menu v-if="menuItem.type === 'submenu'" :index="menuItem.path">
               <template #title>
-                <el-icon><component :is="route.meta?.icon || 'Menu'" /></el-icon>
-                <span>{{ route.meta?.title }}</span>
+                <el-icon><component :is="menuItem.icon || 'Menu'" /></el-icon>
+                <span>{{ menuItem.title }}</span>
               </template>
               <el-menu-item
-                v-for="child in route.children"
+                v-for="child in menuItem.children"
                 :key="child.path"
-                :index="resolvePath(route.path, child.path)"
+                :index="child.path"
               >
-                {{ child.meta?.title }}
+                {{ child.title }}
               </el-menu-item>
             </el-sub-menu>
             
-            <el-menu-item v-else-if="route.children && route.children.length === 1" :index="resolvePath(route.path, route.children[0].path)">
-              <el-icon><component :is="route.meta?.icon || 'Menu'" /></el-icon>
-              <span>{{ route.children[0].meta?.title }}</span>
-            </el-menu-item>
-            
-            <el-menu-item v-else :index="route.path">
-              <el-icon><component :is="route.meta?.icon || 'Menu'" /></el-icon>
-              <span>{{ route.meta?.title }}</span>
+            <el-menu-item v-else :index="menuItem.path">
+              <el-icon><component :is="menuItem.icon || 'Menu'" /></el-icon>
+              <span>{{ menuItem.title }}</span>
             </el-menu-item>
           </template>
         </el-menu>
@@ -110,7 +105,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Fold, Expand, Box, User, Lock, ArrowDown, SwitchButton } from '@element-plus/icons-vue'
+import { Fold, Expand, Box, User, Lock, ArrowDown, SwitchButton, HomeFilled, OfficeBuilding, Goods, ShoppingCart, Document, DataAnalysis, Setting, Operation } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
 import { usePermissionStore } from '@/store/modules/permission'
 import { logout } from '@/api/modules/auth'
@@ -126,9 +121,74 @@ const keepAliveRoutes = ['CustomerList', 'OrderList', 'ProductList', 'SupplierLi
 
 const userInfo = computed(() => userStore.userInfo || {})
 
-const menuRoutes = computed(() => {
+const iconMap = {
+  'HomeFilled': HomeFilled,
+  'OfficeBuilding': OfficeBuilding,
+  'Goods': Goods,
+  'Box': ShoppingCart,
+  'Document': Document,
+  'ShoppingCart': ShoppingCart,
+  'DataAnalysis': DataAnalysis,
+  'Setting': Setting,
+  'Operation': Operation
+}
+
+const menuItems = computed(() => {
+  const items = []
   const routes = permissionStore.routes.length > 0 ? permissionStore.routes : constantRoutes
-  return routes.filter(r => !r.meta?.hidden && r.path !== '/login' && r.path !== '/404' && r.path !== '/403')
+  
+  for (const route of routes) {
+    if (route.meta?.hidden || ['/login', '/404', '/403'].includes(route.path)) {
+      continue
+    }
+    
+    const icon = iconMap[route.meta?.icon] || 'Menu'
+    
+    if (route.path === '/') {
+      if (route.children && route.children.length > 0) {
+        const child = route.children[0]
+        items.push({
+          key: child.path,
+          type: 'menu',
+          path: '/' + child.path,
+          title: child.meta?.title || '首页',
+          icon: icon
+        })
+      }
+    } else if (route.children && route.children.length > 1) {
+      const children = route.children.map(child => ({
+        path: route.path + '/' + child.path,
+        title: child.meta?.title || child.path
+      }))
+      items.push({
+        key: route.path,
+        type: 'submenu',
+        path: route.path,
+        title: route.meta?.title || route.path,
+        icon: icon,
+        children: children
+      })
+    } else if (route.children && route.children.length === 1) {
+      const child = route.children[0]
+      items.push({
+        key: route.path,
+        type: 'menu',
+        path: route.path + '/' + child.path,
+        title: route.meta?.title || child.meta?.title || route.path,
+        icon: icon
+      })
+    } else {
+      items.push({
+        key: route.path,
+        type: 'menu',
+        path: route.path,
+        title: route.meta?.title || route.path,
+        icon: icon
+      })
+    }
+  }
+  
+  return items
 })
 
 onMounted(async () => {
@@ -146,11 +206,6 @@ const activeMenu = computed(() => {
 const breadcrumb = computed(() => {
   return route.matched.filter(item => item.meta?.title && item.path !== '/').slice(1)
 })
-
-const resolvePath = (parent, child) => {
-  if (child.startsWith('/')) return child
-  return `${parent}/${child}`.replace(/\/+/g, '/')
-}
 
 const toggleCollapse = () => {
   isCollapse.value = !isCollapse.value
