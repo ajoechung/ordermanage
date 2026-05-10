@@ -4,6 +4,7 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import { fileURLToPath, URL } from 'node:url'
+import compression from 'vite-plugin-compression'
 
 export default defineConfig({
   plugins: [
@@ -19,6 +20,12 @@ export default defineConfig({
     Components({
       resolvers: [ElementPlusResolver()],
       dts: 'src/components.d.ts'
+    }),
+    compression({
+      algorithm: 'gzip',
+      ext: '.gz',
+      threshold: 10240,
+      minRatio: 0.8
     })
   ],
   resolve: {
@@ -47,7 +54,10 @@ export default defineConfig({
         manualChunks: {
           'element-plus': ['element-plus'],
           'vue-core': ['vue', 'vue-router', 'pinia']
-        }
+        },
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     }
   }
