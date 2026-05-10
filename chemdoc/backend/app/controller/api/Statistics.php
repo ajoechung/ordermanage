@@ -4,15 +4,19 @@ namespace app\controller\api;
 use app\BaseController;
 use app\service\StatisticsService;
 use app\service\Result;
+use think\App;
+use think\Request;
 
 class Statistics extends BaseController
 {
     protected StatisticsService $statisticsService;
+    protected Request $request;
 
-    public function __construct()
+    public function __construct(App $app)
     {
-        parent::__construct();
+        parent::__construct($app);
         $this->statisticsService = new StatisticsService();
+        $this->request = request();
     }
 
     public function dashboard()
