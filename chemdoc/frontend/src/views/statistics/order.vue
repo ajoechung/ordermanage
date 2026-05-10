@@ -91,45 +91,7 @@
       </el-col>
     </el-row>
 
-    <el-row :gutter="20" class="table-row">
-      <el-col :span="24">
-        <el-card>
-          <template #header>
-            <span class="card-title">订单明细</span>
-          </template>
-          <el-table :data="orderList" border stripe>
-            <el-table-column prop="order_no" label="订单号" width="160" />
-            <el-table-column prop="customer_name" label="客户名称" min-width="180" />
-            <el-table-column prop="status" label="订单状态" width="100">
-              <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)" size="small">
-                  {{ getStatusText(row.status) }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="product_count" label="产品数量" width="100" align="center" />
-            <el-table-column prop="total_amount" label="订单金额" width="120" align="right">
-              <template #default="{ row }">
-                ¥{{ Number(row.total_amount || 0).toLocaleString() }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="create_user_name" label="创建人" width="100" />
-            <el-table-column prop="create_time" label="创建时间" width="160" />
-          </el-table>
-          <div class="pagination-container">
-            <el-pagination
-              v-model:current-page="pagination.page"
-              v-model:page-size="pagination.pageSize"
-              :page-sizes="[10, 20, 50]"
-              :total="pagination.total"
-              layout="total, sizes, prev, pager, next"
-              @size-change="handleSizeChange"
-              @current-change="handlePageChange"
-            />
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+
   </div>
 </template>
 
@@ -152,17 +114,10 @@ const summary = reactive({
   avg_amount: 0
 })
 
-const orderList = ref([])
 const trendChartRef = ref(null)
 const statusChartRef = ref(null)
 let trendChart = null
 let statusChart = null
-
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  total: 0
-})
 
 const statusMap = {
   draft: { text: '草稿', type: 'info' },
@@ -178,33 +133,27 @@ const getStatusType = (status) => statusMap[status]?.type || 'info'
 
 const loadData = async () => {
   try {
-    const params = {
-      page: pagination.page,
-      page_size: pagination.pageSize,
-      ...searchForm
-    }
+    const params = {}
     
     if (searchForm.date_range && searchForm.date_range.length === 2) {
-      params.start_date = searchForm.date_range[0]
-      params.end_date = searchForm.date_range[1]
+      params.date_range = searchForm.date_range
     }
     
     const res = await getOrderStatistics(params)
     if (res.code === 200) {
       const data = res.data
-      summary.total_count = data.summary.total_count || 0
-      summary.total_amount = data.summary.total_amount || 0
-      summary.completed_count = data.summary.completed_count || 0
-      summary.avg_amount = data.summary.avg_amount || 0
       
-      orderList.value = data.list || []
-      pagination.total = data.total || 0
+      summary.total_count = data.total_count || 0
+      summary.total_amount = data.total_amount || 0
+      summary.completed_count = data.completed_count || 0
+      summary.avg_amount = data.avg_amount || 0
       
-      if (data.trend) {
-        initTrendChart(data.trend)
+      if (data.monthly_data && data.monthly_data.length > 0) {
+        initTrendChart(data.monthly_data)
       }
-      if (data.status_distribution) {
-        initStatusChart(data.status_distribution)
+      
+      if (data.status_data && data.status_data.length > 0) {
+        initStatusChart(data.status_data)
       }
     }
   } catch (error) {
@@ -224,7 +173,7 @@ const initTrendChart = (data) => {
   trendChart.setOption({
     tooltip: { trigger: 'axis' },
     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-    xAxis: { type: 'category', data: data.dates || [] },
+    xAxis: { type: 'category', data: data.map(item => item.month) },
     yAxis: { type: 'value', axisLabel: { formatter: '¥{value}' } },
     series: [{
       name: '销售额',
@@ -232,7 +181,7 @@ const initTrendChart = (data) => {
       smooth: true,
       areaStyle: { opacity: 0.3 },
       itemStyle: { color: '#409eff' },
-      data: data.amounts || []
+      data: data.map(item => item.amount)
     }]
   })
 }
@@ -254,7 +203,7 @@ const initStatusChart = (data) => {
       radius: ['40%', '70%'],
       avoidLabelOverlap: false,
       itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
-      label: { show: false },
+      label: { show: true },
       emphasis: { label: { show: true, fontSize: 14 } },
       data: data.map(item => ({
         name: getStatusText(item.status),
@@ -265,7 +214,6 @@ const initStatusChart = (data) => {
 }
 
 const handleSearch = () => {
-  pagination.page = 1
   loadData()
 }
 
@@ -273,17 +221,6 @@ const handleReset = () => {
   Object.keys(searchForm).forEach(key => {
     searchForm[key] = key === 'date_range' ? [] : ''
   })
-  pagination.page = 1
-  loadData()
-}
-
-const handleSizeChange = (size) => {
-  pagination.pageSize = size
-  loadData()
-}
-
-const handlePageChange = (page) => {
-  pagination.page = page
   loadData()
 }
 
