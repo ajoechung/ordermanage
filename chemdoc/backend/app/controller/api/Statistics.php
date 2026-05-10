@@ -11,6 +11,7 @@ class Statistics extends BaseController
 
     public function __construct()
     {
+        parent::__construct();
         $this->statisticsService = new StatisticsService();
     }
 

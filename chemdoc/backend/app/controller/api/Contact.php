@@ -11,6 +11,7 @@ class Contact extends BaseController
 
     public function __construct()
     {
+        parent::__construct();
         $this->contactService = new ContactService();
     }
 
@@ -28,28 +29,12 @@ class Contact extends BaseController
     public function save()
     {
         $data = $this->request->post();
-
-        if (empty($data['customer_id'])) {
-            return json(Result::validateError('请选择所属客户'));
-        }
-        if (empty($data['name'])) {
-            return json(Result::validateError('请输入联系人姓名'));
-        }
-        if (empty($data['mobile'])) {
-            return json(Result::validateError('请输入手机号'));
-        }
-
         return json($this->contactService->create($data));
     }
 
     public function update($id)
     {
         $data = $this->request->put();
-
-        if (empty($data['name'])) {
-            return json(Result::validateError('请输入联系人姓名'));
-        }
-
         return json($this->contactService->update((int)$id, $data));
     }
 

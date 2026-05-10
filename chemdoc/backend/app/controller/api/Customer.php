@@ -13,6 +13,7 @@ class Customer extends BaseController
 
     public function __construct()
     {
+        parent::__construct();
         $this->customerService = new CustomerService();
         $this->validate = new CustomerValidate();
     }
@@ -32,8 +33,8 @@ class Customer extends BaseController
     {
         $data = $this->request->post();
 
-        if (!$this->validate->scene('create')->check($data)) {
-            return json(Result::validateError($this->validate->getError()));
+        if (empty($data['name'])) {
+            return json(Result::validateError('请输入客户名称'));
         }
 
         return json($this->customerService->create($data));
@@ -43,8 +44,8 @@ class Customer extends BaseController
     {
         $data = $this->request->put();
 
-        if (!$this->validate->scene('update')->check($data)) {
-            return json(Result::validateError($this->validate->getError()));
+        if (empty($data['name'])) {
+            return json(Result::validateError('请输入客户名称'));
         }
 
         return json($this->customerService->update((int)$id, $data));

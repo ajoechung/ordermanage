@@ -11,6 +11,7 @@ class Login extends BaseController
 
     public function __construct()
     {
+        parent::__construct();
         $this->authService = new AuthService();
     }
 
@@ -37,7 +38,6 @@ class Login extends BaseController
         if ($userId == 0) {
             return json(Result::unauthorized());
         }
-
         return json($this->authService->getUserInfo($userId));
     }
 }
