@@ -19,7 +19,7 @@ export function create(data) {
 
 export function update(data) {
   return request({
-    url: '/system/user',
+    url: `/system/user/${data.id}`,
     method: 'put',
     data
   })

@@ -199,8 +199,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
-import { getList, create, update, deleteUser, assignRole } from '@/api/modules/system'
-import { getRoleList } from '@/api/modules/auth'
+import { getList, create, update, deleteUser, assignRole, getRoleList } from '@/api/modules/system'
 
 const searchForm = reactive({
   username: '',
