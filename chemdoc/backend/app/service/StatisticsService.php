@@ -61,7 +61,7 @@ class StatisticsService
                 ->whereNull('delete_time')
                 ->count(),
             'pending_purchase_count' => Db::name('purchase_order')
-                ->whereIn('purchase_status', [1, 2, 3])
+                ->whereIn('status', [1, 2, 3])
                 ->whereNull('delete_time')
                 ->count(),
             'need_follow_count' => Db::name('customer')
