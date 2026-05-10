@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/store/modules/user'
-import { usePermissionStore } from '@/store/modules/permission'
 import { ElMessage } from 'element-plus'
 
 export const constantRoutes = [
@@ -21,10 +20,7 @@ export const constantRoutes = [
     name: 'Forbidden',
     component: () => import('@/views/error/403.vue'),
     meta: { title: '无权限', hidden: true }
-  }
-]
-
-export const asyncRoutes = [
+  },
   {
     path: '/',
     component: () => import('@/components/layout/index.vue'),
@@ -34,7 +30,7 @@ export const asyncRoutes = [
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
-        meta: { title: '首页', icon: 'HomeFilled', permission: ['dashboard', 'admin'] }
+        meta: { title: '首页', icon: 'HomeFilled' }
       }
     ]
   },
@@ -42,25 +38,25 @@ export const asyncRoutes = [
     path: '/customer',
     component: () => import('@/components/layout/index.vue'),
     redirect: '/customer/list',
-    meta: { title: '客户管理', icon: 'OfficeBuilding', permission: ['customer', 'admin'] },
+    meta: { title: '客户管理', icon: 'OfficeBuilding' },
     children: [
       {
         path: 'list',
         name: 'CustomerList',
         component: () => import('@/views/customer/list.vue'),
-        meta: { title: '客户列表', permission: ['customer', 'admin'] }
+        meta: { title: '客户列表' }
       },
       {
         path: 'contact',
         name: 'ContactList',
         component: () => import('@/views/customer/contact.vue'),
-        meta: { title: '联系人列表', permission: ['customer', 'admin'] }
+        meta: { title: '联系人列表' }
       },
       {
         path: 'follow',
         name: 'CustomerFollow',
         component: () => import('@/views/customer/follow.vue'),
-        meta: { title: '跟进记录', permission: ['customer', 'admin'] }
+        meta: { title: '跟进记录' }
       }
     ]
   },
@@ -68,19 +64,19 @@ export const asyncRoutes = [
     path: '/product',
     component: () => import('@/components/layout/index.vue'),
     redirect: '/product/category',
-    meta: { title: '产品管理', icon: 'Goods', permission: ['product', 'admin'] },
+    meta: { title: '产品管理', icon: 'Goods' },
     children: [
       {
         path: 'category',
         name: 'ProductCategory',
         component: () => import('@/views/product/category.vue'),
-        meta: { title: '产品分类', permission: ['product', 'admin'] }
+        meta: { title: '产品分类' }
       },
       {
         path: 'list',
         name: 'ProductList',
         component: () => import('@/views/product/list.vue'),
-        meta: { title: '产品信息', permission: ['product', 'admin'] }
+        meta: { title: '产品信息' }
       }
     ]
   },
@@ -88,13 +84,13 @@ export const asyncRoutes = [
     path: '/supplier',
     component: () => import('@/components/layout/index.vue'),
     redirect: '/supplier/list',
-    meta: { title: '供应商管理', icon: 'Box', permission: ['supplier', 'admin'] },
+    meta: { title: '供应商管理', icon: 'Box' },
     children: [
       {
         path: 'list',
         name: 'SupplierList',
         component: () => import('@/views/supplier/list.vue'),
-        meta: { title: '供应商列表', permission: ['supplier', 'admin'] }
+        meta: { title: '供应商列表' }
       }
     ]
   },
@@ -102,13 +98,13 @@ export const asyncRoutes = [
     path: '/order',
     component: () => import('@/components/layout/index.vue'),
     redirect: '/order/list',
-    meta: { title: '订单管理', icon: 'Document', permission: ['order', 'admin'] },
+    meta: { title: '订单管理', icon: 'Document' },
     children: [
       {
         path: 'list',
         name: 'OrderList',
         component: () => import('@/views/order/list.vue'),
-        meta: { title: '订单列表', permission: ['order', 'admin'] }
+        meta: { title: '订单列表' }
       }
     ]
   },
@@ -116,13 +112,13 @@ export const asyncRoutes = [
     path: '/purchase',
     component: () => import('@/components/layout/index.vue'),
     redirect: '/purchase/list',
-    meta: { title: '采购单管理', icon: 'ShoppingCart', permission: ['purchase', 'admin'] },
+    meta: { title: '采购单管理', icon: 'ShoppingCart' },
     children: [
       {
         path: 'list',
         name: 'PurchaseList',
         component: () => import('@/views/purchase/list.vue'),
-        meta: { title: '采购单列表', permission: ['purchase', 'admin'] }
+        meta: { title: '采购单列表' }
       }
     ]
   },
@@ -130,19 +126,19 @@ export const asyncRoutes = [
     path: '/statistics',
     component: () => import('@/components/layout/index.vue'),
     redirect: '/statistics/customer',
-    meta: { title: '数据统计', icon: 'DataAnalysis', permission: ['statistics', 'admin'] },
+    meta: { title: '数据统计', icon: 'DataAnalysis' },
     children: [
       {
         path: 'customer',
         name: 'CustomerStats',
         component: () => import('@/views/statistics/customer.vue'),
-        meta: { title: '客户统计', permission: ['statistics', 'admin'] }
+        meta: { title: '客户统计' }
       },
       {
         path: 'order',
         name: 'OrderStats',
         component: () => import('@/views/statistics/order.vue'),
-        meta: { title: '订单统计', permission: ['statistics', 'admin'] }
+        meta: { title: '订单统计' }
       }
     ]
   },
@@ -150,19 +146,19 @@ export const asyncRoutes = [
     path: '/system',
     component: () => import('@/components/layout/index.vue'),
     redirect: '/system/user',
-    meta: { title: '系统管理', icon: 'Setting', permission: ['system', 'admin'] },
+    meta: { title: '系统管理', icon: 'Setting' },
     children: [
       {
         path: 'user',
         name: 'SystemUser',
         component: () => import('@/views/system/user.vue'),
-        meta: { title: '用户管理', permission: ['system', 'admin'] }
+        meta: { title: '用户管理' }
       },
       {
         path: 'role',
         name: 'SystemRole',
         component: () => import('@/views/system/role.vue'),
-        meta: { title: '角色管理', permission: ['system', 'admin'] }
+        meta: { title: '角色管理' }
       }
     ]
   },
@@ -170,132 +166,45 @@ export const asyncRoutes = [
     path: '/log',
     component: () => import('@/components/layout/index.vue'),
     redirect: '/log/list',
-    meta: { title: '操作日志', icon: 'Operation', permission: ['operation', 'admin'] },
+    meta: { title: '操作日志', icon: 'Operation' },
     children: [
       {
         path: 'list',
         name: 'LogList',
         component: () => import('@/views/system/log.vue'),
-        meta: { title: '日志列表', permission: ['operation', 'admin'] }
+        meta: { title: '日志列表' }
       }
     ]
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/404',
+    meta: { hidden: true }
   }
 ]
-
-function hasPermission(groups, route) {
-  if (route.meta && route.meta.permission) {
-    if (groups.includes(1)) {
-      return true
-    }
-    return route.meta.permission.some((p) => groups.includes(p))
-  }
-  return true
-}
-
-function filterAsyncRoutes(routes, permissions) {
-  const res = []
-  routes.forEach((route) => {
-    const tmp = { ...route }
-    if (hasPermission(permissions, tmp)) {
-      if (tmp.children) {
-        tmp.children = filterAsyncRoutes(tmp.children, permissions)
-      }
-      res.push(tmp)
-    }
-  })
-  return res
-}
 
 const router = createRouter({
   history: createWebHistory(),
   routes: constantRoutes
 })
 
-export function resetRouter() {
-  const asyncRouterNames = asyncRoutes.flatMap(route => getRouteNames(route))
-  asyncRouterNames.forEach(name => {
-    if (router.hasRoute(name)) {
-      router.removeRoute(name)
-    }
-  })
-}
-
-function getRouteNames(route) {
-  const names = [route.name]
-  if (route.children) {
-    route.children.forEach(child => {
-      names.push(...getRouteNames(child))
-    })
-  }
-  return names
-}
-
 router.beforeEach(async (to, from, next) => {
+  console.log('路由守卫:', to.path)
+  
   const userStore = useUserStore()
-  const permissionStore = usePermissionStore()
   const hasToken = userStore.token
 
   if (hasToken) {
     if (to.path === '/login') {
       next({ path: '/' })
     } else {
-      if (Object.keys(userStore.userInfo).length === 0) {
-        try {
-          await userStore.getInfo()
-        } catch (error) {
-          userStore.resetToken()
-          ElMessage.error('获取用户信息失败，请重新登录')
-          next(`/login?redirect=${to.path}`)
-          return
-        }
-      }
-
-      if (to.meta.permission) {
-        const hasPermission = userStore.groups.includes(1) || 
-          to.meta.permission.some((p) => userStore.groups.includes(p))
-        if (!hasPermission) {
-          if (to.path !== '/403') {
-            next({ path: '/403' })
-          } else {
-            next()
-          }
-          return
-        }
-      }
-
-      const addedRoutes = router.getRoutes().map(r => r.path)
-      const shouldAddRoutes = !addedRoutes.includes('/dashboard')
-      
-      if (shouldAddRoutes) {
-        const groups = userStore.groups || []
-        const filteredRoutes = filterAsyncRoutes(asyncRoutes, groups)
-
-        await permissionStore.generateRoutes(groups)
-
-        filteredRoutes.forEach(route => {
-          if (!router.hasRoute(route.name)) {
-            router.addRoute(route)
-          }
-        })
-
-        router.addRoute({
-          path: '/:pathMatch(.*)*',
-          redirect: '/404',
-          meta: { hidden: true }
-        })
-
-        const fullPath = router.resolve(to.path).matched.length > 0 ? to.path : to.fullPath
-        next({ path: fullPath, replace: true })
-        return
-      }
-
       next()
     }
   } else {
     if (to.path === '/login') {
       next()
     } else {
-      next(`/login`)
+      next('/login')
     }
   }
 })
