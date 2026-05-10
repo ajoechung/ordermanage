@@ -102,13 +102,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { Fold, Expand, Box, User, Lock, ArrowDown, SwitchButton } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
 import { usePermissionStore } from '@/store/modules/permission'
 import { logout } from '@/api/modules/auth'
+import { constantRoutes } from '@/router/index.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -119,7 +120,14 @@ const isCollapse = ref(false)
 const keepAliveRoutes = ['CustomerList', 'OrderList', 'ProductList', 'SupplierList', 'ContactList']
 
 const userInfo = computed(() => userStore.userInfo || {})
-const permissionRoutes = computed(() => permissionStore.routes || [])
+const permissionRoutes = computed(() => permissionStore.routes.length > 0 ? permissionStore.routes : constantRoutes.filter(r => r.path !== '/login' && r.path !== '/404' && r.path !== '/403' && r.path !== '/'))
+
+onMounted(async () => {
+  if (permissionStore.routes.length === 0) {
+    const groups = userStore.groups || []
+    await permissionStore.generateRoutes(groups)
+  }
+})
 
 const activeMenu = computed(() => {
   const { path } = route

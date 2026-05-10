@@ -35,9 +35,9 @@
               <div class="card-header">
                 <div class="header-title"><span class="title-dot"></span><span>销售趋势</span></div>
                 <el-radio-group v-model="salesTrendType" size="small" @change="loadSalesTrend">
-                  <el-radio-button label="week">本周</el-radio-button>
-                  <el-radio-button label="month">本月</el-radio-button>
-                  <el-radio-button label="year">本年</el-radio-button>
+                  <el-radio-button value="week">本周</el-radio-button>
+                  <el-radio-button value="month">本月</el-radio-button>
+                  <el-radio-button value="year">本年</el-radio-button>
                 </el-radio-group>
               </div>
             </template>
@@ -162,7 +162,16 @@ const loadSalesTrend = async () => {
 const loadCustomerDistribution = async () => {
   try {
     const res = await getCustomerDistribution()
-    if (res.code === 200 && customerChart) { customerChart.setOption({ series: [{ data: res.data.map(item => ({ name: item.industry, value: item.count })) }] }) }
+    if (res.code === 200 && customerChart) {
+      const data = res.data
+      let chartData = []
+      if (Array.isArray(data)) {
+        chartData = data.map(item => ({ name: item.industry || item.name, value: item.count || item.value }))
+      } else if (data && data.list) {
+        chartData = data.list.map(item => ({ name: item.industry || item.name, value: item.count || item.value }))
+      }
+      customerChart.setOption({ series: [{ data: chartData }] })
+    }
   } catch (error) { console.error('获取客户分布失败:', error) }
 }
 
