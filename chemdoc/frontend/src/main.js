@@ -7,20 +7,30 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 
 import App from './App.vue'
 import router from './router'
-import { usePermissionStore } from './store/modules/permission'
 
 import './styles/index.scss'
 
-const app = createApp(App)
+console.log('=== Vue App Initializing ===')
 
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component)
+try {
+  const app = createApp(App)
+
+  for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+    app.component(key, component)
+  }
+
+  const pinia = createPinia()
+
+  app.use(pinia)
+  app.use(router)
+  app.use(ElementPlus, { locale: zhCn })
+
+  console.log('=== Mounting App ===')
+  app.mount('#app')
+  console.log('=== App Mounted Successfully ===')
+  
+} catch (error) {
+  console.error('=== Vue App Initialization Error ===')
+  console.error(error)
+  console.error(error.stack)
 }
-
-const pinia = createPinia()
-
-app.use(pinia)
-app.use(router)
-app.use(ElementPlus, { locale: zhCn })
-
-app.mount('#app')
