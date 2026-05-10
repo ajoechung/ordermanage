@@ -5,18 +5,15 @@ use app\BaseController;
 use app\service\PurchaseService;
 use app\service\Result;
 use think\App;
-use think\Request;
 
 class Purchase extends BaseController
 {
     protected PurchaseService $purchaseService;
-    protected Request $request;
 
     public function __construct(App $app)
     {
         parent::__construct($app);
         $this->purchaseService = new PurchaseService();
-        $this->request = request();
     }
 
     public function index()

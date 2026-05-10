@@ -6,20 +6,17 @@ use app\service\CustomerService;
 use app\service\Result;
 use app\validate\CustomerValidate;
 use think\App;
-use think\Request;
 
 class Customer extends BaseController
 {
     protected CustomerService $customerService;
     protected CustomerValidate $validate;
-    protected Request $request;
 
     public function __construct(App $app)
     {
         parent::__construct($app);
         $this->customerService = new CustomerService();
         $this->validate = new CustomerValidate();
-        $this->request = request();
     }
 
     public function index()

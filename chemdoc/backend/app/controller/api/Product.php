@@ -5,18 +5,15 @@ use app\BaseController;
 use app\service\ProductService;
 use app\service\Result;
 use think\App;
-use think\Request;
 
 class Product extends BaseController
 {
     protected ProductService $productService;
-    protected Request $request;
 
     public function __construct(App $app)
     {
         parent::__construct($app);
         $this->productService = new ProductService();
-        $this->request = request();
     }
 
     public function index()

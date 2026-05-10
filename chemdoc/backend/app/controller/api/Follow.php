@@ -5,18 +5,15 @@ use app\BaseController;
 use app\service\FollowService;
 use app\service\Result;
 use think\App;
-use think\Request;
 
 class Follow extends BaseController
 {
     protected FollowService $followService;
-    protected Request $request;
 
     public function __construct(App $app)
     {
         parent::__construct($app);
         $this->followService = new FollowService();
-        $this->request = request();
     }
 
     public function index()

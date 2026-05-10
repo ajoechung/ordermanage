@@ -5,18 +5,15 @@ use app\BaseController;
 use app\service\ContactService;
 use app\service\Result;
 use think\App;
-use think\Request;
 
 class Contact extends BaseController
 {
     protected ContactService $contactService;
-    protected Request $request;
 
     public function __construct(App $app)
     {
         parent::__construct($app);
         $this->contactService = new ContactService();
-        $this->request = request();
     }
 
     public function index()
