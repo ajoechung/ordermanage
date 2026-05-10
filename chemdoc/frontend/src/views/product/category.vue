@@ -75,7 +75,12 @@ const loadData = async () => {
   try {
     const res = await getCategoryList()
     if (res.code === 200) {
-      categoryList.value = res.data || []
+      const data = res.data
+      if (Array.isArray(data)) {
+        categoryList.value = data
+      } else if (data && typeof data === 'object') {
+        categoryList.value = data.list || data.data || []
+      }
     }
   } catch (error) {
     console.error('获取分类列表失败:', error)

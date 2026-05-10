@@ -1,1 +1,0 @@
-import{s as e}from"./index-kaYcqHv8.js";function r(t){return e({url:"/customer",method:"get",params:t})}function u(t){return e({url:"/customer",method:"post",data:t})}function s(t,o){return e({url:`/customer/${t}`,method:"put",data:o})}function n(t){return e({url:`/customer/${t}`,method:"delete"})}const m=r,a=r,d=u,i=s;export{a,d as c,n as d,m as g,i as u};
