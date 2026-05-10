@@ -6,6 +6,9 @@ function hasPermission(groups, route) {
     if (groups.includes(1)) {
       return true
     }
+    if (groups.length === 0) {
+      return true
+    }
     return route.meta.permission.some((p) => groups.includes(p))
   }
   return true
