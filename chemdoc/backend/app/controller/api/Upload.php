@@ -5,15 +5,19 @@ use app\BaseController;
 use app\service\UploadService;
 use app\service\Result;
 use think\facade\Filesystem;
+use think\App;
+use think\Request;
 
 class Upload extends BaseController
 {
     protected UploadService $uploadService;
+    protected Request $request;
 
-    public function __construct()
+    public function __construct(App $app)
     {
-        parent::__construct();
+        parent::__construct($app);
         $this->uploadService = new UploadService();
+        $this->request = request();
     }
 
     public function image()

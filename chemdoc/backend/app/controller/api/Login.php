@@ -4,15 +4,19 @@ namespace app\controller\api;
 use app\BaseController;
 use app\service\AuthService;
 use app\service\Result;
+use think\App;
+use think\Request;
 
 class Login extends BaseController
 {
     protected AuthService $authService;
+    protected Request $request;
 
-    public function __construct()
+    public function __construct(App $app)
     {
-        parent::__construct();
+        parent::__construct($app);
         $this->authService = new AuthService();
+        $this->request = request();
     }
 
     public function index()

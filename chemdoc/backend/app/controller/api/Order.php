@@ -4,15 +4,19 @@ namespace app\controller\api;
 use app\BaseController;
 use app\service\OrderService;
 use app\service\Result;
+use think\App;
+use think\Request;
 
 class Order extends BaseController
 {
     protected OrderService $orderService;
+    protected Request $request;
 
-    public function __construct()
+    public function __construct(App $app)
     {
-        parent::__construct();
+        parent::__construct($app);
         $this->orderService = new OrderService();
+        $this->request = request();
     }
 
     public function index()

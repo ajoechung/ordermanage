@@ -4,15 +4,19 @@ namespace app\controller\api;
 use app\BaseController;
 use app\service\SupplierService;
 use app\service\Result;
+use think\App;
+use think\Request;
 
 class Supplier extends BaseController
 {
     protected SupplierService $supplierService;
+    protected Request $request;
 
-    public function __construct()
+    public function __construct(App $app)
     {
-        parent::__construct();
+        parent::__construct($app);
         $this->supplierService = new SupplierService();
+        $this->request = request();
     }
 
     public function index()
