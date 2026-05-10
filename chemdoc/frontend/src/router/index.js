@@ -31,148 +31,140 @@ export const constantRoutes = [
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
         meta: { title: '首页', icon: 'HomeFilled' }
-      }
-    ]
-  },
-  {
-    path: '/customer',
-    component: () => import('@/components/layout/index.vue'),
-    redirect: '/customer/list',
-    meta: { title: '客户管理', icon: 'OfficeBuilding' },
-    children: [
-      {
-        path: 'list',
-        name: 'CustomerList',
-        component: () => import('@/views/customer/list.vue'),
-        meta: { title: '客户列表' }
       },
-      {
-        path: 'contact',
-        name: 'ContactList',
-        component: () => import('@/views/customer/contact.vue'),
-        meta: { title: '联系人列表' }
-      },
-      {
-        path: 'follow',
-        name: 'CustomerFollow',
-        component: () => import('@/views/customer/follow.vue'),
-        meta: { title: '跟进记录' }
-      }
-    ]
-  },
-  {
-    path: '/product',
-    component: () => import('@/components/layout/index.vue'),
-    redirect: '/product/category',
-    meta: { title: '产品管理', icon: 'Goods' },
-    children: [
-      {
-        path: 'category',
-        name: 'ProductCategory',
-        component: () => import('@/views/product/category.vue'),
-        meta: { title: '产品分类' }
-      },
-      {
-        path: 'list',
-        name: 'ProductList',
-        component: () => import('@/views/product/list.vue'),
-        meta: { title: '产品信息' }
-      }
-    ]
-  },
-  {
-    path: '/supplier',
-    component: () => import('@/components/layout/index.vue'),
-    redirect: '/supplier/list',
-    meta: { title: '供应商管理', icon: 'Box' },
-    children: [
-      {
-        path: 'list',
-        name: 'SupplierList',
-        component: () => import('@/views/supplier/list.vue'),
-        meta: { title: '供应商列表' }
-      }
-    ]
-  },
-  {
-    path: '/order',
-    component: () => import('@/components/layout/index.vue'),
-    redirect: '/order/list',
-    meta: { title: '订单管理', icon: 'Document' },
-    children: [
-      {
-        path: 'list',
-        name: 'OrderList',
-        component: () => import('@/views/order/list.vue'),
-        meta: { title: '订单列表' }
-      }
-    ]
-  },
-  {
-    path: '/purchase',
-    component: () => import('@/components/layout/index.vue'),
-    redirect: '/purchase/list',
-    meta: { title: '采购单管理', icon: 'ShoppingCart' },
-    children: [
-      {
-        path: 'list',
-        name: 'PurchaseList',
-        component: () => import('@/views/purchase/list.vue'),
-        meta: { title: '采购单列表' }
-      }
-    ]
-  },
-  {
-    path: '/statistics',
-    component: () => import('@/components/layout/index.vue'),
-    redirect: '/statistics/customer',
-    meta: { title: '数据统计', icon: 'DataAnalysis' },
-    children: [
       {
         path: 'customer',
-        name: 'CustomerStats',
-        component: () => import('@/views/statistics/customer.vue'),
-        meta: { title: '客户统计' }
+        redirect: '/customer/list',
+        meta: { title: '客户管理', icon: 'OfficeBuilding' },
+        children: [
+          {
+            path: 'list',
+            name: 'CustomerList',
+            component: () => import('@/views/customer/list.vue'),
+            meta: { title: '客户列表' }
+          },
+          {
+            path: 'contact',
+            name: 'ContactList',
+            component: () => import('@/views/customer/contact.vue'),
+            meta: { title: '联系人列表' }
+          },
+          {
+            path: 'follow',
+            name: 'CustomerFollow',
+            component: () => import('@/views/customer/follow.vue'),
+            meta: { title: '跟进记录' }
+          }
+        ]
+      },
+      {
+        path: 'product',
+        redirect: '/product/category',
+        meta: { title: '产品管理', icon: 'Goods' },
+        children: [
+          {
+            path: 'category',
+            name: 'ProductCategory',
+            component: () => import('@/views/product/category.vue'),
+            meta: { title: '产品分类' }
+          },
+          {
+            path: 'list',
+            name: 'ProductList',
+            component: () => import('@/views/product/list.vue'),
+            meta: { title: '产品信息' }
+          }
+        ]
+      },
+      {
+        path: 'supplier',
+        redirect: '/supplier/list',
+        meta: { title: '供应商管理', icon: 'Box' },
+        children: [
+          {
+            path: 'list',
+            name: 'SupplierList',
+            component: () => import('@/views/supplier/list.vue'),
+            meta: { title: '供应商列表' }
+          }
+        ]
       },
       {
         path: 'order',
-        name: 'OrderStats',
-        component: () => import('@/views/statistics/order.vue'),
-        meta: { title: '订单统计' }
-      }
-    ]
-  },
-  {
-    path: '/system',
-    component: () => import('@/components/layout/index.vue'),
-    redirect: '/system/user',
-    meta: { title: '系统管理', icon: 'Setting' },
-    children: [
-      {
-        path: 'user',
-        name: 'SystemUser',
-        component: () => import('@/views/system/user.vue'),
-        meta: { title: '用户管理' }
+        redirect: '/order/list',
+        meta: { title: '订单管理', icon: 'Document' },
+        children: [
+          {
+            path: 'list',
+            name: 'OrderList',
+            component: () => import('@/views/order/list.vue'),
+            meta: { title: '订单列表' }
+          }
+        ]
       },
       {
-        path: 'role',
-        name: 'SystemRole',
-        component: () => import('@/views/system/role.vue'),
-        meta: { title: '角色管理' }
-      }
-    ]
-  },
-  {
-    path: '/log',
-    component: () => import('@/components/layout/index.vue'),
-    redirect: '/log/list',
-    meta: { title: '操作日志', icon: 'Operation' },
-    children: [
+        path: 'purchase',
+        redirect: '/purchase/list',
+        meta: { title: '采购单管理', icon: 'ShoppingCart' },
+        children: [
+          {
+            path: 'list',
+            name: 'PurchaseList',
+            component: () => import('@/views/purchase/list.vue'),
+            meta: { title: '采购单列表' }
+          }
+        ]
+      },
       {
-        path: 'list',
-        name: 'LogList',
-        component: () => import('@/views/system/log.vue'),
-        meta: { title: '日志列表' }
+        path: 'statistics',
+        redirect: '/statistics/customer',
+        meta: { title: '数据统计', icon: 'DataAnalysis' },
+        children: [
+          {
+            path: 'customer',
+            name: 'CustomerStats',
+            component: () => import('@/views/statistics/customer.vue'),
+            meta: { title: '客户统计' }
+          },
+          {
+            path: 'order',
+            name: 'OrderStats',
+            component: () => import('@/views/statistics/order.vue'),
+            meta: { title: '订单统计' }
+          }
+        ]
+      },
+      {
+        path: 'system',
+        redirect: '/system/user',
+        meta: { title: '系统管理', icon: 'Setting' },
+        children: [
+          {
+            path: 'user',
+            name: 'SystemUser',
+            component: () => import('@/views/system/user.vue'),
+            meta: { title: '用户管理' }
+          },
+          {
+            path: 'role',
+            name: 'SystemRole',
+            component: () => import('@/views/system/role.vue'),
+            meta: { title: '角色管理' }
+          }
+        ]
+      },
+      {
+        path: 'log',
+        redirect: '/log/list',
+        meta: { title: '操作日志', icon: 'Operation' },
+        children: [
+          {
+            path: 'list',
+            name: 'LogList',
+            component: () => import('@/views/system/log.vue'),
+            meta: { title: '日志列表' }
+          }
+        ]
       }
     ]
   },

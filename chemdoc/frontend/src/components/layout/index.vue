@@ -142,31 +142,25 @@ const menuItems = computed(() => {
   const items = []
   const routes = permissionStore.routes.length > 0 ? permissionStore.routes : constantRoutes
   
-  for (const route of routes) {
-    if (route.meta?.hidden || ['/login', '/404', '/403'].includes(route.path)) {
+  // 找到根路由 '/'
+  const rootRoute = routes.find(r => r.path === '/')
+  if (!rootRoute || !rootRoute.children) return items
+  
+  for (const route of rootRoute.children) {
+    if (route.meta?.hidden) {
       continue
     }
     
-    if (route.path === '/') {
-      if (route.children && route.children.length > 0) {
-        const child = route.children[0]
-        items.push({
-          key: child.path,
-          type: 'menu',
-          path: '/' + child.path,
-          title: child.meta?.title || '首页',
-          icon: child.meta?.icon || 'HomeFilled'
-        })
-      }
-    } else if (route.children && route.children.length > 1) {
+    // 检查是否有子路由并且子路由数量大于1
+    if (route.children && route.children.length > 1) {
       const children = route.children.map(child => ({
-        path: route.path + '/' + child.path,
+        path: '/' + route.path + '/' + child.path,
         title: child.meta?.title || child.path
       }))
       items.push({
         key: route.path,
         type: 'submenu',
-        path: route.path,
+        path: '/' + route.path,
         title: route.meta?.title || route.path,
         icon: route.meta?.icon || 'Menu',
         children: children
@@ -176,7 +170,7 @@ const menuItems = computed(() => {
       items.push({
         key: route.path,
         type: 'menu',
-        path: route.path + '/' + child.path,
+        path: '/' + route.path + '/' + child.path,
         title: route.meta?.title || child.meta?.title || route.path,
         icon: route.meta?.icon || 'Menu'
       })
@@ -184,7 +178,7 @@ const menuItems = computed(() => {
       items.push({
         key: route.path,
         type: 'menu',
-        path: route.path,
+        path: '/' + route.path,
         title: route.meta?.title || route.path,
         icon: route.meta?.icon || 'Menu'
       })
