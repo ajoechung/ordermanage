@@ -59,7 +59,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { getCategoryList, create as createCategory, update as updateCategory, deleteCategory } from '@/api/modules/product'
+import { getCategoryList, createCategory, updateCategory, deleteCategory } from '@/api/modules/product'
 
 const tableLoading = ref(false)
 const categoryList = ref([])
