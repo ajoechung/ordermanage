@@ -29,11 +29,22 @@
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px" :close-on-click-modal="false" @close="handleDialogClose">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
         <el-form-item v-if="formData.parent_id" label="上级分类"><span>{{ parentCategoryName }}</span></el-form-item>
+        <el-form-item v-else label="上级分类">
+          <el-select v-model="formData.parent_id" placeholder="请选择上级分类（不选则为一级分类）" clearable style="width: 100%">
+            <el-option v-for="cat in flatCategoryList" :key="cat.category_id" :label="cat.name" :value="cat.category_id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="分类名称" prop="name">
           <el-input v-model="formData.name" placeholder="请输入分类名称" />
         </el-form-item>
         <el-form-item label="排序" prop="sort">
           <el-input-number v-model="formData.sort" :min="0" :max="9999" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="是否显示" prop="is_show">
+          <el-radio-group v-model="formData.is_show">
+            <el-radio :label="1">显示</el-radio>
+            <el-radio :label="0">隐藏</el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -63,7 +74,8 @@ const formData = reactive({
   category_id: null,
   parent_id: null,
   name: '',
-  sort: 0
+  sort: 0,
+  is_show: 1
 })
 
 const formRules = {
@@ -73,7 +85,7 @@ const formRules = {
 const loadData = async () => {
   tableLoading.value = true
   try {
-    const res = await getCategoryList()
+    const res = await getCategoryList({ tree: true })
     if (res.code === 200) {
       const data = res.data
       if (Array.isArray(data)) {
@@ -90,10 +102,24 @@ const loadData = async () => {
   }
 }
 
+const flatCategoryList = computed(() => {
+  const result = []
+  const flatten = (list, level = 0) => {
+    for (const item of list) {
+      result.push({ ...item, level })
+      if (item.children && item.children.length > 0) {
+        flatten(item.children, level + 1)
+      }
+    }
+  }
+  flatten(categoryList.value)
+  return result
+})
+
 const findName = (list, id) => {
   for (const item of list) {
     if (item.category_id === id) return item.name
-    if (item.children) {
+    if (item.children && item.children.length > 0) {
       const name = findName(item.children, id)
       if (name) return name
     }

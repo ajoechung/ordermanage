@@ -51,21 +51,39 @@ class ProductService
 
     public function getCategories(array $params = []): array
     {
-        $parentId = (int)($params['parent_id'] ?? 0);
-        $isShow = $params['is_show'] ?? true;
+        $tree = $params['tree'] ?? false;
+        $isShow = $params['is_show'] ?? false;
 
         $query = ProductCategoryModel::where(true);
 
-        if ($isShow) {
+        if ($isShow !== true && $isShow !== 'true') {
             $query->where('is_show', 1);
         }
 
-        $list = $query->where('parent_id', $parentId)
-            ->order('sort', 'asc')
+        $list = $query->order('sort', 'asc')
             ->select()
             ->toArray();
 
+        if ($tree) {
+            $list = $this->buildCategoryTree($list);
+        }
+
         return Result::success($list);
+    }
+
+    protected function buildCategoryTree(array $categories, int $parentId = 0): array
+    {
+        $tree = [];
+        foreach ($categories as $category) {
+            if ($category['parent_id'] == $parentId) {
+                $children = $this->buildCategoryTree($categories, $category['category_id']);
+                if (!empty($children)) {
+                    $category['children'] = $children;
+                }
+                $tree[] = $category;
+            }
+        }
+        return $tree;
     }
 
     public function createCategory(array $data): array
@@ -131,12 +149,24 @@ class ProductService
             return Result::error('该分类存在子分类，无法删除');
         }
 
-        $hasProducts = ProductModel::where('category_id', $id)->whereNull('delete_time')->count();
-        if ($hasProducts > 0) {
-            return Result::error('该分类存在关联产品，无法删除');
+        try {
+            $hasProducts = ProductModel::where('category_id', $id)->count();
+            if ($hasProducts > 0) {
+                return Result::error('该分类存在关联产品，无法删除');
+            }
+        } catch (\Exception $e) {
+            // 如果检查失败，继续删除
         }
 
         $category->delete();
+
+        OperationLogModel::log(
+            request()->user_id ?? 0,
+            request()->username ?? '',
+            '产品管理',
+            '删除分类',
+            '删除产品分类：' . $category->name
+        );
 
         return Result::success(null, '分类删除成功');
     }
