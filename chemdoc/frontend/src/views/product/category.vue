@@ -28,7 +28,7 @@
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px" :close-on-click-modal="false" @close="handleDialogClose">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
-        <el-form-item v-if="formData.parent_id" label="上级分类"><span>{{ parentCategoryName }}</span></el-form-item>
+        <el-form-item v-if="formData.category_id" label="上级分类"><span>{{ parentCategoryName }}</span></el-form-item>
         <el-form-item v-else label="上级分类">
           <el-select v-model="formData.parent_id" placeholder="请选择上级分类（不选则为一级分类）" clearable style="width: 100%">
             <el-option v-for="cat in flatCategoryList" :key="cat.category_id" :label="cat.name" :value="cat.category_id" />

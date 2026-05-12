@@ -11,8 +11,8 @@ Route::group('api', function () {
     Route::get('dashboard', 'api.Statistics/dashboard');
 
     Route::get('customer', 'api.Customer/index');
-    Route::get('customer/:id', 'api.Customer/read');
     Route::get('customer/:id/detail', 'api.Customer/fullDetail');
+    Route::get('customer/:id', 'api.Customer/read');
     Route::post('customer', 'api.Customer/save');
     Route::put('customer/:id', 'api.Customer/update');
     Route::delete('customer/:id', 'api.Customer/delete');
@@ -48,14 +48,14 @@ Route::group('api', function () {
     Route::post('purchase/status', 'api.Purchase/status');
 
     Route::get('product', 'api.Product/index');
-    Route::get('product/:id', 'api.Product/read');
-    Route::post('product', 'api.Product/save');
-    Route::put('product/:id', 'api.Product/update');
-    Route::delete('product/:id', 'api.Product/delete');
     Route::get('product/categories', 'api.Product/categories');
     Route::post('product/category', 'api.Product/createCategory');
     Route::put('product/category/:id', 'api.Product/updateCategory');
     Route::delete('product/category/:id', 'api.Product/deleteCategory');
+    Route::get('product/:id', 'api.Product/read');
+    Route::post('product', 'api.Product/save');
+    Route::put('product/:id', 'api.Product/update');
+    Route::delete('product/:id', 'api.Product/delete');
 
     Route::get('statistics/customer', 'api.Statistics/customer');
     Route::get('statistics/order', 'api.Statistics/order');
