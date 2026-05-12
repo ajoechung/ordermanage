@@ -122,6 +122,13 @@
           <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入产品描述" />
         </el-form-item>
 
+        <el-form-item label="产品状态" prop="status">
+          <el-radio-group v-model="formData.status">
+            <el-radio :label="1">上架</el-radio>
+            <el-radio :label="0">下架</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
         <el-form-item label="MSDS文件">
           <el-upload
             v-model:file-list="formData.msds"
@@ -209,6 +216,7 @@ const formData = reactive({
   unit: '',
   origin: '',
   description: '',
+  status: 1,
   msds: [],
   coa: []
 })
@@ -248,7 +256,7 @@ const loadData = async () => {
 
 const loadCategories = async () => {
   try {
-    const res = await getCategoryList({ is_show: false })
+    const res = await getCategoryList()
     if (res.code === 200) {
       categoryList.value = res.data || []
     }
@@ -388,6 +396,7 @@ const handleDialogClose = () => {
     unit: '',
     origin: '',
     description: '',
+    status: 1,
     msds: [],
     coa: []
   })
