@@ -134,6 +134,14 @@ class ProductService
 
         $category->save($updateData);
 
+        OperationLogModel::log(
+            request()->user_id ?? 0,
+            request()->username ?? '',
+            '产品管理',
+            '编辑分类',
+            '编辑产品分类：' . $category->name
+        );
+
         return Result::success(null, '分类更新成功');
     }
 

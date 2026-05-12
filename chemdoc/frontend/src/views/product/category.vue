@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { getCategoryList, createCategory, updateCategory, deleteCategory } from '@/api/modules/product'
@@ -136,7 +136,13 @@ const handleAdd = (parent) => {
 
 const handleEdit = (row) => {
   dialogTitle.value = '编辑分类'
-  Object.assign(formData, { category_id: row.category_id, parent_id: row.parent_id, name: row.name, sort: row.sort || 0 })
+  Object.assign(formData, { 
+    category_id: row.category_id, 
+    parent_id: row.parent_id, 
+    name: row.name, 
+    sort: row.sort || 0,
+    is_show: row.is_show ?? 1
+  })
   if (row.parent_id) {
     parentCategoryName.value = findName(categoryList.value, row.parent_id)
   }
@@ -183,7 +189,7 @@ const handleSubmit = async () => {
 
 const handleDialogClose = () => {
   formRef.value?.resetFields()
-  Object.assign(formData, { category_id: null, parent_id: null, name: '', sort: 0 })
+  Object.assign(formData, { category_id: null, parent_id: null, name: '', sort: 0, is_show: 1 })
 }
 
 onMounted(() => { loadData() })
