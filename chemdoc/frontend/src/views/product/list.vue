@@ -38,9 +38,7 @@
         <el-table-column prop="code" label="产品编码" width="120" />
         <el-table-column prop="spec" label="规格" width="100" />
         <el-table-column prop="unit" label="单位" width="80" align="center" />
-        <el-table-column prop="price" label="单价" width="100" align="right">
-          <template #default="{ row }">¥{{ Number(row.price || 0).toFixed(2) }}</template>
-        </el-table-column>
+        <el-table-column prop="origin" label="产地" width="120" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
@@ -114,14 +112,56 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="单价" prop="price">
-              <el-input-number v-model="formData.price" :min="0" :precision="2" :controls="false" style="width: 100%" placeholder="请输入单价" />
+            <el-form-item label="产地" prop="origin">
+              <el-input v-model="formData.origin" placeholder="请输入产地" />
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-form-item label="产品描述" prop="description">
           <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入产品描述" />
+        </el-form-item>
+
+        <el-form-item label="MSDS文件">
+          <el-upload
+            v-model:file-list="formData.msds"
+            :action="uploadUrl"
+            :headers="uploadHeaders"
+            :data="{ type: 'msds' }"
+            multiple
+            :limit="10"
+            accept=".pdf,.doc,.docx"
+            :on-success="handleMsdsUploadSuccess"
+            :on-remove="handleMsdsRemove"
+            :file-list="formData.msds"
+            list-type="text"
+          >
+            <el-button type="primary" size="small">点击上传MSDS文件</el-button>
+            <template #tip>
+              <span class="el-upload__tip">支持PDF、DOC、DOCX格式，最多上传10个文件</span>
+            </template>
+          </el-upload>
+        </el-form-item>
+
+        <el-form-item label="COA文件">
+          <el-upload
+            v-model:file-list="formData.coa"
+            :action="uploadUrl"
+            :headers="uploadHeaders"
+            :data="{ type: 'coa' }"
+            multiple
+            :limit="10"
+            accept=".pdf,.doc,.docx"
+            :on-success="handleCoaUploadSuccess"
+            :on-remove="handleCoaRemove"
+            :file-list="formData.coa"
+            list-type="text"
+          >
+            <el-button type="primary" size="small">点击上传COA文件</el-button>
+            <template #tip>
+              <span class="el-upload__tip">支持PDF、DOC、DOCX格式，最多上传10个文件</span>
+            </template>
+          </el-upload>
         </el-form-item>
       </el-form>
 
@@ -167,13 +207,19 @@ const formData = reactive({
   code: '',
   spec: '',
   unit: '',
-  price: 0,
-  description: ''
+  origin: '',
+  description: '',
+  msds: [],
+  coa: []
 })
 
 const formRules = {
-  name: [{ required: true, message: '请输入产品名称', trigger: 'blur' }],
-  price: [{ required: true, message: '请输入单价', trigger: 'blur' }]
+  name: [{ required: true, message: '请输入产品名称', trigger: 'blur' }]
+}
+
+const uploadUrl = '/api/upload/file'
+const uploadHeaders = {
+  'Authorization': 'Bearer ' + localStorage.getItem('token') || ''
 }
 
 const loadData = async () => {
@@ -202,12 +248,44 @@ const loadData = async () => {
 
 const loadCategories = async () => {
   try {
-    const res = await getCategoryList()
+    const res = await getCategoryList({ is_show: false })
     if (res.code === 200) {
       categoryList.value = res.data || []
     }
   } catch (error) {
     console.error('获取分类列表失败:', error)
+  }
+}
+
+const handleMsdsUploadSuccess = (response) => {
+  if (response.code === 200 && response.data && response.data.url) {
+    formData.msds.push({
+      name: response.data.name || 'msds_file',
+      url: response.data.url
+    })
+  }
+}
+
+const handleMsdsRemove = (file) => {
+  const index = formData.msds.findIndex(item => item.url === file.url)
+  if (index > -1) {
+    formData.msds.splice(index, 1)
+  }
+}
+
+const handleCoaUploadSuccess = (response) => {
+  if (response.code === 200 && response.data && response.data.url) {
+    formData.coa.push({
+      name: response.data.name || 'coa_file',
+      url: response.data.url
+    })
+  }
+}
+
+const handleCoaRemove = (file) => {
+  const index = formData.coa.findIndex(item => item.url === file.url)
+  if (index > -1) {
+    formData.coa.splice(index, 1)
   }
 }
 
@@ -232,6 +310,17 @@ const handleEdit = (row) => {
   Object.keys(formData).forEach(key => {
     formData[key] = row[key] ?? formData[key]
   })
+  
+  formData.msds = (row.msds || []).map(url => ({
+    name: url.split('/').pop() || 'msds_file',
+    url: url
+  }))
+  
+  formData.coa = (row.coa || []).map(url => ({
+    name: url.split('/').pop() || 'coa_file',
+    url: url
+  }))
+  
   dialogVisible.value = true
 }
 
@@ -266,6 +355,10 @@ const handleSubmit = async () => {
     submitLoading.value = true
     try {
       const submitData = { ...formData }
+      
+      submitData.msds = formData.msds.map(item => item.url)
+      submitData.coa = formData.coa.map(item => item.url)
+
       if (submitData.product_id) {
         await update(submitData.product_id, submitData)
       } else {
@@ -293,8 +386,10 @@ const handleDialogClose = () => {
     code: '',
     spec: '',
     unit: '',
-    price: 0,
-    description: ''
+    origin: '',
+    description: '',
+    msds: [],
+    coa: []
   })
 }
 

@@ -41,8 +41,10 @@ class ProductService
                 $item['category_name'] = $item['category']['name'] ?? '';
                 unset($item['category']);
             }
-            if (isset($item['attachment']) && is_string($item['attachment'])) {
-                $item['attachment'] = json_decode($item['attachment'], true) ?? [];
+            foreach (['attachment', 'msds', 'coa'] as $field) {
+                if (isset($item[$field]) && is_string($item[$field])) {
+                    $item[$field] = json_decode($item[$field], true) ?? [];
+                }
             }
         }
 
@@ -52,11 +54,11 @@ class ProductService
     public function getCategories(array $params = []): array
     {
         $tree = $params['tree'] ?? false;
-        $isShow = $params['is_show'] ?? false;
+        $isShow = $params['is_show'] ?? true;
 
         $query = ProductCategoryModel::where(true);
 
-        if ($isShow !== true && $isShow !== 'true') {
+        if ($isShow === true || $isShow === 'true') {
             $query->where('is_show', 1);
         }
 
@@ -204,8 +206,10 @@ class ProductService
             unset($data['category']);
         }
 
-        if (isset($data['attachment']) && is_string($data['attachment'])) {
-            $data['attachment'] = json_decode($data['attachment'], true) ?? [];
+        foreach (['attachment', 'msds', 'coa'] as $field) {
+            if (isset($data[$field]) && is_string($data[$field])) {
+                $data[$field] = json_decode($data[$field], true) ?? [];
+            }
         }
 
         return Result::success($data);
@@ -219,9 +223,11 @@ class ProductService
             'code' => $data['code'] ?? '',
             'spec' => $data['spec'] ?? '',
             'unit' => $data['unit'] ?? '',
-            'price' => $data['price'] ?? 0,
             'description' => $data['description'] ?? '',
+            'origin' => $data['origin'] ?? '',
             'attachment' => isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null,
+            'msds' => isset($data['msds']) ? json_encode($data['msds'], JSON_UNESCAPED_UNICODE) : null,
+            'coa' => isset($data['coa']) ? json_encode($data['coa'], JSON_UNESCAPED_UNICODE) : null,
             'status' => $data['status'] ?? 1,
             'create_user_id' => request()->user_id ?? 0,
             'create_time' => date('Y-m-d H:i:s'),
@@ -247,7 +253,7 @@ class ProductService
 
         $updateData = [];
 
-        $fields = ['name', 'category_id', 'code', 'spec', 'unit', 'price', 'description', 'status'];
+        $fields = ['name', 'category_id', 'code', 'spec', 'unit', 'description', 'origin', 'status'];
 
         foreach ($fields as $field) {
             if (isset($data[$field])) {
@@ -257,6 +263,14 @@ class ProductService
 
         if (isset($data['attachment'])) {
             $updateData['attachment'] = is_array($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : $data['attachment'];
+        }
+
+        if (isset($data['msds'])) {
+            $updateData['msds'] = is_array($data['msds']) ? json_encode($data['msds'], JSON_UNESCAPED_UNICODE) : $data['msds'];
+        }
+
+        if (isset($data['coa'])) {
+            $updateData['coa'] = is_array($data['coa']) ? json_encode($data['coa'], JSON_UNESCAPED_UNICODE) : $data['coa'];
         }
 
         $updateData['update_time'] = date('Y-m-d H:i:s');
