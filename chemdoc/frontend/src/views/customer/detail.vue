@@ -126,6 +126,29 @@
         </el-card>
       </el-tab-pane>
 
+      <el-tab-pane label="交易产品" name="product">
+        <el-card shadow="never">
+          <el-table :data="productList" stripe border>
+            <el-table-column prop="product_name" label="产品名称" min-width="180" />
+            <el-table-column prop="spec" label="规格" width="150" />
+            <el-table-column prop="unit" label="单位" width="80" />
+            <el-table-column prop="price" label="单价" width="120" align="right">
+              <template #default="{ row }">
+                ¥{{ Number(row.price || 0).toLocaleString() }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="quantity" label="交易数量" width="100" align="center" />
+            <el-table-column prop="total_amount" label="交易金额" width="120" align="right">
+              <template #default="{ row }">
+                ¥{{ Number(row.total_amount || 0).toLocaleString() }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="last_trade_time" label="最后交易时间" width="160" />
+          </el-table>
+          <el-empty v-if="productList.length === 0" description="暂无交易产品" />
+        </el-card>
+      </el-tab-pane>
+
       <el-tab-pane label="操作日志" name="log">
         <el-card shadow="never">
           <el-table :data="logList" stripe border>
@@ -168,6 +191,7 @@ const currentCustomer = ref({})
 const contactList = ref([])
 const followList = ref([])
 const orderList = ref([])
+const productList = ref([])
 const logList = ref([])
 
 const customerName = computed(() => currentCustomer.value.name || '客户详情')
@@ -239,6 +263,13 @@ const loadCustomerDetail = async (id) => {
   orderList.value = [
     { order_id: 1, order_no: 'ORD202405001', customer_name: '化工科技有限公司', total_amount: 50000, status: 4, create_time: '2024-05-05 11:20:00' },
     { order_id: 2, order_no: 'ORD202404008', customer_name: '化工科技有限公司', total_amount: 35000, status: 4, create_time: '2024-04-20 09:15:00' }
+  ]
+
+  // 交易产品
+  productList.value = [
+    { product_id: 1, product_name: '工业级氢氧化钠', spec: '99% 25kg/袋', unit: '袋', price: 1200, quantity: 50, total_amount: 60000, last_trade_time: '2024-05-05 11:20:00' },
+    { product_id: 2, product_name: '盐酸标准溶液', spec: '1mol/L 500ml/瓶', unit: '瓶', price: 80, quantity: 100, total_amount: 8000, last_trade_time: '2024-04-20 09:15:00' },
+    { product_id: 3, product_name: '无水乙醇', spec: '99.7% 5L/桶', unit: '桶', price: 350, quantity: 30, total_amount: 10500, last_trade_time: '2024-03-15 14:30:00' }
   ]
 
   // 操作日志

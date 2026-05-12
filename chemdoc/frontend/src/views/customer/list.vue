@@ -156,32 +156,20 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="detailVisible" title="客户详情" width="800px">
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="客户名称">{{ currentCustomer.name }}</el-descriptions-item>
-        <el-descriptions-item label="客户编码">{{ currentCustomer.code }}</el-descriptions-item>
-        <el-descriptions-item label="行业">{{ currentCustomer.industry }}</el-descriptions-item>
-        <el-descriptions-item label="客户等级">
-          <el-tag :type="getLevelTag(currentCustomer.level)" size="small">
-            {{ getLevelText(currentCustomer.level) }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="客户来源">{{ currentCustomer.source }}</el-descriptions-item>
-        <el-descriptions-item label="客户规模">{{ currentCustomer.scale }}</el-descriptions-item>
-        <el-descriptions-item label="详细地址" :span="2">{{ currentCustomer.address }}</el-descriptions-item>
-        <el-descriptions-item label="客户描述" :span="2">{{ currentCustomer.description }}</el-descriptions-item>
-        <el-descriptions-item label="负责人">{{ currentCustomer.owner_name }}</el-descriptions-item>
-        <el-descriptions-item label="创建时间">{{ currentCustomer.create_time }}</el-descriptions-item>
-      </el-descriptions>
-    </el-dialog>
+    <customer-detail
+      v-model="detailVisible"
+      :customer-id="currentCustomerId"
+      ref="detailRef"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
 import { getList, create, update, deleteCustomer } from '@/api/modules/customer'
+import CustomerDetail from './detail.vue'
 
 const searchForm = reactive({
   keyword: '',
@@ -204,7 +192,8 @@ const detailVisible = ref(false)
 const dialogTitle = ref('')
 const submitLoading = ref(false)
 const formRef = ref(null)
-const currentCustomer = ref({})
+const detailRef = ref(null)
+const currentCustomerId = ref(null)
 
 const formData = reactive({
   customer_id: null,
@@ -278,8 +267,11 @@ const handleEdit = (row) => {
 }
 
 const handleView = (row) => {
-  currentCustomer.value = row
+  currentCustomerId.value = row.customer_id
   detailVisible.value = true
+  nextTick(() => {
+    detailRef.value?.loadCustomerDetail(row.customer_id)
+  })
 }
 
 const handleDelete = async (row) => {

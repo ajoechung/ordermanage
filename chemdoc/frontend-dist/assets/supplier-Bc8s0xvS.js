@@ -1,0 +1,1 @@
+import{s as t}from"./index-CjgrrC8Z.js";function u(e){return t({url:"/supplier",method:"get",params:e})}function p(e){return t({url:"/supplier",method:"post",data:e})}function s(e,r){return t({url:`/supplier/${e}`,method:"put",data:r})}function n(e){return t({url:`/supplier/${e}`,method:"delete"})}const o=u,l=p,c=s;export{l as c,n as d,o as g,c as u};
