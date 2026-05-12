@@ -12,6 +12,7 @@ Route::group('api', function () {
 
     Route::get('customer', 'api.Customer/index');
     Route::get('customer/:id', 'api.Customer/read');
+    Route::get('customer/:id/detail', 'api.Customer/fullDetail');
     Route::post('customer', 'api.Customer/save');
     Route::put('customer/:id', 'api.Customer/update');
     Route::delete('customer/:id', 'api.Customer/delete');

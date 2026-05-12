@@ -30,6 +30,11 @@ class Customer extends BaseController
         return json($this->customerService->getDetail((int)$id));
     }
 
+    public function fullDetail($id)
+    {
+        return json($this->customerService->getFullDetail((int)$id));
+    }
+
     public function save()
     {
         $data = $this->request->post();

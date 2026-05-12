@@ -15,6 +15,13 @@ export function getCustomerDetail(id) {
   })
 }
 
+export function getCustomerFullDetail(id) {
+  return request({
+    url: `/customer/${id}/detail`,
+    method: 'get'
+  })
+}
+
 export function createCustomer(data) {
   return request({
     url: '/customer',

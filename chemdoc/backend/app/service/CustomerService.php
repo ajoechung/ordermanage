@@ -5,6 +5,12 @@ use app\model\CustomerModel;
 use app\model\OperationLogModel;
 use think\facade\Db;
 
+use app\model\ContactModel;
+use app\model\CustomerFollowModel;
+use app\model\OrderModel;
+use app\model\OrderItemModel;
+use app\model\ProductModel;
+
 class CustomerService
 {
     public function getList(array $params): array
@@ -73,6 +79,83 @@ class CustomerService
         if (isset($data['attachment']) && is_string($data['attachment'])) {
             $data['attachment'] = json_decode($data['attachment'], true) ?? [];
         }
+
+        return Result::success($data);
+    }
+
+    public function getFullDetail(int $id): array
+    {
+        $customer = CustomerModel::with(['ownerUser'])->find($id);
+
+        if (!$customer) {
+            return Result::notFound('客户不存在');
+        }
+
+        $data = $customer->toArray();
+
+        if (isset($data['owner_user'])) {
+            $data['owner_name'] = $data['owner_user']['realname'] ?? '';
+            unset($data['owner_user']);
+        }
+
+        // 获取联系人列表
+        $contacts = ContactModel::where('customer_id', $id)
+            ->order('is_default desc, contact_id asc')
+            ->select()
+            ->toArray();
+        foreach ($contacts as &$contact) {
+            $contact['phone'] = $contact['mobile'] ?? '';
+            $contact['is_primary'] = $contact['is_default'] ?? 0;
+        }
+        $data['contacts'] = $contacts;
+
+        // 获取跟进记录
+        $follows = CustomerFollowModel::where('customer_id', $id)
+            ->with(['createUser'])
+            ->order('create_time desc')
+            ->select()
+            ->toArray();
+        foreach ($follows as &$follow) {
+            $follow['create_user_name'] = $follow['create_user']['realname'] ?? '';
+            $follow['type'] = $this->getFollowTypeCode($follow['method']);
+            unset($follow['create_user']);
+        }
+        $data['follows'] = $follows;
+
+        // 获取历史订单
+        $orders = OrderModel::where('customer_id', $id)
+            ->order('create_time desc')
+            ->select()
+            ->toArray();
+        foreach ($orders as &$order) {
+            $order['status'] = $order['order_status'] ?? 0;
+            if (!isset($order['customer_name'])) {
+                $order['customer_name'] = $customer->name ?? '';
+            }
+        }
+        $data['orders'] = $orders;
+
+        // 获取交易产品（从订单商品中统计）
+        $productData = Db::name('order_item')
+            ->alias('oi')
+            ->join('product p', 'oi.product_id = p.product_id')
+            ->join('order o', 'oi.order_id = o.order_id')
+            ->where('o.customer_id', $id)
+            ->where('o.order_status', 'in', [3, 4, 5])
+            ->field('p.name as product_name, p.spec, p.unit, p.price, SUM(oi.quantity) as quantity, SUM(oi.subtotal) as total_amount, MAX(oi.create_time) as last_trade_time')
+            ->group('oi.product_id')
+            ->order('total_amount desc')
+            ->select()
+            ->toArray();
+        $data['products'] = $productData;
+
+        // 获取操作日志
+        $logs = OperationLogModel::where('module', '客户管理')
+            ->where('description', 'like', "%{$customer->name}%")
+            ->order('create_time desc')
+            ->select()
+            ->toArray();
+        $data['logs'] = $logs;
 
         return Result::success($data);
     }
@@ -183,5 +266,18 @@ class CustomerService
         );
 
         return Result::success(null, '客户删除成功');
+    }
+
+    private function getFollowTypeCode(string $method): int
+    {
+        $typeMap = [
+            '电话' => 1,
+            '微信' => 2,
+            '邮件' => 3,
+            '拜访' => 4,
+            '面谈' => 4,
+            '其他' => 5,
+        ];
+        return $typeMap[$method] ?? 5;
     }
 }

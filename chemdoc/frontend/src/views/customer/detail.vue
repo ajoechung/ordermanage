@@ -167,6 +167,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { getCustomerFullDetail } from '@/api/modules/customer'
 
 const props = defineProps({
   modelValue: {
@@ -215,69 +216,49 @@ const getOrderStatusTag = (status) => {
 }
 
 const loadCustomerDetail = async (id) => {
-  // 这里可以调用API获取完整的客户详情，包括关联数据
-  // 暂时使用模拟数据
-  currentCustomer.value = {
-    customer_id: id,
-    name: '化工科技有限公司',
-    code: 'CUST001',
-    industry: '化工',
-    level: 3,
-    source: '搜索引擎',
-    scale: '100-500人',
-    address: '北京市朝阳区科技园1号楼',
-    description: '这是一家专注于化工产品研发的企业，具有丰富的行业经验和技术实力。',
-    status: 1,
-    owner_name: '张三',
-    create_time: '2024-01-15 09:30:00',
-    update_time: '2024-05-10 14:20:00'
-  }
+  try {
+    const res = await getCustomerFullDetail(id)
+    if (res.code === 200) {
+      const data = res.data
+      
+      // 设置客户基本信息
+      currentCustomer.value = {
+        customer_id: data.customer_id,
+        name: data.name || '',
+        code: data.code || '',
+        industry: data.industry || '',
+        level: data.level || 1,
+        source: data.source || '',
+        scale: data.scale || '',
+        address: data.address || '',
+        description: data.description || '',
+        status: data.status || 1,
+        owner_name: data.owner_name || '',
+        create_time: data.create_time || '',
+        update_time: data.update_time || ''
+      }
 
-  // 联系人数据
-  contactList.value = [
-    { contact_id: 1, name: '李四', position: '采购经理', phone: '13800138000', email: 'lisi@example.com', wechat: 'lisi_wx', is_primary: 1 },
-    { contact_id: 2, name: '王五', position: '技术总监', phone: '13800138001', email: 'wangwu@example.com', wechat: 'wangwu_wx', is_primary: 0 }
-  ]
+      // 设置联系人数据
+      contactList.value = data.contacts || []
 
-  // 跟进记录
-  followList.value = [
-    {
-      follow_id: 1,
-      type: 1,
-      content: '初步沟通客户需求，客户对我们的产品表示有兴趣，约定下周进行详细演示。',
-      attachment: null,
-      create_user_name: '张三',
-      create_time: '2024-05-08 10:30:00'
-    },
-    {
-      follow_id: 2,
-      type: 4,
-      content: '进行产品演示，客户对产品功能很满意，正在对比竞品，需要进一步跟进。',
-      attachment: '/uploads/demo.pdf',
-      create_user_name: '张三',
-      create_time: '2024-05-12 14:00:00'
+      // 设置跟进记录
+      followList.value = data.follows || []
+
+      // 设置历史订单
+      orderList.value = data.orders || []
+
+      // 设置交易产品
+      productList.value = data.products || []
+
+      // 设置操作日志
+      logList.value = data.logs || []
+    } else {
+      ElMessage.error(res.msg || '获取客户详情失败')
     }
-  ]
-
-  // 历史订单
-  orderList.value = [
-    { order_id: 1, order_no: 'ORD202405001', customer_name: '化工科技有限公司', total_amount: 50000, status: 4, create_time: '2024-05-05 11:20:00' },
-    { order_id: 2, order_no: 'ORD202404008', customer_name: '化工科技有限公司', total_amount: 35000, status: 4, create_time: '2024-04-20 09:15:00' }
-  ]
-
-  // 交易产品
-  productList.value = [
-    { product_id: 1, product_name: '工业级氢氧化钠', spec: '99% 25kg/袋', unit: '袋', price: 1200, quantity: 50, total_amount: 60000, last_trade_time: '2024-05-05 11:20:00' },
-    { product_id: 2, product_name: '盐酸标准溶液', spec: '1mol/L 500ml/瓶', unit: '瓶', price: 80, quantity: 100, total_amount: 8000, last_trade_time: '2024-04-20 09:15:00' },
-    { product_id: 3, product_name: '无水乙醇', spec: '99.7% 5L/桶', unit: '桶', price: 350, quantity: 30, total_amount: 10500, last_trade_time: '2024-03-15 14:30:00' }
-  ]
-
-  // 操作日志
-  logList.value = [
-    { log_id: 1, action: '新增客户', description: '创建客户：化工科技有限公司', create_user_name: '张三', create_time: '2024-01-15 09:30:00' },
-    { log_id: 2, action: '更新客户', description: '修改客户信息：客户规模从50-100人更新为100-500人', create_user_name: '李四', create_time: '2024-03-20 15:45:00' },
-    { log_id: 3, action: '添加联系人', description: '新增联系人：李四（采购经理）', create_user_name: '张三', create_time: '2024-04-10 10:20:00' }
-  ]
+  } catch (error) {
+    console.error('获取客户详情失败:', error)
+    ElMessage.error('获取客户详情失败')
+  }
 }
 
 const handleAddContact = () => {
