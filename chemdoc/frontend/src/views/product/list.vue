@@ -12,8 +12,8 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 100px">
-            <el-option label="上架" :value="1" />
-            <el-option label="下架" :value="0" />
+            <el-option label="启用" :value="1" />
+            <el-option label="禁用" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -42,7 +42,7 @@
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
             <el-tag :type="row.status === '启用' || row.status === 1 ? 'success' : 'danger'" size="small">
-              {{ row.status === '启用' || row.status === 1 ? '上架' : '下架' }}
+              {{ row.status === '启用' || row.status === 1 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -125,8 +125,8 @@
 
         <el-form-item label="产品状态" prop="status">
           <el-radio-group v-model="formData.status">
-            <el-radio label="启用">上架</el-radio>
-            <el-radio label="禁用">下架</el-radio>
+            <el-radio label="启用">启用</el-radio>
+            <el-radio label="禁用">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -141,7 +141,6 @@
             accept=".pdf,.doc,.docx"
             :on-success="handleMsdsUploadSuccess"
             :on-remove="handleMsdsRemove"
-            :file-list="formData.msds"
             list-type="text"
           >
             <el-button type="primary" size="small">点击上传MSDS文件</el-button>
@@ -162,7 +161,6 @@
             accept=".pdf,.doc,.docx"
             :on-success="handleCoaUploadSuccess"
             :on-remove="handleCoaRemove"
-            :file-list="formData.coa"
             list-type="text"
           >
             <el-button type="primary" size="small">点击上传COA文件</el-button>
