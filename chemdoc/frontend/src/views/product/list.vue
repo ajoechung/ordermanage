@@ -41,8 +41,8 @@
         <el-table-column prop="origin" label="产地" width="120" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
-            <el-tag :type="Number(row.status) === 1 ? 'success' : 'danger'" size="small">
-              {{ Number(row.status) === 1 ? '上架' : '下架' }}
+            <el-tag :type="row.status === '启用' || row.status === 1 ? 'success' : 'danger'" size="small">
+              {{ row.status === '启用' || row.status === 1 ? '上架' : '下架' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -125,8 +125,8 @@
 
         <el-form-item label="产品状态" prop="status">
           <el-radio-group v-model="formData.status">
-            <el-radio :label="1">上架</el-radio>
-            <el-radio :label="0">下架</el-radio>
+            <el-radio label="启用">上架</el-radio>
+            <el-radio label="禁用">下架</el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -245,7 +245,7 @@ const formData = reactive({
   unit: '',
   origin: '',
   description: '',
-  status: 1,
+  status: '启用',
   msds: [],
   coa: []
 })
@@ -445,7 +445,7 @@ const handleDialogClose = () => {
     unit: '',
     origin: '',
     description: '',
-    status: 1,
+    status: '启用',
     msds: [],
     coa: []
   })
