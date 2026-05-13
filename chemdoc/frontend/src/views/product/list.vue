@@ -79,7 +79,7 @@
           <el-col :span="12">
             <el-form-item label="产品分类" prop="category_id">
               <el-select v-model="formData.category_id" placeholder="请选择" style="width: 100%">
-                <el-option v-for="c in categoryList" :key="c.category_id" :label="c.name" :value="c.category_id" />
+                <el-option v-for="c in categoryList" :key="c.category_id" :label="formatCategoryName(c)" :value="c.category_id" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -263,6 +263,12 @@ const loadCategories = async () => {
   } catch (error) {
     console.error('获取分类列表失败:', error)
   }
+}
+
+const formatCategoryName = (category) => {
+  const level = category.level || 0
+  const prefix = level > 1 ? '├─ '.repeat(level - 1) : ''
+  return prefix + category.name
 }
 
 const handleMsdsUploadSuccess = (response) => {
