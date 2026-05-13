@@ -19,7 +19,8 @@ return [
     'response' => [
         'default_return_type' => 'json',
     ],
-    'database' => require __DIR__ . '/database.php',
-    'jwt' => require __DIR__ . '/jwt.php',
-    'upload' => require __DIR__ . '/upload.php',
+    'database' => require __DIR__ . '/../config/database.php',
+    'cache' => require __DIR__ . '/../config/cache.php',
+    'jwt' => require __DIR__ . '/../config/jwt.php',
+    'upload' => require __DIR__ . '/../config/upload.php',
 ];

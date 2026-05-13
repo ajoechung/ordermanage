@@ -1,16 +1,14 @@
 <?php
-use think\facade\Env;
-
 return [
-    'type'            => Env::get('database.type', 'mysql'),
-    'hostname'        => Env::get('database.hostname', '127.0.0.1'),
-    'database'        => Env::get('database.database', 'chemdoc'),
-    'username'        => Env::get('database.username', 'root'),
-    'password'        => Env::get('database.password', 'root'),
-    'hostport'        => Env::get('database.hostport', '3306'),
-    'charset'         => Env::get('database.charset', 'utf8mb4'),
-    'prefix'          => Env::get('database.prefix', ''),
-    'debug'           => Env::get('database.debug', true),
+    'type'            => $_ENV['DATABASE_TYPE'] ?? 'mysql',
+    'hostname'        => $_ENV['DATABASE_HOSTNAME'] ?? '127.0.0.1',
+    'database'        => $_ENV['DATABASE_DATABASE'] ?? 'chemdoc',
+    'username'        => $_ENV['DATABASE_USERNAME'] ?? 'root',
+    'password'        => $_ENV['DATABASE_PASSWORD'] ?? 'root',
+    'hostport'        => $_ENV['DATABASE_HOSTPORT'] ?? '3306',
+    'charset'         => $_ENV['DATABASE_CHARSET'] ?? 'utf8mb4',
+    'prefix'          => $_ENV['DATABASE_PREFIX'] ?? '',
+    'debug'           => ($_ENV['DATABASE_DEBUG'] ?? 'true') === 'true',
     'deploy'          => 0,
     'rw_separate'     => false,
     'master_num'      => 1,
