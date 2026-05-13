@@ -54,7 +54,6 @@ class Captcha extends BaseController
         imagepng($image);
         $imageData = ob_get_contents();
         ob_end_clean();
-        imagedestroy($image);
 
         $base64 = 'data:image/png;base64,' . base64_encode($imageData);
 
