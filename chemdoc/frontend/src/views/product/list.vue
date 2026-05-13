@@ -349,34 +349,102 @@ const handleAdd = () => {
 }
 
 const handleViewAttachments = (row) => {
+  const msdsFiles = []
+  if (row.msds) {
+    if (Array.isArray(row.msds)) {
+      row.msds.forEach(url => {
+        if (url && url !== 'null' && url !== 'undefined') {
+          msdsFiles.push({
+            name: typeof url === 'string' ? (url.split('/').pop() || 'msds_file') : (url.name || 'msds_file'),
+            url: typeof url === 'string' ? url : (url.url || '')
+          })
+        }
+      })
+    } else if (typeof row.msds === 'string' && row.msds) {
+      msdsFiles.push({
+        name: row.msds.split('/').pop() || 'msds_file',
+        url: row.msds
+      })
+    }
+  }
+  
+  const coaFiles = []
+  if (row.coa) {
+    if (Array.isArray(row.coa)) {
+      row.coa.forEach(url => {
+        if (url && url !== 'null' && url !== 'undefined') {
+          coaFiles.push({
+            name: typeof url === 'string' ? (url.split('/').pop() || 'coa_file') : (url.name || 'coa_file'),
+            url: typeof url === 'string' ? url : (url.url || '')
+          })
+        }
+      })
+    } else if (typeof row.coa === 'string' && row.coa) {
+      coaFiles.push({
+        name: row.coa.split('/').pop() || 'coa_file',
+        url: row.coa
+      })
+    }
+  }
+  
   currentProduct.value = {
-    msds: (row.msds || []).map(url => ({
-      name: typeof url === 'string' ? url.split('/').pop() || 'msds_file' : (url.name || 'msds_file'),
-      url: typeof url === 'string' ? url : (url.url || '')
-    })),
-    coa: (row.coa || []).map(url => ({
-      name: typeof url === 'string' ? url.split('/').pop() || 'coa_file' : (url.name || 'coa_file'),
-      url: typeof url === 'string' ? url : (url.url || '')
-    }))
+    msds: msdsFiles,
+    coa: coaFiles
   }
   attachmentDialogVisible.value = true
 }
 
 const handleEdit = (row) => {
   dialogTitle.value = '编辑产品'
-  Object.keys(formData).forEach(key => {
-    formData[key] = row[key] ?? formData[key]
-  })
+  initFormData()
   
-  formData.msds = (row.msds || []).map(url => ({
-    name: typeof url === 'string' ? url.split('/').pop() || 'msds_file' : (url.name || 'msds_file'),
-    url: typeof url === 'string' ? url : (url.url || '')
-  }))
+  formData.product_id = row.product_id || null
+  formData.name = row.name || ''
+  formData.category_id = row.category_id || null
+  formData.code = row.code || ''
+  formData.spec = row.spec || ''
+  formData.unit = row.unit || ''
+  formData.origin = row.origin || ''
+  formData.description = row.description || ''
+  formData.status = row.status || '启用'
   
-  formData.coa = (row.coa || []).map(url => ({
-    name: typeof url === 'string' ? url.split('/').pop() || 'coa_file' : (url.name || 'coa_file'),
-    url: typeof url === 'string' ? url : (url.url || '')
-  }))
+  formData.msds = []
+  if (row.msds) {
+    if (Array.isArray(row.msds)) {
+      row.msds.forEach(url => {
+        if (url && url !== 'null' && url !== 'undefined') {
+          formData.msds.push({
+            name: typeof url === 'string' ? (url.split('/').pop() || 'msds_file') : (url.name || 'msds_file'),
+            url: typeof url === 'string' ? url : (url.url || '')
+          })
+        }
+      })
+    } else if (typeof row.msds === 'string' && row.msds) {
+      formData.msds.push({
+        name: row.msds.split('/').pop() || 'msds_file',
+        url: row.msds
+      })
+    }
+  }
+  
+  formData.coa = []
+  if (row.coa) {
+    if (Array.isArray(row.coa)) {
+      row.coa.forEach(url => {
+        if (url && url !== 'null' && url !== 'undefined') {
+          formData.coa.push({
+            name: typeof url === 'string' ? (url.split('/').pop() || 'coa_file') : (url.name || 'coa_file'),
+            url: typeof url === 'string' ? url : (url.url || '')
+          })
+        }
+      })
+    } else if (typeof row.coa === 'string' && row.coa) {
+      formData.coa.push({
+        name: row.coa.split('/').pop() || 'coa_file',
+        url: row.coa
+      })
+    }
+  }
   
   dialogVisible.value = true
 }
