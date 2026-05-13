@@ -9,6 +9,7 @@ class UploadService
 {
     protected array $config;
     protected string $disk = 'public';
+    protected ?string $originalName = null;
 
     public function __construct()
     {
@@ -28,6 +29,7 @@ class UploadService
     public function upload(UploadedFile $file, string $type = 'images'): array
     {
         $ext = strtolower($file->getOriginalExtension());
+        $this->originalName = $file->getOriginalName();
         
         $allowedExt = $this->config['allowed_ext'] ?? [];
         if (!in_array($ext, $allowedExt)) {
@@ -56,7 +58,7 @@ class UploadService
                 'url' => $url,
                 'path' => $savePath,
                 'filename' => $filename,
-                'original_name' => $file->getOriginalName(),
+                'original_name' => $this->originalName,
                 'size' => $file->getSize(),
                 'ext' => $ext,
             ], '上传成功');
@@ -88,6 +90,6 @@ class UploadService
 
     protected function generateFilename(string $ext): string
     {
-        return md5(uniqid((string)mt_rand(), true)) . '.' . $ext;
+        return $this->originalName . '.' . $ext;
     }
 }
