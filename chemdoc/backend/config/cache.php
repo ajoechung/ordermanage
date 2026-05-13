@@ -4,7 +4,7 @@ return [
     'stores' => [
         'file' => [
             'type' => 'File',
-            'path' => '../runtime/cache/',
+            'path' => __DIR__ . '/../runtime/cache',
             'prefix' => '',
             'expire' => 0,
         ],
