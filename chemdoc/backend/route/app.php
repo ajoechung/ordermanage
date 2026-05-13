@@ -47,16 +47,6 @@ Route::group('api', function () {
     Route::delete('purchase/:id', 'api.Purchase/delete');
     Route::post('purchase/status', 'api.Purchase/status');
 
-    Route::get('product', 'api.Product/index');
-    Route::get('product/categories', 'api.Product/categories');
-    Route::post('product/category', 'api.Product/createCategory');
-    Route::put('product/category/:id', 'api.Product/updateCategory');
-    Route::delete('product/category/:id', 'api.Product/deleteCategory');
-    Route::get('product/:id', 'api.Product/read');
-    Route::post('product', 'api.Product/save');
-    Route::put('product/:id', 'api.Product/update');
-    Route::delete('product/:id', 'api.Product/delete');
-
     Route::get('statistics/customer', 'api.Statistics/customer');
     Route::get('statistics/order', 'api.Statistics/order');
 
@@ -75,5 +65,16 @@ Route::group('api', function () {
     Route::post('upload/image', 'api.Upload/image');
     Route::post('upload/file', 'api.Upload/file');
     Route::post('upload/delete', 'api.Upload/delete');
+
+    Route::get('product/categories', 'api.Product/categories');
+    Route::post('product/category', 'api.Product/createCategory');
+    Route::put('product/category/:id', 'api.Product/updateCategory');
+    Route::delete('product/category/:id', 'api.Product/deleteCategory');
+
+    Route::get('product/:id', 'api.Product/read');
+    Route::get('product', 'api.Product/index');
+    Route::post('product', 'api.Product/save');
+    Route::put('product/:id', 'api.Product/update');
+    Route::delete('product/:id', 'api.Product/delete');
 
 })->middleware(\app\middleware\CorsMiddleware::class);
