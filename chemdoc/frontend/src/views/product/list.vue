@@ -7,7 +7,7 @@
         </el-form-item>
         <el-form-item label="产品分类">
           <el-select v-model="searchForm.category_id" placeholder="请选择" clearable>
-            <el-option v-for="c in categoryList" :key="c.category_id" :label="c.name" :value="c.category_id" />
+            <el-option v-for="c in flatCategoryList" :key="c.category_id" :label="formatCategoryName(c)" :value="c.category_id" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
@@ -80,7 +80,7 @@
           <el-col :span="12">
             <el-form-item label="产品分类" prop="category_id">
               <el-select v-model="formData.category_id" placeholder="请选择" style="width: 100%">
-                <el-option v-for="c in categoryList" :key="c.category_id" :label="formatCategoryName(c)" :value="c.category_id" />
+                <el-option v-for="c in flatCategoryList" :key="c.category_id" :label="formatCategoryName(c)" :value="c.category_id" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -221,6 +221,7 @@ const searchForm = reactive({
 const tableLoading = ref(false)
 const productList = ref([])
 const categoryList = ref([])
+const flatCategoryList = ref([])
 
 const pagination = reactive({
   page: 1,
@@ -285,18 +286,30 @@ const loadData = async () => {
 
 const loadCategories = async () => {
   try {
-    const res = await getCategoryList()
+    const res = await getCategoryList({ tree: true })
     if (res.code === 200) {
       categoryList.value = res.data || []
+      flatCategoryList.value = flattenCategories(categoryList.value)
     }
   } catch (error) {
     console.error('获取分类列表失败:', error)
   }
 }
 
+const flattenCategories = (list, level = 0) => {
+  const result = []
+  for (const item of list) {
+    result.push({ ...item, level })
+    if (item.children && item.children.length > 0) {
+      result.push(...flattenCategories(item.children, level + 1))
+    }
+  }
+  return result
+}
+
 const formatCategoryName = (category) => {
   const level = category.level || 0
-  const prefix = level > 1 ? '├─ '.repeat(level - 1) : ''
+  const prefix = level > 0 ? '　'.repeat(level) + '├─ ' : ''
   return prefix + category.name
 }
 
@@ -345,6 +358,19 @@ const handleReset = () => {
 
 const handleAdd = () => {
   dialogTitle.value = '新增产品'
+  Object.assign(formData, {
+    product_id: null,
+    name: '',
+    category_id: null,
+    code: '',
+    spec: '',
+    unit: '',
+    origin: '',
+    description: '',
+    status: '启用',
+    msds: [],
+    coa: []
+  })
   dialogVisible.value = true
 }
 
@@ -396,7 +422,19 @@ const handleViewAttachments = (row) => {
 
 const handleEdit = (row) => {
   dialogTitle.value = '编辑产品'
-  initFormData()
+  Object.assign(formData, {
+    product_id: null,
+    name: '',
+    category_id: null,
+    code: '',
+    spec: '',
+    unit: '',
+    origin: '',
+    description: '',
+    status: '启用',
+    msds: [],
+    coa: []
+  })
   
   formData.product_id = row.product_id || null
   formData.name = row.name || ''
