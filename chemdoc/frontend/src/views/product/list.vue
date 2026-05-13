@@ -41,14 +41,15 @@
         <el-table-column prop="origin" label="产地" width="120" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
-              {{ row.status === 1 ? '上架' : '下架' }}
+            <el-tag :type="Number(row.status) === 1 ? 'success' : 'danger'" size="small">
+              {{ Number(row.status) === 1 ? '上架' : '下架' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="create_time" label="创建时间" width="160" />
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
+            <el-button type="primary" link size="small" @click="handleViewAttachments(row)">附件</el-button>
             <el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
             <el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
           </template>
@@ -177,6 +178,31 @@
         <el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="attachmentDialogVisible" title="查看附件" width="600px" :close-on-click-modal="false">
+      <div v-if="currentProduct">
+        <el-card title="MSDS文件" v-if="currentProduct.msds && currentProduct.msds.length > 0">
+          <ul>
+            <li v-for="(file, index) in currentProduct.msds" :key="index">
+              <a :href="file.url" target="_blank" rel="noopener">{{ file.name }}</a>
+            </li>
+          </ul>
+        </el-card>
+        <el-card title="COA文件" v-if="currentProduct.coa && currentProduct.coa.length > 0">
+          <ul>
+            <li v-for="(file, index) in currentProduct.coa" :key="index">
+              <a :href="file.url" target="_blank" rel="noopener">{{ file.name }}</a>
+            </li>
+          </ul>
+        </el-card>
+        <div v-if="(!currentProduct.msds || currentProduct.msds.length === 0) && (!currentProduct.coa || currentProduct.coa.length === 0)" class="empty-attachments">
+          <el-empty description="暂无附件" />
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="attachmentDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -206,6 +232,9 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const submitLoading = ref(false)
 const formRef = ref(null)
+
+const attachmentDialogVisible = ref(false)
+const currentProduct = ref(null)
 
 const formData = reactive({
   product_id: null,
@@ -271,36 +300,36 @@ const formatCategoryName = (category) => {
   return prefix + category.name
 }
 
-const handleMsdsUploadSuccess = (response) => {
+const handleMsdsUploadSuccess = (response, file, fileList) => {
   if (response.code === 200 && response.data && response.data.url) {
-    formData.msds.push({
-      name: response.data.name || 'msds_file',
-      url: response.data.url
-    })
+    formData.msds = fileList.map(f => ({
+      name: f.name,
+      url: f.response?.data?.url || f.url
+    }))
   }
 }
 
-const handleMsdsRemove = (file) => {
-  const index = formData.msds.findIndex(item => item.url === file.url)
-  if (index > -1) {
-    formData.msds.splice(index, 1)
-  }
+const handleMsdsRemove = (file, fileList) => {
+  formData.msds = fileList.map(f => ({
+    name: f.name,
+    url: f.response?.data?.url || f.url
+  }))
 }
 
-const handleCoaUploadSuccess = (response) => {
+const handleCoaUploadSuccess = (response, file, fileList) => {
   if (response.code === 200 && response.data && response.data.url) {
-    formData.coa.push({
-      name: response.data.name || 'coa_file',
-      url: response.data.url
-    })
+    formData.coa = fileList.map(f => ({
+      name: f.name,
+      url: f.response?.data?.url || f.url
+    }))
   }
 }
 
-const handleCoaRemove = (file) => {
-  const index = formData.coa.findIndex(item => item.url === file.url)
-  if (index > -1) {
-    formData.coa.splice(index, 1)
-  }
+const handleCoaRemove = (file, fileList) => {
+  formData.coa = fileList.map(f => ({
+    name: f.name,
+    url: f.response?.data?.url || f.url
+  }))
 }
 
 const handleSearch = () => {
@@ -319,6 +348,20 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
+const handleViewAttachments = (row) => {
+  currentProduct.value = {
+    msds: (row.msds || []).map(url => ({
+      name: typeof url === 'string' ? url.split('/').pop() || 'msds_file' : (url.name || 'msds_file'),
+      url: typeof url === 'string' ? url : (url.url || '')
+    })),
+    coa: (row.coa || []).map(url => ({
+      name: typeof url === 'string' ? url.split('/').pop() || 'coa_file' : (url.name || 'coa_file'),
+      url: typeof url === 'string' ? url : (url.url || '')
+    }))
+  }
+  attachmentDialogVisible.value = true
+}
+
 const handleEdit = (row) => {
   dialogTitle.value = '编辑产品'
   Object.keys(formData).forEach(key => {
@@ -326,13 +369,13 @@ const handleEdit = (row) => {
   })
   
   formData.msds = (row.msds || []).map(url => ({
-    name: url.split('/').pop() || 'msds_file',
-    url: url
+    name: typeof url === 'string' ? url.split('/').pop() || 'msds_file' : (url.name || 'msds_file'),
+    url: typeof url === 'string' ? url : (url.url || '')
   }))
   
   formData.coa = (row.coa || []).map(url => ({
-    name: url.split('/').pop() || 'coa_file',
-    url: url
+    name: typeof url === 'string' ? url.split('/').pop() || 'coa_file' : (url.name || 'coa_file'),
+    url: typeof url === 'string' ? url : (url.url || '')
   }))
   
   dialogVisible.value = true
