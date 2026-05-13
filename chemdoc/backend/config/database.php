@@ -1,14 +1,23 @@
 <?php
+$envPath = dirname(__DIR__) . '/.env';
+$envConfig = [];
+
+if (is_file($envPath)) {
+    $envConfig = parse_ini_file($envPath, true);
+}
+
+$dbConfig = $envConfig['DATABASE'] ?? [];
+
 return [
-    'type'            => $_ENV['DATABASE_TYPE'] ?? 'mysql',
-    'hostname'        => $_ENV['DATABASE_HOSTNAME'] ?? '127.0.0.1',
-    'database'        => $_ENV['DATABASE_DATABASE'] ?? 'chemdoc',
-    'username'        => $_ENV['DATABASE_USERNAME'] ?? 'root',
-    'password'        => $_ENV['DATABASE_PASSWORD'] ?? 'root',
-    'hostport'        => $_ENV['DATABASE_HOSTPORT'] ?? '3306',
-    'charset'         => $_ENV['DATABASE_CHARSET'] ?? 'utf8mb4',
-    'prefix'          => $_ENV['DATABASE_PREFIX'] ?? '',
-    'debug'           => ($_ENV['DATABASE_DEBUG'] ?? 'true') === 'true',
+    'type'            => $dbConfig['TYPE'] ?? 'mysql',
+    'hostname'        => $dbConfig['HOSTNAME'] ?? '127.0.0.1',
+    'database'        => $dbConfig['DATABASE'] ?? 'chemdoc',
+    'username'        => $dbConfig['USERNAME'] ?? 'root',
+    'password'        => $dbConfig['PASSWORD'] ?? 'root',
+    'hostport'        => $dbConfig['HOSTPORT'] ?? '3306',
+    'charset'         => $dbConfig['CHARSET'] ?? 'utf8mb4',
+    'prefix'          => $dbConfig['PREFIX'] ?? '',
+    'debug'           => ($dbConfig['DEBUG'] ?? 'true') === 'true',
     'deploy'          => 0,
     'rw_separate'     => false,
     'master_num'      => 1,
