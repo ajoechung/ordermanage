@@ -225,7 +225,7 @@ class ProductService
         $product = ProductModel::create([
             'name' => $data['name'],
             'category_id' => $data['category_id'] ?? null,
-            'code' => $data['code'] ?? '',
+            'code' => !empty($data['code']) ? $data['code'] : null,
             'spec' => $data['spec'] ?? '',
             'unit' => $data['unit'] ?? '',
             'description' => $data['description'] ?? '',
@@ -258,12 +258,16 @@ class ProductService
 
         $updateData = [];
 
-        $fields = ['name', 'category_id', 'code', 'spec', 'unit', 'description', 'origin'];
+        $fields = ['name', 'category_id', 'spec', 'unit', 'description', 'origin'];
 
         foreach ($fields as $field) {
             if (isset($data[$field])) {
                 $updateData[$field] = $data[$field];
             }
+        }
+
+        if (isset($data['code'])) {
+            $updateData['code'] = !empty($data['code']) ? $data['code'] : null;
         }
 
         if (isset($data['status'])) {
