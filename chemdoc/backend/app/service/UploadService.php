@@ -58,6 +58,7 @@ class UploadService
             $subDir = $this->getSubDir();
             
             $filename = $this->generateFilename($ext);
+            $originalSize = $file->getSize();
             
             $fullDir = './' . $path . '/' . $type . '/' . $subDir;
             $savePath = $path . '/' . $type . '/' . $subDir . '/' . $filename;
@@ -79,7 +80,7 @@ class UploadService
                 'path' => $savePath,
                 'filename' => $filename,
                 'original_name' => $this->originalName,
-                'size' => $file->getSize(),
+                'size' => $originalSize,
                 'ext' => $ext,
             ], '上传成功');
 
