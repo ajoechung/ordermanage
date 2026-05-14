@@ -311,36 +311,46 @@ const formatCategoryName = (category) => {
   return prefix + category.name
 }
 
-const handleMsdsUploadSuccess = (response, file, fileList) => {
-  if (response.code === 200 && response.data && response.data.url) {
-    formData.msds = fileList.map(f => ({
-      name: f.name,
-      url: f.response?.data?.url || f.url
-    }))
+const getFileUrl = (file) => {
+  if (file.response && file.response.data && file.response.data.url) {
+    return file.response.data.url
   }
+  if (file.url) {
+    return file.url
+  }
+  return null
+}
+
+const handleMsdsUploadSuccess = (response, file, fileList) => {
+  const validFiles = fileList.map(f => {
+    const url = getFileUrl(f)
+    return url ? { name: f.name, url } : null
+  }).filter(f => f !== null)
+  formData.msds = validFiles
 }
 
 const handleMsdsRemove = (file, fileList) => {
-  formData.msds = fileList.map(f => ({
-    name: f.name,
-    url: f.response?.data?.url || f.url
-  }))
+  const validFiles = fileList.map(f => {
+    const url = getFileUrl(f)
+    return url ? { name: f.name, url } : null
+  }).filter(f => f !== null)
+  formData.msds = validFiles
 }
 
 const handleCoaUploadSuccess = (response, file, fileList) => {
-  if (response.code === 200 && response.data && response.data.url) {
-    formData.coa = fileList.map(f => ({
-      name: f.name,
-      url: f.response?.data?.url || f.url
-    }))
-  }
+  const validFiles = fileList.map(f => {
+    const url = getFileUrl(f)
+    return url ? { name: f.name, url } : null
+  }).filter(f => f !== null)
+  formData.coa = validFiles
 }
 
 const handleCoaRemove = (file, fileList) => {
-  formData.coa = fileList.map(f => ({
-    name: f.name,
-    url: f.response?.data?.url || f.url
-  }))
+  const validFiles = fileList.map(f => {
+    const url = getFileUrl(f)
+    return url ? { name: f.name, url } : null
+  }).filter(f => f !== null)
+  formData.coa = validFiles
 }
 
 const handleSearch = () => {
