@@ -195,11 +195,12 @@ const orderList = ref([])
 const productList = ref([])
 const logList = ref([])
 
-// 监听customerId和visible变化，自动加载数据
-watch([() => props.customerId, visible], ([newCustomerId, newVisible]) => {
-  if (newVisible && newCustomerId) {
-    loadCustomerDetail(newCustomerId)
-  } else if (!newVisible) {
+// 监听visible变化
+watch(visible, (newVal) => {
+  if (newVal && props.customerId) {
+    // 打开抽屉且有customerId时，加载数据
+    loadCustomerDetail(props.customerId)
+  } else if (!newVal) {
     // 关闭抽屉时清空数据
     currentCustomer.value = {}
     contactList.value = []
@@ -233,9 +234,12 @@ const getOrderStatusTag = (status) => {
 
 const loadCustomerDetail = async (id) => {
   try {
+    console.log('开始加载客户详情，id:', id)
     const res = await getCustomerFullDetail(id)
+    console.log('客户详情API响应:', res)
     if (res.code === 200) {
       const data = res.data
+      console.log('客户详情数据:', data)
       
       // 设置客户基本信息
       currentCustomer.value = {
@@ -268,6 +272,7 @@ const loadCustomerDetail = async (id) => {
 
       // 设置操作日志
       logList.value = data.logs || []
+      console.log('客户详情加载完成:', currentCustomer.value)
     } else {
       ElMessage.error(res.msg || '获取客户详情失败')
     }
