@@ -165,7 +165,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getCustomerFullDetail } from '@/api/modules/customer'
 
@@ -194,6 +194,22 @@ const followList = ref([])
 const orderList = ref([])
 const productList = ref([])
 const logList = ref([])
+
+// 监听customerId和visible变化，自动加载数据
+watch([() => props.customerId, visible], ([newCustomerId, newVisible]) => {
+  if (newVisible && newCustomerId) {
+    loadCustomerDetail(newCustomerId)
+  } else if (!newVisible) {
+    // 关闭抽屉时清空数据
+    currentCustomer.value = {}
+    contactList.value = []
+    followList.value = []
+    orderList.value = []
+    productList.value = []
+    logList.value = []
+    activeTab.value = 'basic'
+  }
+})
 
 const customerName = computed(() => currentCustomer.value.name || '客户详情')
 
