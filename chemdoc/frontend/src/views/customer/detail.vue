@@ -195,13 +195,20 @@ const orderList = ref([])
 const productList = ref([])
 const logList = ref([])
 
+// 监听customerId变化
+watch(() => props.customerId, (newVal) => {
+  console.log('customerId变化:', newVal, 'visible:', visible.value)
+  if (visible.value && newVal) {
+    loadCustomerDetail(newVal)
+  }
+})
+
 // 监听visible变化
 watch(visible, (newVal) => {
+  console.log('visible变化:', newVal, 'customerId:', props.customerId)
   if (newVal && props.customerId) {
-    // 打开抽屉且有customerId时，加载数据
     loadCustomerDetail(props.customerId)
   } else if (!newVal) {
-    // 关闭抽屉时清空数据
     currentCustomer.value = {}
     contactList.value = []
     followList.value = []
@@ -210,7 +217,7 @@ watch(visible, (newVal) => {
     logList.value = []
     activeTab.value = 'basic'
   }
-})
+}, { immediate: true })
 
 const customerName = computed(() => currentCustomer.value.name || '客户详情')
 
