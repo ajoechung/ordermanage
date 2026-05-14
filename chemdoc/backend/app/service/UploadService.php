@@ -90,6 +90,6 @@ class UploadService
 
     protected function generateFilename(string $ext): string
     {
-        return $this->originalName . '.' . $ext;
+        return $this->originalName;
     }
 }

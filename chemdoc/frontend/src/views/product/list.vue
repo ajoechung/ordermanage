@@ -517,8 +517,12 @@ const handleSubmit = async () => {
     try {
       const submitData = { ...formData }
       
-      submitData.msds = formData.msds.map(item => item.url)
-      submitData.coa = formData.coa.map(item => item.url)
+      submitData.msds = formData.msds && Array.isArray(formData.msds) 
+        ? formData.msds.filter(item => item && item.url).map(item => item.url) 
+        : []
+      submitData.coa = formData.coa && Array.isArray(formData.coa) 
+        ? formData.coa.filter(item => item && item.url).map(item => item.url) 
+        : []
 
       if (submitData.product_id) {
         await update(submitData.product_id, submitData)
