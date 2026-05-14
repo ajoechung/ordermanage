@@ -1,0 +1,1 @@
+import{s as t}from"./index-DqLVeBaA.js";function o(r){return t({url:"/order",method:"get",params:r})}function u(r){return t({url:"/order",method:"post",data:r})}function s(r,e){return t({url:`/order/${r}`,method:"put",data:e})}function n(r){return t({url:"/order/status",method:"post",data:r})}const a=o,c=u,i=s;export{i as a,c,a as g,n as u};

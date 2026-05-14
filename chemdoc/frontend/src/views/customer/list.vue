@@ -267,10 +267,18 @@ const handleEdit = (row) => {
 }
 
 const handleView = (row) => {
+  console.log('handleView called, row:', row)
   currentCustomerId.value = row.customer_id
+  console.log('currentCustomerId set:', currentCustomerId.value)
   detailVisible.value = true
   nextTick(() => {
-    detailRef.value?.loadCustomerDetail(row.customer_id)
+    console.log('nextTick: detailRef:', detailRef.value)
+    if (detailRef.value) {
+      console.log('calling loadCustomerDetail with:', row.customer_id)
+      detailRef.value.loadCustomerDetail(row.customer_id)
+    } else {
+      console.error('detailRef is undefined!')
+    }
   })
 }
 
