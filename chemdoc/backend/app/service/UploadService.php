@@ -73,7 +73,7 @@ class UploadService
                 return Result::error('文件移动失败');
             }
             
-            $url = '/' . $savePath;
+            $url = 'http://szy.ajoe.cn/' . $savePath;
             
             return Result::success([
                 'url' => $url,
