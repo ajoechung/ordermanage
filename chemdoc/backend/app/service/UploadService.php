@@ -13,7 +13,7 @@ class UploadService
 
     public function __construct()
     {
-        $this->config = config('upload.');
+        $this->config = config('upload.') ?? [];
     }
 
     public function uploadImage(UploadedFile $file): array
@@ -54,7 +54,11 @@ class UploadService
                 mkdir($fullDir, 0755, true);
             }
             
-            $file->move($fullDir, $filename);
+            $info = $file->move($fullDir, $filename);
+            
+            if (!$info) {
+                return Result::error('文件移动失败');
+            }
             
             $url = '/' . $savePath;
             
