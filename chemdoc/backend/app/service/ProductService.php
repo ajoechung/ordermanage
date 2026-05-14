@@ -14,6 +14,7 @@ class ProductService
         $pageSize = (int)($params['page_size'] ?? 20);
         $keyword = $params['keyword'] ?? '';
         $categoryId = $params['category_id'] ?? '';
+        $categoryIds = $params['category_ids'] ?? [];
         $status = $params['status'] ?? '';
 
         $query = ProductModel::with(['category']);
@@ -24,6 +25,16 @@ class ProductService
 
         if (!empty($categoryId)) {
             $query->scope('categoryId', (int)$categoryId);
+        } elseif (!empty($categoryIds)) {
+            if (is_string($categoryIds)) {
+                $categoryIds = explode(',', $categoryIds);
+            }
+            $categoryIds = array_filter($categoryIds, function($id) {
+                return !empty($id);
+            });
+            if (!empty($categoryIds)) {
+                $query->whereIn('category_id', $categoryIds);
+            }
         }
 
         if ($status !== '') {

@@ -6,7 +6,7 @@
           <el-input v-model="searchForm.keyword" placeholder="请输入产品名称" clearable @keyup.enter="handleSearch" />
         </el-form-item>
         <el-form-item label="产品分类">
-          <el-select v-model="searchForm.category_id" placeholder="请选择" clearable>
+          <el-select v-model="searchForm.category_id" placeholder="请选择" clearable style="width: 240px">
             <el-option v-for="c in flatCategoryList" :key="c.category_id" :label="formatCategoryName(c)" :value="c.category_id" />
           </el-select>
         </el-form-item>
@@ -280,8 +280,15 @@ const loadData = async () => {
       page_size: pagination.pageSize
     }
     if (searchForm.keyword) params.keyword = searchForm.keyword
-    if (searchForm.category_id) params.category_id = searchForm.category_id
     if (searchForm.status !== '') params.status = searchForm.status
+    
+    // 如果选择了产品分类，获取该分类及其所有子分类的ID
+    if (searchForm.category_id) {
+      const categoryIds = getAllChildCategoryIds(searchForm.category_id)
+      if (categoryIds.length > 0) {
+        params.category_ids = categoryIds
+      }
+    }
 
     const res = await getList(params)
     if (res.code === 200) {
@@ -328,6 +335,37 @@ const flattenCategories = (list, level = 0) => {
     }
   }
   return result
+}
+
+const getAllChildCategoryIds = (categoryId, categories = categoryList.value) => {
+  const ids = []
+  
+  const findChildren = (list) => {
+    for (const item of list) {
+      if (item.category_id === categoryId) {
+        ids.push(categoryId)
+        if (item.children && item.children.length > 0) {
+          collectAllChildIds(item.children, ids)
+        }
+        break
+      }
+      if (item.children && item.children.length > 0) {
+        findChildren(item.children)
+      }
+    }
+  }
+  
+  const collectAllChildIds = (children, result) => {
+    for (const child of children) {
+      result.push(child.category_id)
+      if (child.children && child.children.length > 0) {
+        collectAllChildIds(child.children, result)
+      }
+    }
+  }
+  
+  findChildren(categories)
+  return ids
 }
 
 const formatCategoryName = (category) => {
