@@ -166,7 +166,7 @@ const loadCustomers = async () => {
   try {
     const res = await getAll()
     if (res.code === 200) {
-      customerList.value = res.data || []
+      customerList.value = res.data.list || []
     }
   } catch (error) {
     console.error('获取客户列表失败:', error)
