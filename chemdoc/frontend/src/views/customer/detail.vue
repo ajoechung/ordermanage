@@ -197,16 +197,25 @@ const logList = ref([])
 
 // 监听customerId变化，当customerId改变且抽屉打开时加载数据
 watch(() => props.customerId, async (newVal) => {
+  console.log('=== customerId变化 ===')
+  console.log('newVal:', newVal)
+  console.log('visible.value:', visible.value)
   if (newVal && visible.value) {
+    console.log('准备加载数据...')
     await loadCustomerDetail(newVal)
   }
 })
 
 // 监听visible变化
 watch(visible, async (newVal) => {
+  console.log('=== visible变化 ===')
+  console.log('newVal:', newVal)
+  console.log('props.customerId:', props.customerId)
   if (newVal && props.customerId) {
+    console.log('准备加载数据...')
     await loadCustomerDetail(props.customerId)
   } else if (!newVal) {
+    console.log('清空数据...')
     currentCustomer.value = {}
     contactList.value = []
     followList.value = []
