@@ -28,12 +28,24 @@ class UploadService
 
     public function upload(UploadedFile $file, string $type = 'images'): array
     {
-        $ext = strtolower($file->getOriginalExtension());
         $this->originalName = $file->getOriginalName();
         
-        $allowedExt = $this->config['allowed_ext'] ?? [];
+        // 获取文件扩展名
+        $ext = strtolower($file->getOriginalExtension());
+        if (empty($ext)) {
+            // 尝试从原始文件名获取扩展名
+            $ext = strtolower(pathinfo($this->originalName, PATHINFO_EXTENSION));
+        }
+        
+        // 根据类型获取允许的文件格式
+        if ($type === 'images') {
+            $allowedExt = $this->config['image_ext'] ?? ['jpg', 'jpeg', 'png', 'gif'];
+        } else {
+            $allowedExt = $this->config['file_ext'] ?? ['pdf', 'doc', 'docx', 'xls', 'xlsx'];
+        }
+        
         if (!in_array($ext, $allowedExt)) {
-            return Result::error('不支持的文件格式');
+            return Result::error('不支持的文件格式：' . $ext);
         }
 
         $maxSize = $this->config['max_file_size'] ?? 10485760;
