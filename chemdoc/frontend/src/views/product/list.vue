@@ -177,22 +177,36 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="attachmentDialogVisible" title="查看附件" width="600px" :close-on-click-modal="false">
-      <div v-if="currentProduct">
-        <el-card title="MSDS文件" v-if="currentProduct.msds && currentProduct.msds.length > 0">
-          <ul>
-            <li v-for="(file, index) in currentProduct.msds" :key="index">
-              <a :href="file.url" target="_blank" rel="noopener">{{ file.name }}</a>
-            </li>
-          </ul>
-        </el-card>
-        <el-card title="COA文件" v-if="currentProduct.coa && currentProduct.coa.length > 0">
-          <ul>
-            <li v-for="(file, index) in currentProduct.coa" :key="index">
-              <a :href="file.url" target="_blank" rel="noopener">{{ file.name }}</a>
-            </li>
-          </ul>
-        </el-card>
+    <el-dialog v-model="attachmentDialogVisible" title="查看附件" width="700px" :close-on-click-modal="false">
+      <div v-if="currentProduct" class="attachment-content">
+        <div v-if="currentProduct.msds && currentProduct.msds.length > 0" class="attachment-section">
+          <h3 class="attachment-title">📄 MSDS 文件</h3>
+          <el-card>
+            <ul class="attachment-list">
+              <li v-for="(file, index) in currentProduct.msds" :key="index">
+                <a :href="getFileFullUrl(file.url)" target="_blank" rel="noopener" class="attachment-link">
+                  <span class="file-icon">📎</span>
+                  <span class="file-name">{{ file.name }}</span>
+                </a>
+              </li>
+            </ul>
+          </el-card>
+        </div>
+        
+        <div v-if="currentProduct.coa && currentProduct.coa.length > 0" class="attachment-section">
+          <h3 class="attachment-title">📄 COA 文件</h3>
+          <el-card>
+            <ul class="attachment-list">
+              <li v-for="(file, index) in currentProduct.coa" :key="index">
+                <a :href="getFileFullUrl(file.url)" target="_blank" rel="noopener" class="attachment-link">
+                  <span class="file-icon">📎</span>
+                  <span class="file-name">{{ file.name }}</span>
+                </a>
+              </li>
+            </ul>
+          </el-card>
+        </div>
+        
         <div v-if="(!currentProduct.msds || currentProduct.msds.length === 0) && (!currentProduct.coa || currentProduct.coa.length === 0)" class="empty-attachments">
           <el-empty description="暂无附件" />
         </div>
@@ -292,6 +306,17 @@ const loadCategories = async () => {
   } catch (error) {
     console.error('获取分类列表失败:', error)
   }
+}
+
+const getFileFullUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  if (!url.startsWith('/')) {
+    url = '/' + url
+  }
+  return url
 }
 
 const flattenCategories = (list, level = 0) => {
@@ -591,4 +616,60 @@ onMounted(() => {
 .table-title { font-size: 16px; font-weight: 600; color: #303133; }
 .pagination-container { display: flex; justify-content: flex-end; margin-top: 20px; }
 :deep(.el-table) { font-size: 14px; }
+
+.attachment-content {
+  padding: 10px;
+}
+
+.attachment-section {
+  margin-bottom: 20px;
+}
+
+.attachment-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 10px;
+  padding-left: 10px;
+  border-left: 4px solid #409EFF;
+}
+
+.attachment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.attachment-list li {
+  margin-bottom: 8px;
+}
+
+.attachment-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #409EFF;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.attachment-link:hover {
+  background-color: #f5f7fa;
+}
+
+.file-icon {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.file-name {
+  font-size: 14px;
+  word-break: break-all;
+}
+
+.empty-attachments {
+  padding: 40px 0;
+  text-align: center;
+}
 </style>
