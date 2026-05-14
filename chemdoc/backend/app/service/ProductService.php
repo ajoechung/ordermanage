@@ -217,6 +217,11 @@ class ProductService
 
     public function create(array $data): array
     {
+        $status = $data['status'] ?? 1;
+        if (is_string($status)) {
+            $status = $status === '启用' ? 1 : 0;
+        }
+        
         $product = ProductModel::create([
             'name' => $data['name'],
             'category_id' => $data['category_id'] ?? null,
@@ -228,7 +233,7 @@ class ProductService
             'attachment' => isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null,
             'msds' => isset($data['msds']) ? json_encode($data['msds'], JSON_UNESCAPED_UNICODE) : null,
             'coa' => isset($data['coa']) ? json_encode($data['coa'], JSON_UNESCAPED_UNICODE) : null,
-            'status' => $data['status'] ?? 1,
+            'status' => $status,
             'create_user_id' => request()->user_id ?? 0,
             'create_time' => date('Y-m-d H:i:s'),
         ]);
@@ -253,12 +258,20 @@ class ProductService
 
         $updateData = [];
 
-        $fields = ['name', 'category_id', 'code', 'spec', 'unit', 'description', 'origin', 'status'];
+        $fields = ['name', 'category_id', 'code', 'spec', 'unit', 'description', 'origin'];
 
         foreach ($fields as $field) {
             if (isset($data[$field])) {
                 $updateData[$field] = $data[$field];
             }
+        }
+
+        if (isset($data['status'])) {
+            $status = $data['status'];
+            if (is_string($status)) {
+                $status = $status === '启用' ? 1 : 0;
+            }
+            $updateData['status'] = $status;
         }
 
         if (isset($data['attachment'])) {
