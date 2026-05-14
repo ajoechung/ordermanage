@@ -215,7 +215,7 @@ watch(visible, async (newVal) => {
     logList.value = []
     activeTab.value = 'basic'
   }
-})
+}, { immediate: true })
 
 const customerName = computed(() => currentCustomer.value.name || '客户详情')
 
