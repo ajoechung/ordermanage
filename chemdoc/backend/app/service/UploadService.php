@@ -49,8 +49,9 @@ class UploadService
         }
 
         $maxSize = $this->config['max_file_size'] ?? 10485760;
-        if ($file->getSize() > $maxSize) {
-            return Result::error('文件大小超过限制');
+        $fileSize = $file->getSize();
+        if ($fileSize === false || $fileSize > $maxSize) {
+            return Result::error('文件大小超过限制或无法获取文件大小');
         }
 
         try {
@@ -58,7 +59,6 @@ class UploadService
             $subDir = $this->getSubDir();
             
             $filename = $this->generateFilename($ext);
-            $originalSize = $file->getSize();
             
             $fullDir = './' . $path . '/' . $type . '/' . $subDir;
             $savePath = $path . '/' . $type . '/' . $subDir . '/' . $filename;
@@ -80,7 +80,7 @@ class UploadService
                 'path' => $savePath,
                 'filename' => $filename,
                 'original_name' => $this->originalName,
-                'size' => $originalSize,
+                'size' => $fileSize,
                 'ext' => $ext,
             ], '上传成功');
 

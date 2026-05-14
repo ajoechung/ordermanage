@@ -311,46 +311,45 @@ const formatCategoryName = (category) => {
   return prefix + category.name
 }
 
-const getFileUrl = (file) => {
-  if (file.response && file.response.data && file.response.data.url) {
-    return file.response.data.url
-  }
-  if (file.url) {
-    return file.url
-  }
-  return null
-}
-
 const handleMsdsUploadSuccess = (response, file, fileList) => {
-  const validFiles = fileList.map(f => {
-    const url = getFileUrl(f)
-    return url ? { name: f.name, url } : null
-  }).filter(f => f !== null)
-  formData.msds = validFiles
+  if (response.code === 200 && response.data && response.data.url) {
+    // 直接从响应中获取URL
+    const newFile = {
+      name: file.name,
+      url: response.data.url
+    }
+    
+    // 检查是否已存在
+    const existingIndex = formData.msds.findIndex(f => f.url === response.data.url)
+    if (existingIndex === -1) {
+      formData.msds = [...formData.msds, newFile]
+    }
+  }
 }
 
 const handleMsdsRemove = (file, fileList) => {
-  const validFiles = fileList.map(f => {
-    const url = getFileUrl(f)
-    return url ? { name: f.name, url } : null
-  }).filter(f => f !== null)
-  formData.msds = validFiles
+  // 从文件列表中移除
+  const urls = fileList.map(f => f.url).filter(Boolean)
+  formData.msds = formData.msds.filter(f => urls.includes(f.url))
 }
 
 const handleCoaUploadSuccess = (response, file, fileList) => {
-  const validFiles = fileList.map(f => {
-    const url = getFileUrl(f)
-    return url ? { name: f.name, url } : null
-  }).filter(f => f !== null)
-  formData.coa = validFiles
+  if (response.code === 200 && response.data && response.data.url) {
+    const newFile = {
+      name: file.name,
+      url: response.data.url
+    }
+    
+    const existingIndex = formData.coa.findIndex(f => f.url === response.data.url)
+    if (existingIndex === -1) {
+      formData.coa = [...formData.coa, newFile]
+    }
+  }
 }
 
 const handleCoaRemove = (file, fileList) => {
-  const validFiles = fileList.map(f => {
-    const url = getFileUrl(f)
-    return url ? { name: f.name, url } : null
-  }).filter(f => f !== null)
-  formData.coa = validFiles
+  const urls = fileList.map(f => f.url).filter(Boolean)
+  formData.coa = formData.coa.filter(f => urls.includes(f.url))
 }
 
 const handleSearch = () => {
