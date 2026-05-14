@@ -167,9 +167,8 @@ class CustomerService
             return Result::error('客户名称已存在');
         }
 
-        $customer = CustomerModel::create([
+        $customerData = [
             'name' => $data['name'],
-            'code' => $data['code'] ?? '',
             'industry' => $data['industry'] ?? '',
             'source' => $data['source'] ?? '',
             'scale' => $data['scale'] ?? '',
@@ -182,7 +181,13 @@ class CustomerService
             'owner_user_id' => $data['owner_user_id'] ?? 0,
             'create_user_id' => request()->user_id ?? 0,
             'create_time' => date('Y-m-d H:i:s'),
-        ]);
+        ];
+
+        if (!empty(trim($data['code'] ?? ''))) {
+            $customerData['code'] = $data['code'];
+        }
+
+        $customer = CustomerModel::create($customerData);
 
         OperationLogModel::log(
             request()->user_id ?? 0,
