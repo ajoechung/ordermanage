@@ -132,7 +132,7 @@
 
         <el-form-item label="MSDS文件">
           <el-upload
-            v-model:file-list="formData.msds"
+            :file-list="formData.msds"
             :action="uploadUrl"
             :headers="uploadHeaders"
             :data="{ type: 'msds' }"
@@ -152,7 +152,7 @@
 
         <el-form-item label="COA文件">
           <el-upload
-            v-model:file-list="formData.coa"
+            :file-list="formData.coa"
             :action="uploadUrl"
             :headers="uploadHeaders"
             :data="{ type: 'coa' }"

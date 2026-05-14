@@ -59,7 +59,7 @@ class UploadService
             
             $filename = $this->generateFilename($ext);
             
-            $fullDir = '.' . $path . '/' . $type . '/' . $subDir;
+            $fullDir = './' . $path . '/' . $type . '/' . $subDir;
             $savePath = $path . '/' . $type . '/' . $subDir . '/' . $filename;
             
             if (!is_dir($fullDir)) {
