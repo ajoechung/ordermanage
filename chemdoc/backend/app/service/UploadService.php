@@ -47,10 +47,14 @@ class UploadService
             
             $filename = $this->generateFilename($ext);
             
-            $fullPath = $path . '/' . $type . '/' . $subDir;
-            $savePath = $fullPath . '/' . $filename;
+            $fullDir = '.' . $path . '/' . $type . '/' . $subDir;
+            $savePath = $path . '/' . $type . '/' . $subDir . '/' . $filename;
             
-            $file->move('.' . $savePath);
+            if (!is_dir($fullDir)) {
+                mkdir($fullDir, 0755, true);
+            }
+            
+            $file->move($fullDir, $filename);
             
             $url = '/' . $savePath;
             
