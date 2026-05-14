@@ -165,7 +165,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getCustomerFullDetail } from '@/api/modules/customer'
 
@@ -195,19 +195,17 @@ const orderList = ref([])
 const productList = ref([])
 const logList = ref([])
 
-// 监听customerId变化
-watch(() => props.customerId, (newVal) => {
-  console.log('customerId变化:', newVal, 'visible:', visible.value)
-  if (visible.value && newVal) {
-    loadCustomerDetail(newVal)
+// 监听customerId变化，当customerId改变且抽屉打开时加载数据
+watch(() => props.customerId, async (newVal) => {
+  if (newVal && visible.value) {
+    await loadCustomerDetail(newVal)
   }
 })
 
 // 监听visible变化
-watch(visible, (newVal) => {
-  console.log('visible变化:', newVal, 'customerId:', props.customerId)
+watch(visible, async (newVal) => {
   if (newVal && props.customerId) {
-    loadCustomerDetail(props.customerId)
+    await loadCustomerDetail(props.customerId)
   } else if (!newVal) {
     currentCustomer.value = {}
     contactList.value = []
@@ -217,7 +215,7 @@ watch(visible, (newVal) => {
     logList.value = []
     activeTab.value = 'basic'
   }
-}, { immediate: true })
+})
 
 const customerName = computed(() => currentCustomer.value.name || '客户详情')
 
@@ -296,6 +294,12 @@ const handleAddContact = () => {
 const handleAddFollow = () => {
   ElMessage.info('新增跟进记录功能待实现')
 }
+
+onMounted(() => {
+  if (visible.value && props.customerId) {
+    loadCustomerDetail(props.customerId)
+  }
+})
 
 defineExpose({
   loadCustomerDetail
