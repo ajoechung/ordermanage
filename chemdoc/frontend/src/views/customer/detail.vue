@@ -224,7 +224,18 @@ watch(visible, async (newVal) => {
     logList.value = []
     activeTab.value = 'basic'
   }
-}, { immediate: true })
+})
+
+// 组件挂载时检查是否需要加载数据
+onMounted(() => {
+  console.log('=== 子组件挂载 ===')
+  console.log('visible.value:', visible.value)
+  console.log('props.customerId:', props.customerId)
+  if (visible.value && props.customerId) {
+    console.log('挂载时加载数据...')
+    loadCustomerDetail(props.customerId)
+  }
+})
 
 const customerName = computed(() => currentCustomer.value.name || '客户详情')
 
