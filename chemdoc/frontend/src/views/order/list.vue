@@ -86,7 +86,21 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="联系人" prop="contact_name">
-              <el-input v-model="formData.contact_name" placeholder="请输入联系人" />
+              <el-select 
+                v-model="formData.selected_contact_id" 
+                placeholder="请选择联系人" 
+                clearable
+                filterable
+                @change="handleContactChange"
+                style="width: 100%"
+              >
+                <el-option 
+                  v-for="contact in customerContacts" 
+                  :key="contact.contact_id" 
+                  :label="contact.name" 
+                  :value="contact.contact_id" 
+                />
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -116,8 +130,18 @@
             <el-table-column label="规格" width="100">
               <template #default="{ row }">{{ row.product_spec || '-' }}</template>
             </el-table-column>
-            <el-table-column label="单价" width="100" align="right">
-              <template #default="{ row }">¥{{ Number(row.unit_price || 0).toFixed(2) }}</template>
+            <el-table-column label="单价" width="120" align="right">
+              <template #default="{ row, $index }">
+                <el-input-number 
+                  v-model="row.unit_price" 
+                  :min="0" 
+                  :precision="2" 
+                  :controls="false" 
+                  size="small"
+                  style="width: 100%"
+                  @change="() => handleUnitPriceChange($index)"
+                />
+              </template>
             </el-table-column>
             <el-table-column label="数量" width="140">
               <template #default="{ row, $index }">
@@ -222,7 +246,8 @@ const formData = reactive({
   discount_amount: 0,
   actual_amount: 0,
   items: [],
-  remark: ''
+  remark: '',
+  selected_contact_id: null
 })
 
 const formRules = {
@@ -267,8 +292,8 @@ const loadData = async () => {
 
 const loadCustomers = async () => {
   try {
-    const res = await getCustomerList()
-    if (res.code === 200) customerList.value = res.data || []
+    const res = await getCustomerList({ page: 1, page_size: 1000 })
+    if (res.code === 200) customerList.value = res.data.list || []
   } catch (error) {
     console.error('获取客户列表失败:', error)
   }
@@ -276,10 +301,27 @@ const loadCustomers = async () => {
 
 const loadProducts = async () => {
   try {
-    const res = await getProductList()
-    if (res.code === 200) productList.value = res.data || []
+    const res = await getProductList({ page: 1, page_size: 1000 })
+    if (res.code === 200) productList.value = res.data.list || []
   } catch (error) {
     console.error('获取产品列表失败:', error)
+  }
+}
+
+// 客户对应的联系人列表
+const customerContacts = ref([])
+// 加载客户对应的联系人
+const loadCustomerContacts = async (customerId) => {
+  if (!customerId) {
+    customerContacts.value = []
+    return
+  }
+  try {
+    const { getList } = await import('@/api/modules/contact')
+    const res = await getList({ customer_id: customerId, page: 1, page_size: 100 })
+    if (res.code === 200) customerContacts.value = res.data.list || []
+  } catch (error) {
+    console.error('获取联系人列表失败:', error)
   }
 }
 
@@ -295,7 +337,7 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
-const handleEdit = (row) => {
+const handleEdit = async (row) => {
   dialogTitle.value = '编辑订单'
   Object.keys(formData).forEach(key => {
     formData[key] = row[key] ?? formData[key]
@@ -309,6 +351,15 @@ const handleEdit = (row) => {
       quantity: item.quantity,
       subtotal: item.subtotal
     }))
+  }
+  // 如果有客户ID，加载该客户的联系人列表
+  if (row.customer_id) {
+    await loadCustomerContacts(row.customer_id)
+    // 尝试找到匹配的联系人
+    const contact = customerContacts.value.find(c => c.name === row.contact_name)
+    if (contact) {
+      formData.selected_contact_id = contact.contact_id
+    }
   }
   dialogVisible.value = true
 }
@@ -357,11 +408,26 @@ const handleDelete = async (row) => {
   }
 }
 
-const handleCustomerChange = (id) => {
+const handleCustomerChange = async (id) => {
   const c = customerList.value.find(x => x.customer_id === id)
   if (c) {
     formData.customer_name = c.name
     formData.delivery_address = c.address || ''
+    // 清空联系人相关信息
+    formData.contact_name = ''
+    formData.contact_phone = ''
+    // 加载该客户的联系人列表
+    await loadCustomerContacts(id)
+  } else {
+    customerContacts.value = []
+  }
+}
+
+const handleContactChange = (id) => {
+  const contact = customerContacts.value.find(x => x.contact_id === id)
+  if (contact) {
+    formData.contact_name = contact.name || ''
+    formData.contact_phone = contact.mobile || contact.phone || ''
   }
 }
 
@@ -373,6 +439,11 @@ const handleProductChange = (id, index) => {
     formData.items[index].unit_price = p.price || 0
     calculateAmount(index)
   }
+}
+
+// 单价变化时重新计算金额
+const handleUnitPriceChange = (index) => {
+  calculateAmount(index)
 }
 
 const calculateAmount = (index) => {
@@ -456,8 +527,10 @@ const handleDialogClose = () => {
     discount_amount: 0,
     actual_amount: 0,
     items: [],
-    remark: ''
+    remark: '',
+    selected_contact_id: null
   })
+  customerContacts.value = []
 }
 
 const handleSizeChange = (size) => {
