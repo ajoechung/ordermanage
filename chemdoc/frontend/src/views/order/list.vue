@@ -386,10 +386,15 @@ const openInvoiceDialog = async (row) => {
 
 // 触发发票上传
 const triggerInvoiceUpload = () => {
-  if (invoiceFileInput.value) {
-    invoiceFileInput.value.click()
-  }
-}
+        console.log('=== 触发发票上传 ===')
+        console.log('invoiceFileInput元素:', invoiceFileInput.value)
+        if (invoiceFileInput.value) {
+            invoiceFileInput.value.click()
+            console.log('已触发文件选择器点击')
+        } else {
+            console.error('invoiceFileInput元素不存在')
+        }
+    }
 
 // 加载发票列表
 const loadInvoiceList = async (orderId) => {
@@ -495,61 +500,78 @@ const handleAdd = () => {
 }
 
 const handleEdit = async (row) => {
-  dialogTitle.value = '编辑订单'
-  
-  try {
-    const res = await getOrderDetail(row.order_id)
-    if (res.code === 200) {
-      const detail = res.data
-      Object.keys(formData).forEach(key => {
-        formData[key] = detail[key] ?? formData[key]
-      })
-      if (detail.items) {
-        formData.items = detail.items.map(item => ({
-          product_id: item.product_id,
-          product_name: item.product_name || item.product?.name || '',
-          product_spec: item.product_spec || item.product?.spec || '',
-          unit_price: item.unit_price || item.price || 0,
-          quantity: item.quantity,
-          subtotal: item.subtotal || item.amount || 0
-        }))
-      } else {
-        formData.items = []
-      }
-      if (detail.customer_id) {
-        await loadCustomerContacts(detail.customer_id)
-        if (detail.contact_id) {
-          formData.selected_contact_id = detail.contact_id
-        } else if (detail.contact_name) {
-          const contact = customerContacts.value.find(c => c.name === detail.contact_name)
-          if (contact) {
-            formData.selected_contact_id = contact.contact_id
-          }
+        console.log('=== 编辑订单 ===')
+        console.log('传入的row:', row)
+        dialogTitle.value = '编辑订单'
+        
+        try {
+            const res = await getOrderDetail(row.order_id)
+            console.log('getOrderDetail返回的res:', res)
+            if (res.code === 200) {
+                const detail = res.data
+                console.log('订单详情detail:', detail)
+                Object.keys(formData).forEach(key => {
+                    formData[key] = detail[key] ?? formData[key]
+                })
+                if (detail.items) {
+                    formData.items = detail.items.map(item => ({
+                        product_id: item.product_id,
+                        product_name: item.product_name || item.product?.name || '',
+                        product_spec: item.product_spec || item.product?.spec || '',
+                        unit_price: item.unit_price || item.price || 0,
+                        quantity: item.quantity,
+                        subtotal: item.subtotal || item.amount || 0
+                    }))
+                    console.log('处理后的formData.items:', formData.items)
+                } else {
+                    formData.items = []
+                    console.log('没有items数据')
+                }
+                if (detail.customer_id) {
+                    await loadCustomerContacts(detail.customer_id)
+                    console.log('客户联系人列表customerContacts:', customerContacts.value)
+                    if (detail.contact_id) {
+                        formData.selected_contact_id = detail.contact_id
+                        console.log('设置selected_contact_id:', detail.contact_id)
+                    } else if (detail.contact_name) {
+                        const contact = customerContacts.value.find(c => c.name === detail.contact_name)
+                        if (contact) {
+                            formData.selected_contact_id = contact.contact_id
+                        }
+                    }
+                }
+                console.log('最终的formData:', formData)
+            }
+        } catch (error) {
+            console.error('获取订单详情失败:', error)
         }
-      }
+        
+        dialogVisible.value = true
     }
-  } catch (error) {
-    console.error('获取订单详情失败:', error)
-  }
-  
-  dialogVisible.value = true
-}
 
 const handleView = async (row) => {
-  currentOrder.value = { ...row }
-  try {
-    const res = await getOrderDetail(row.order_id)
-    if (res.code === 200) {
-      // 合并数据，确保既有基本信息又有明细
-      currentOrder.value = { ...currentOrder.value, ...res.data }
+        console.log('=== 查看订单 ===')
+        console.log('传入的row:', row)
+        currentOrder.value = { ...row }
+        try {
+            const res = await getOrderDetail(row.order_id)
+            console.log('getOrderDetail返回的res:', res)
+            if (res.code === 200) {
+                // 合并数据，确保既有基本信息又有明细
+                currentOrder.value = { ...currentOrder.value, ...res.data }
+                console.log('合并后的currentOrder:', currentOrder.value)
+                console.log('订单明细items:', currentOrder.value.items)
+            }
+        } catch (error) {
+            console.error('获取订单详情失败:', error)
+        }
+        detailVisible.value = true
     }
-  } catch (error) {
-    console.error('获取订单详情失败:', error)
-  }
-  detailVisible.value = true
-}
 
 const handleChangeStatus = async (row, status) => {
+  console.log('=== 订单状态变更 ===')
+  console.log('传入的row:', row)
+  console.log('目标状态:', status)
   const statusText = { 2: '确认', 3: '开始生产', 4: '确认发货', 5: '确认完成', 6: '取消' }
   try {
     await ElMessageBox.confirm(`确定要${statusText[status]}该订单吗？`, '提示', {
@@ -557,7 +579,9 @@ const handleChangeStatus = async (row, status) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
+    console.log('用户确认，调用updateOrderStatus')
     const res = await updateOrderStatus({ id: row.order_id, status: status })
+    console.log('updateOrderStatus返回的res:', res)
     if (res.code === 200) {
       ElMessage.success('操作成功')
       loadData()
