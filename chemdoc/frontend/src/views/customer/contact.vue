@@ -3,10 +3,10 @@
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="联系人">
-          <el-input v-model="searchForm.keyword" placeholder="请输入联系人姓名" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="searchForm.keyword" placeholder="请输入联系人姓名" clearable @keyup.enter="handleSearch" style="width: 220px" />
         </el-form-item>
         <el-form-item label="所属客户">
-          <el-select v-model="searchForm.customer_id" placeholder="请选择" clearable filterable>
+          <el-select v-model="searchForm.customer_id" placeholder="请选择" clearable filterable style="width: 220px">
             <el-option v-for="customer in customerList" :key="customer.customer_id" :label="customer.name" :value="customer.customer_id" />
           </el-select>
         </el-form-item>
@@ -113,6 +113,10 @@
           </el-radio-group>
         </el-form-item>
 
+        <el-form-item label="主联系人">
+          <el-switch v-model="formData.is_default" />
+        </el-form-item>
+
         <el-form-item label="备注" prop="remark">
           <el-input v-model="formData.remark" type="textarea" :rows="3" placeholder="请输入备注" />
         </el-form-item>
@@ -163,6 +167,7 @@ const formData = reactive({
   email: '',
   wechat: '',
   gender: 1,
+  is_default: false,
   remark: ''
 })
 
@@ -291,6 +296,7 @@ const handleDialogClose = () => {
     email: '',
     wechat: '',
     gender: 1,
+    is_default: false,
     remark: ''
   })
 }

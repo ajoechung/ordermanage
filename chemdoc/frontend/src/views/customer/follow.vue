@@ -3,12 +3,12 @@
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="所属客户">
-          <el-select v-model="searchForm.customer_id" placeholder="请选择" clearable filterable @change="handleSearch">
+          <el-select v-model="searchForm.customer_id" placeholder="请选择" clearable filterable @change="handleSearch" style="width: 220px">
             <el-option v-for="c in customerList" :key="c.customer_id" :label="c.name" :value="c.customer_id" />
           </el-select>
         </el-form-item>
         <el-form-item label="跟进方式">
-          <el-select v-model="searchForm.method" placeholder="请选择" clearable @change="handleSearch">
+          <el-select v-model="searchForm.method" placeholder="请选择" clearable @change="handleSearch" style="width: 150px">
             <el-option label="电话" value="电话" />
             <el-option label="拜访" value="拜访" />
             <el-option label="邮件" value="邮件" />
@@ -87,7 +87,7 @@
         </el-form-item>
 
         <el-form-item label="下次跟进">
-          <el-date-picker v-model="formData.next_follow_time" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
+          <el-date-picker v-model="formData.next_time" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
         </el-form-item>
       </el-form>
 
@@ -130,7 +130,7 @@ const formData = reactive({
   customer_id: null,
   method: '',
   content: '',
-  next_follow_time: ''
+  next_time: ''
 })
 
 const formRules = {
@@ -234,7 +234,7 @@ const handleSubmit = async () => {
 
 const handleDialogClose = () => {
   formRef.value?.resetFields()
-  Object.assign(formData, { customer_id: null, method: '', content: '', next_follow_time: '' })
+  Object.assign(formData, { customer_id: null, method: '', content: '', next_time: '' })
 }
 
 const handleSizeChange = (size) => {

@@ -3,15 +3,15 @@
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="采购单号">
-          <el-input v-model="searchForm.keyword" placeholder="请输入采购单号" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="searchForm.keyword" placeholder="请输入采购单号" clearable @keyup.enter="handleSearch" style="width: 220px" />
         </el-form-item>
         <el-form-item label="供应商">
-          <el-select v-model="searchForm.supplier_id" placeholder="请选择" clearable filterable>
+          <el-select v-model="searchForm.supplier_id" placeholder="请选择" clearable filterable style="width: 220px">
             <el-option v-for="s in supplierList" :key="s.supplier_id" :label="s.name" :value="s.supplier_id" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="请选择" clearable>
+          <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 150px">
             <el-option label="草稿" :value="1" />
             <el-option label="已提交" :value="2" />
             <el-option label="已确认" :value="3" />

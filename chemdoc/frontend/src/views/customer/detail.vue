@@ -536,7 +536,7 @@ const handleAddFollow = () => {
     customer_id: props.customerId,
     method: '',
     content: '',
-    next_follow_time: ''
+    next_time: ''
   })
   followDialogVisible.value = true
 }

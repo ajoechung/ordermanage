@@ -3,7 +3,7 @@
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="产品名称">
-          <el-input v-model="searchForm.keyword" placeholder="请输入产品名称" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="searchForm.keyword" placeholder="请输入产品名称" clearable @keyup.enter="handleSearch" style="width: 220px" />
         </el-form-item>
         <el-form-item label="产品分类">
           <el-select v-model="searchForm.category_id" placeholder="请选择" clearable style="width: 240px">
@@ -11,7 +11,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 100px">
+          <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 120px">
             <el-option label="启用" :value="1" />
             <el-option label="禁用" :value="0" />
           </el-select>

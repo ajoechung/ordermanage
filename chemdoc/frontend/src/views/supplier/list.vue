@@ -3,13 +3,13 @@
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="供应商名称">
-          <el-input v-model="searchForm.name" placeholder="请输入供应商名称" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="searchForm.name" placeholder="请输入供应商名称" clearable @keyup.enter="handleSearch" style="width: 220px" />
         </el-form-item>
         <el-form-item label="联系人">
-          <el-input v-model="searchForm.contact" placeholder="请输入联系人" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="searchForm.contact" placeholder="请输入联系人" clearable @keyup.enter="handleSearch" style="width: 220px" />
         </el-form-item>
         <el-form-item label="合作状态">
-          <el-select v-model="searchForm.cooperation_status" placeholder="请选择" clearable style="width: 120px">
+          <el-select v-model="searchForm.cooperation_status" placeholder="请选择" clearable style="width: 150px">
             <el-option label="已合作" value="active" />
             <el-option label="待合作" value="pending" />
             <el-option label="已终止" value="terminated" />

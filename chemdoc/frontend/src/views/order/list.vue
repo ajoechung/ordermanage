@@ -3,13 +3,13 @@
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="订单号">
-          <el-input v-model="searchForm.keyword" placeholder="请输入订单号" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="searchForm.keyword" placeholder="请输入订单号" clearable @keyup.enter="handleSearch" style="width: 220px" />
         </el-form-item>
         <el-form-item label="客户名称">
-          <el-input v-model="searchForm.customer_name" placeholder="请输入客户名称" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="searchForm.customer_name" placeholder="请输入客户名称" clearable @keyup.enter="handleSearch" style="width: 220px" />
         </el-form-item>
         <el-form-item label="订单状态">
-          <el-select v-model="searchForm.order_status" placeholder="请选择" clearable>
+          <el-select v-model="searchForm.order_status" placeholder="请选择" clearable style="width: 150px">
             <el-option label="待确认" :value="1" />
             <el-option label="已确认" :value="2" />
             <el-option label="生产中" :value="3" />

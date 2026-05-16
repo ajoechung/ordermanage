@@ -3,10 +3,10 @@
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="客户名称">
-          <el-input v-model="searchForm.keyword" placeholder="请输入客户名称" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="searchForm.keyword" placeholder="请输入客户名称" clearable @keyup.enter="handleSearch" style="width: 220px" />
         </el-form-item>
         <el-form-item label="行业">
-          <el-input v-model="searchForm.industry" placeholder="请输入行业" clearable />
+          <el-input v-model="searchForm.industry" placeholder="请输入行业" clearable style="width: 220px" />
         </el-form-item>
         <el-form-item label="客户等级">
           <el-select v-model="searchForm.level" placeholder="请选择" clearable style="width: 150px">
