@@ -82,10 +82,17 @@ class OrderService
                 unset($data['customer']);
             }
 
-            if (isset($data['contact'])) {
-                $data['contact_name'] = $data['contact']['name'] ?? '';
-                $data['contact_phone'] = $data['contact']['phone'] ?? '';
-                unset($data['contact']);
+            // 优先使用订单表中直接存储的联系人信息
+            if (empty($data['contact_name'])) {
+                if (isset($data['contact'])) {
+                    $data['contact_name'] = $data['contact']['name'] ?? '';
+                    $data['contact_phone'] = $data['contact']['phone'] ?? '';
+                    unset($data['contact']);
+                }
+            } else {
+                if (isset($data['contact'])) {
+                    unset($data['contact']);
+                }
             }
 
             if (isset($data['create_user'])) {
@@ -142,13 +149,30 @@ class OrderService
     {
         Db::startTrans();
         try {
+            // 计算订单总额
+            $totalAmount = 0;
+            $items = [];
+            if (isset($data['items']) && is_array($data['items'])) {
+                foreach ($data['items'] as $item) {
+                    $unitPrice = floatval($item['unit_price'] ?? 0);
+                    $quantity = intval($item['quantity'] ?? 1);
+                    $subtotal = $unitPrice * $quantity;
+                    $totalAmount += $subtotal;
+                    $items[] = array_merge($item, ['subtotal' => $subtotal]);
+                }
+            }
+
+            $actualAmount = $totalAmount - floatval($data['discount_amount'] ?? 0);
+
             $order = OrderModel::create([
                 'order_no' => $this->generateOrderNo(),
                 'customer_id' => $data['customer_id'],
                 'contact_id' => $data['contact_id'] ?? 0,
-                'total_amount' => $data['total_amount'] ?? 0,
+                'contact_name' => $data['contact_name'] ?? '',
+                'contact_phone' => $data['contact_phone'] ?? '',
+                'total_amount' => $totalAmount,
                 'discount_amount' => $data['discount_amount'] ?? 0,
-                'actual_amount' => $data['actual_amount'] ?? $data['total_amount'] ?? 0,
+                'actual_amount' => $actualAmount,
                 'order_time' => $data['order_time'] ?? date('Y-m-d H:i:s'),
                 'expect_delivery_date' => $data['expect_delivery_date'] ?? null,
                 'delivery_address' => $data['delivery_address'] ?? '',
@@ -157,8 +181,8 @@ class OrderService
                 'create_time' => date('Y-m-d H:i:s'),
             ]);
 
-            if (isset($data['items']) && is_array($data['items'])) {
-                foreach ($data['items'] as $item) {
+            if (!empty($items)) {
+                foreach ($items as $item) {
                     OrderItemModel::create([
                         'order_id' => $order->order_id,
                         'product_id' => $item['product_id'],
@@ -167,7 +191,7 @@ class OrderService
                         'product_unit' => $item['product_unit'] ?? '',
                         'unit_price' => $item['unit_price'] ?? 0,
                         'quantity' => $item['quantity'] ?? 1,
-                        'subtotal' => $item['subtotal'] ?? 0,
+                        'subtotal' => $item['subtotal'],
                         'create_time' => date('Y-m-d H:i:s'),
                     ]);
                 }
@@ -203,12 +227,29 @@ class OrderService
 
         Db::startTrans();
         try {
+            // 计算订单总额
+            $totalAmount = 0;
+            $items = [];
+            if (isset($data['items']) && is_array($data['items'])) {
+                foreach ($data['items'] as $item) {
+                    $unitPrice = floatval($item['unit_price'] ?? 0);
+                    $quantity = intval($item['quantity'] ?? 1);
+                    $subtotal = $unitPrice * $quantity;
+                    $totalAmount += $subtotal;
+                    $items[] = array_merge($item, ['subtotal' => $subtotal]);
+                }
+            }
+
+            $actualAmount = $totalAmount - floatval($data['discount_amount'] ?? 0);
+
             $updateData = [
                 'customer_id' => $data['customer_id'] ?? $order->customer_id,
                 'contact_id' => $data['contact_id'] ?? $order->contact_id,
-                'total_amount' => $data['total_amount'] ?? $order->total_amount,
+                'contact_name' => $data['contact_name'] ?? $order->contact_name ?? '',
+                'contact_phone' => $data['contact_phone'] ?? $order->contact_phone ?? '',
+                'total_amount' => $totalAmount,
                 'discount_amount' => $data['discount_amount'] ?? 0,
-                'actual_amount' => $data['actual_amount'] ?? $order->actual_amount,
+                'actual_amount' => $actualAmount,
                 'expect_delivery_date' => $data['expect_delivery_date'] ?? $order->expect_delivery_date,
                 'delivery_address' => $data['delivery_address'] ?? $order->delivery_address,
                 'remark' => $data['remark'] ?? '',
@@ -217,9 +258,9 @@ class OrderService
 
             $order->save($updateData);
 
-            if (isset($data['items']) && is_array($data['items'])) {
+            if (!empty($items)) {
                 OrderItemModel::where('order_id', $id)->delete();
-                foreach ($data['items'] as $item) {
+                foreach ($items as $item) {
                     OrderItemModel::create([
                         'order_id' => $id,
                         'product_id' => $item['product_id'],
@@ -228,7 +269,7 @@ class OrderService
                         'product_unit' => $item['product_unit'] ?? '',
                         'unit_price' => $item['unit_price'] ?? 0,
                         'quantity' => $item['quantity'] ?? 1,
-                        'subtotal' => $item['subtotal'] ?? 0,
+                        'subtotal' => $item['subtotal'],
                         'create_time' => date('Y-m-d H:i:s'),
                     ]);
                 }
