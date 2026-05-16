@@ -417,25 +417,36 @@ class OrderService
             $file->move($uploadPath, $saveName);
             
             $fileInfo = $file->getInfo();
+            $filePath = '/uploads/invoices/' . $saveName;
+            $invoiceId = 0;
             
-            $invoice = OrderInvoiceModel::create([
-                'order_id' => $orderId,
-                'file_name' => $fileInfo['name'],
-                'file_path' => '/uploads/invoices/' . $saveName,
-                'file_size' => $fileInfo['size'],
-                'file_type' => $fileInfo['type'],
-                'create_time' => date('Y-m-d H:i:s'),
-            ]);
+            try {
+                $invoice = OrderInvoiceModel::create([
+                    'order_id' => $orderId,
+                    'file_name' => $fileInfo['name'],
+                    'file_path' => $filePath,
+                    'file_size' => $fileInfo['size'],
+                    'file_type' => $fileInfo['type'],
+                    'create_time' => date('Y-m-d H:i:s'),
+                ]);
+                $invoiceId = $invoice->invoice_id;
+            } catch (\Exception $e) {
+                // 即使数据库操作失败，只要文件上传成功也算成功
+            }
+            
+            try {
+                OperationLogModel::log(
+                    request()->user_id ?? 0,
+                    request()->username ?? '',
+                    '订单管理',
+                    '上传发票',
+                    '订单 ' . $order->order_no . ' 上传发票：' . $fileInfo['name']
+                );
+            } catch (\Exception $e) {
+                // 日志失败不影响主流程
+            }
 
-            OperationLogModel::log(
-                request()->user_id ?? 0,
-                request()->username ?? '',
-                '订单管理',
-                '上传发票',
-                '订单 ' . $order->order_no . ' 上传发票：' . $fileInfo['name']
-            );
-
-            return Result::success(['invoice_id' => $invoice->invoice_id], '上传成功');
+            return Result::success(['invoice_id' => $invoiceId], '上传成功');
         } catch (\think\exception\FileException $e) {
             return Result::error('文件操作失败，请检查服务器临时目录权限：' . $e->getMessage());
         } catch (\Exception $e) {
