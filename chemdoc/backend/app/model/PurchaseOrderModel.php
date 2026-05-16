@@ -21,6 +21,11 @@ class PurchaseOrderModel extends BaseModel
         return $this->belongsTo(AdminUserModel::class, 'create_user_id', 'user_id');
     }
 
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(OrderModel::class, 'order_id');
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(PurchaseItemModel::class, 'purchase_id');

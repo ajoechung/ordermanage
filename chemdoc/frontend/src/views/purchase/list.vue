@@ -38,6 +38,9 @@
       <el-table v-loading="tableLoading" :data="purchaseList" stripe border>
         <el-table-column prop="purchase_id" label="ID" width="80" />
         <el-table-column prop="order_no" label="采购单号" width="160" />
+        <el-table-column label="关联订单" width="160">
+          <template #default="{ row }">{{ row.order_no || '-' }}</template>
+        </el-table-column>
         <el-table-column prop="supplier_name" label="供应商" min-width="180" show-overflow-tooltip />
         <el-table-column prop="contact" label="联系人" width="100" />
         <el-table-column prop="phone" label="联系电话" width="130" />
@@ -75,7 +78,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px" :close-on-click-modal="false" @close="handleDialogClose">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="900px" :close-on-click-modal="false" @close="handleDialogClose">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
         <el-row :gutter="20">
           <el-col :span="12">
@@ -86,23 +89,85 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="联系人" prop="contact">
-              <el-input v-model="formData.contact" placeholder="请输入联系人" />
+            <el-form-item label="关联订单">
+              <el-select v-model="formData.order_id" filterable placeholder="请选择订单（可选）" clearable style="width: 100%">
+                <el-option v-for="o in orderList" :key="o.order_id" :label="o.order_no" :value="o.order_id" />
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
+            <el-form-item label="联系人" prop="contact">
+              <el-input v-model="formData.contact" placeholder="请输入联系人" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item label="联系电话" prop="phone">
               <el-input v-model="formData.phone" placeholder="请输入电话" />
             </el-form-item>
           </el-col>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="预计到货">
               <el-date-picker v-model="formData.expected_date" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
+
+        <el-form-item label="采购产品">
+          <el-table :data="formData.items" border size="small">
+            <el-table-column label="产品" min-width="200">
+              <template #default="{ row, $index }">
+                <el-select v-model="row.product_id" filterable placeholder="请选择" @change="(val) => handleProductChange(val, $index)">
+                  <el-option v-for="p in productList" :key="p.product_id" :label="p.name" :value="p.product_id" />
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="规格" width="100">
+              <template #default="{ row }">{{ row.product_spec || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="单价" width="120" align="right">
+              <template #default="{ row, $index }">
+                <el-input-number
+                  v-model="row.unit_price"
+                  :min="0"
+                  :precision="2"
+                  :controls="false"
+                  size="small"
+                  style="width: 100%"
+                  @change="() => handleUnitPriceChange($index)"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column label="数量" width="140">
+              <template #default="{ row, $index }">
+                <el-input-number v-model="row.quantity" :min="1" size="small" @change="() => calculateAmount($index)" />
+              </template>
+            </el-table-column>
+            <el-table-column label="金额" width="100" align="right">
+              <template #default="{ row }">¥{{ Number(row.subtotal || 0).toFixed(2) }}</template>
+            </el-table-column>
+            <el-table-column label="操作" width="60" align="center">
+              <template #default="{ $index }">
+                <el-button type="danger" link size="small" @click="removeItem($index)">删</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div style="margin-top: 10px">
+            <el-button type="primary" link size="small" @click="addItem"><Plus />添加产品</el-button>
+          </div>
+        </el-form-item>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="采购总额">
+              <el-input :model-value="`¥${Number(purchaseAmount).toFixed(2)}`" disabled />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
         <el-form-item label="备注">
           <el-input v-model="formData.remark" type="textarea" :rows="3" placeholder="请输入备注" />
         </el-form-item>
@@ -113,7 +178,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="detailVisible" title="采购单详情" width="700px">
+    <el-dialog v-model="detailVisible" title="采购单详情" width="900px">
       <el-descriptions :column="2" border>
         <el-descriptions-item label="采购单号">{{ currentPurchase.order_no }}</el-descriptions-item>
         <el-descriptions-item label="状态">
@@ -128,16 +193,33 @@
         </el-descriptions-item>
         <el-descriptions-item label="备注" :span="2">{{ currentPurchase.remark }}</el-descriptions-item>
       </el-descriptions>
+
+      <div v-if="currentPurchase.items && currentPurchase.items.length > 0" style="margin-top: 20px;">
+        <h4>采购明细</h4>
+        <el-table :data="currentPurchase.items" border size="small">
+          <el-table-column prop="product_name" label="产品名称" />
+          <el-table-column prop="spec" label="规格" width="120" />
+          <el-table-column prop="price" label="单价" width="120" align="right">
+            <template #default="{ row }">¥{{ Number(row.price || 0).toFixed(2) }}</template>
+          </el-table-column>
+          <el-table-column prop="quantity" label="数量" width="100" align="right" />
+          <el-table-column prop="amount" label="金额" width="120" align="right">
+            <template #default="{ row }">¥{{ Number(row.amount || 0).toFixed(2) }}</template>
+          </el-table-column>
+        </el-table>
+      </div>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
 import { getList as getSupplierList } from '@/api/modules/supplier'
+import { getAll as getProductList } from '@/api/modules/product'
+import { getAll as getOrderList } from '@/api/modules/order'
 import { getPurchaseList, createPurchase, updatePurchase, deletePurchase, updatePurchaseStatus } from '@/api/modules/purchase'
 
 const route = useRoute()
@@ -146,6 +228,8 @@ const searchForm = reactive({ keyword: '', supplier_id: '', status: '' })
 const tableLoading = ref(false)
 const purchaseList = ref([])
 const supplierList = ref([])
+const productList = ref([])
+const orderList = ref([])
 
 const pagination = reactive({ page: 1, pageSize: 20, total: 0 })
 
@@ -160,9 +244,11 @@ const formData = reactive({
   purchase_id: null,
   supplier_id: null,
   supplier_name: '',
+  order_id: null,
   contact: '',
   phone: '',
   expected_date: '',
+  items: [],
   remark: ''
 })
 
@@ -183,10 +269,12 @@ const statusMap = {
 const getStatusText = (status) => statusMap[status]?.text || '未知'
 const getStatusType = (status) => statusMap[status]?.type || 'info'
 
+const purchaseAmount = computed(() => formData.items.reduce((sum, item) => sum + (item.subtotal || 0), 0))
+
 const loadData = async () => {
   tableLoading.value = true
   try {
-    const params = { page: pagination.page, page_size: pagination.pageSize }
+    const params = { page: pagination.page, pageSize: pagination.pageSize }
     if (searchForm.keyword) params.keyword = searchForm.keyword
     if (searchForm.supplier_id) params.supplier_id = searchForm.supplier_id
     if (searchForm.status !== '') params.status = searchForm.status
@@ -213,6 +301,24 @@ const loadSuppliers = async () => {
   }
 }
 
+const loadProducts = async () => {
+  try {
+    const res = await getProductList({ page: 1, pageSize: 1000 })
+    if (res.code === 200) productList.value = res.data.list || []
+  } catch (error) {
+    console.error('获取产品列表失败:', error)
+  }
+}
+
+const loadOrders = async () => {
+  try {
+    const res = await getOrderList({ page: 1, pageSize: 1000 })
+    if (res.code === 200) orderList.value = res.data.list || []
+  } catch (error) {
+    console.error('获取订单列表失败:', error)
+  }
+}
+
 const handleSearch = () => { pagination.page = 1; loadData() }
 const handleReset = () => {
   Object.assign(searchForm, { keyword: '', supplier_id: '', status: '' })
@@ -225,16 +331,43 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
-const handleEdit = (row) => {
+const handleEdit = async (row) => {
   dialogTitle.value = '编辑采购单'
   Object.keys(formData).forEach(key => {
     formData[key] = row[key] ?? formData[key]
   })
+  // 获取详情，包含items
+  try {
+    const { getPurchaseDetail } = await import('@/api/modules/purchase')
+    const res = await getPurchaseDetail(row.purchase_id)
+    if (res.code === 200 && res.data.items) {
+      formData.items = res.data.items.map(item => ({
+        product_id: item.product_id,
+        product_name: item.product_name,
+        product_spec: item.spec || '',
+        unit_price: item.price || 0,
+        quantity: item.quantity || 1,
+        subtotal: item.amount || 0
+      }))
+    }
+  } catch (error) {
+    console.error('获取详情失败:', error)
+  }
   dialogVisible.value = true
 }
 
-const handleView = (row) => {
+const handleView = async (row) => {
   currentPurchase.value = row
+  // 获取详情，包含items
+  try {
+    const { getPurchaseDetail } = await import('@/api/modules/purchase')
+    const res = await getPurchaseDetail(row.purchase_id)
+    if (res.code === 200) {
+      currentPurchase.value = res.data
+    }
+  } catch (error) {
+    console.error('获取详情失败:', error)
+  }
   detailVisible.value = true
 }
 
@@ -286,10 +419,47 @@ const handleSupplierChange = (id) => {
   }
 }
 
+const handleProductChange = (id, index) => {
+  const p = productList.value.find(x => x.product_id === id)
+  if (p) {
+    formData.items[index].product_name = p.name
+    formData.items[index].product_spec = p.spec || ''
+    formData.items[index].unit_price = p.price || 0
+    calculateAmount(index)
+  }
+}
+
+const handleUnitPriceChange = (index) => {
+  calculateAmount(index)
+}
+
+const calculateAmount = (index) => {
+  formData.items[index].subtotal = (formData.items[index].unit_price || 0) * (formData.items[index].quantity || 0)
+}
+
+const addItem = () => {
+  formData.items.push({
+    product_id: null,
+    product_name: '',
+    product_spec: '',
+    unit_price: 0,
+    quantity: 1,
+    subtotal: 0
+  })
+}
+
+const removeItem = (index) => {
+  formData.items.splice(index, 1)
+}
+
 const handleSubmit = async () => {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
     if (!valid) return
+    if (formData.items.length === 0) {
+      ElMessage.warning('请添加采购产品')
+      return
+    }
     submitLoading.value = true
     try {
       const submitData = { ...formData }
@@ -318,9 +488,11 @@ const handleDialogClose = () => {
     purchase_id: null,
     supplier_id: null,
     supplier_name: '',
+    order_id: null,
     contact: '',
     phone: '',
     expected_date: '',
+    items: [],
     remark: ''
   })
 }
@@ -330,6 +502,8 @@ const handlePageChange = (page) => { pagination.page = page; loadData() }
 
 onMounted(() => {
   loadSuppliers()
+  loadProducts()
+  loadOrders()
   if (route.query.supplier_id) searchForm.supplier_id = Number(route.query.supplier_id)
   loadData()
 })

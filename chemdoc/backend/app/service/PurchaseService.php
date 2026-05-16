@@ -3,6 +3,7 @@ namespace app\service;
 
 use app\model\PurchaseOrderModel;
 use app\model\PurchaseItemModel;
+use app\model\OrderModel;
 use app\model\OperationLogModel;
 use think\facade\Db;
 
@@ -17,7 +18,7 @@ class PurchaseService
         $status = $params['status'] ?? '';
         $dateRange = $params['date_range'] ?? [];
 
-        $query = PurchaseOrderModel::with(['supplier', 'createUser']);
+        $query = PurchaseOrderModel::with(['supplier', 'createUser', 'order']);
 
         if (!empty($keyword)) {
             $query->where(function ($q) use ($keyword) {
@@ -51,6 +52,10 @@ class PurchaseService
             if (isset($item['create_user'])) {
                 $item['create_name'] = $item['create_user']['realname'] ?? '';
                 unset($item['create_user']);
+            }
+            if (isset($item['order'])) {
+                $item['order_no'] = $item['order']['order_no'] ?? '';
+                unset($item['order']);
             }
             $item['total_amount'] = round((float)$item['total_amount'], 2);
             $item['paid_amount'] = round((float)$item['paid_amount'], 2);
@@ -99,13 +104,23 @@ class PurchaseService
     {
         Db::startTrans();
         try {
+            $totalAmount = 0;
+            if (isset($data['items']) && is_array($data['items'])) {
+                foreach ($data['items'] as $item) {
+                    $totalAmount += ($item['price'] ?? 0) * ($item['quantity'] ?? 0);
+                }
+            }
+
             $order = PurchaseOrderModel::create([
                 'order_no' => $this->generateOrderNo(),
                 'supplier_id' => $data['supplier_id'],
-                'total_amount' => $data['total_amount'] ?? 0,
+                'order_id' => $data['order_id'] ?? null,
+                'contact' => $data['contact'] ?? '',
+                'phone' => $data['phone'] ?? '',
+                'total_amount' => $totalAmount,
                 'paid_amount' => $data['paid_amount'] ?? 0,
                 'order_time' => $data['order_time'] ?? date('Y-m-d H:i:s'),
-                'expect_arrival_date' => $data['expect_arrival_date'] ?? null,
+                'expect_arrival_date' => $data['expected_date'] ?? $data['expect_arrival_date'] ?? null,
                 'actual_arrival_date' => $data['actual_arrival_date'] ?? null,
                 'remark' => $data['remark'] ?? '',
                 'status' => 1,
@@ -119,11 +134,10 @@ class PurchaseService
                         'purchase_id' => $order->purchase_id,
                         'product_id' => $item['product_id'],
                         'product_name' => $item['product_name'] ?? '',
-                        'spec' => $item['spec'] ?? '',
-                        'unit' => $item['unit'] ?? '',
+                        'spec' => $item['product_spec'] ?? $item['spec'] ?? '',
                         'quantity' => $item['quantity'] ?? 1,
-                        'price' => $item['price'] ?? 0,
-                        'amount' => $item['amount'] ?? 0,
+                        'price' => $item['unit_price'] ?? $item['price'] ?? 0,
+                        'amount' => ($item['unit_price'] ?? $item['price'] ?? 0) * ($item['quantity'] ?? 0),
                     ]);
                 }
             }
@@ -158,16 +172,45 @@ class PurchaseService
 
         Db::startTrans();
         try {
+            $totalAmount = $order->total_amount;
+            if (isset($data['items']) && is_array($data['items'])) {
+                $totalAmount = 0;
+                foreach ($data['items'] as $item) {
+                    $totalAmount += ($item['price'] ?? $item['unit_price'] ?? 0) * ($item['quantity'] ?? 0);
+                }
+            }
+
             $updateData = [
                 'supplier_id' => $data['supplier_id'] ?? $order->supplier_id,
-                'total_amount' => $data['total_amount'] ?? $order->total_amount,
+                'order_id' => $data['order_id'] ?? $order->order_id,
+                'contact' => $data['contact'] ?? $order->contact,
+                'phone' => $data['phone'] ?? $order->phone,
+                'total_amount' => $totalAmount,
                 'paid_amount' => $data['paid_amount'] ?? 0,
-                'expect_arrival_date' => $data['expect_arrival_date'] ?? $order->expect_arrival_date,
+                'expect_arrival_date' => $data['expected_date'] ?? $data['expect_arrival_date'] ?? $order->expect_arrival_date,
                 'remark' => $data['remark'] ?? '',
                 'update_time' => date('Y-m-d H:i:s'),
             ];
 
             $order->save($updateData);
+
+            if (isset($data['items']) && is_array($data['items'])) {
+                // 删除旧的items
+                PurchaseItemModel::where('purchase_id', $id)->delete();
+                
+                // 添加新的items
+                foreach ($data['items'] as $item) {
+                    PurchaseItemModel::create([
+                        'purchase_id' => $id,
+                        'product_id' => $item['product_id'],
+                        'product_name' => $item['product_name'] ?? '',
+                        'spec' => $item['product_spec'] ?? $item['spec'] ?? '',
+                        'quantity' => $item['quantity'] ?? 1,
+                        'price' => $item['unit_price'] ?? $item['price'] ?? 0,
+                        'amount' => ($item['unit_price'] ?? $item['price'] ?? 0) * ($item['quantity'] ?? 0),
+                    ]);
+                }
+            }
 
             Db::commit();
 
