@@ -27,11 +27,11 @@ Route::group('api', function () {
     Route::post('follow', 'api.Follow/save');
     Route::delete('follow/:id', 'api.Follow/delete');
 
-    Route::get('order', 'api.Order/index');
     Route::get('order/:id', 'api.Order/read');
-    Route::post('order', 'api.Order/save');
     Route::put('order/:id', 'api.Order/update');
     Route::delete('order/:id', 'api.Order/delete');
+    Route::get('order', 'api.Order/index');
+    Route::post('order', 'api.Order/save');
     Route::post('order/status', 'api.Order/status');
     Route::get('order/invoices/:orderId', 'api.Order/invoices');
     Route::post('order/uploadInvoice', 'api.Order/uploadInvoice');
