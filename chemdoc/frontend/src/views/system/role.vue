@@ -154,10 +154,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
-import { getRoleList, create, update, deleteRole, getPermissionList, assignPermission } from '@/api/modules/system'
+import { getRoleList, createRole, updateRole, deleteRole, getPermissionList, assignPermission } from '@/api/modules/system'
 
 const searchForm = reactive({
   name: ''
@@ -375,6 +375,8 @@ const handleSubmit = async () => {
         ElMessage.success(formData.id ? '编辑成功' : '新增成功')
         dialogVisible.value = false
         loadData()
+      } else {
+        ElMessage.error(res.msg || '操作失败')
       }
     } catch (error) {
       console.error('提交失败:', error)

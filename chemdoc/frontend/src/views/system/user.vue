@@ -252,6 +252,15 @@ const formRules = {
   nickname: [{ required: true, message: '请输入姓名', trigger: 'blur' }]
 }
 
+// 编辑时密码可以为空
+const editFormRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度为3-20个字符', trigger: 'blur' }
+  ],
+  nickname: [{ required: true, message: '请输入姓名', trigger: 'blur' }]
+}
+
 const loadData = async () => {
   tableLoading.value = true
   try {
@@ -380,6 +389,8 @@ const handleAssignRoleSubmit = async () => {
 const handleSubmit = async () => {
   if (!formRef.value) return
   
+  const rules = formData.id ? editFormRules : formRules
+  
   await formRef.value.validate(async (valid) => {
     if (!valid) return
     
@@ -391,6 +402,8 @@ const handleSubmit = async () => {
         ElMessage.success(formData.id ? '编辑成功' : '新增成功')
         dialogVisible.value = false
         loadData()
+      } else {
+        ElMessage.error(res.msg || '操作失败')
       }
     } catch (error) {
       console.error('提交失败:', error)

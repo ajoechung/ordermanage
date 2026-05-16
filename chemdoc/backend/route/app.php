@@ -56,6 +56,7 @@ Route::group('api', function () {
     Route::post('system/user', 'api.System/createUser');
     Route::put('system/user/:id', 'api.System/updateUser');
     Route::delete('system/user/:id', 'api.System/deleteUser');
+    Route::post('system/assignRole', 'api.System/assignRole');
     Route::get('system/groups', 'api.System/groups');
     Route::post('system/group', 'api.System/createGroup');
     Route::put('system/group/:id', 'api.System/updateGroup');

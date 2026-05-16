@@ -14,14 +14,14 @@ class System extends BaseController
         $params = $this->request->param();
         $page = (int)($params['page'] ?? 1);
         $pageSize = (int)($params['page_size'] ?? 20);
-        $keyword = $params['keyword'] ?? '';
+        $keyword = $params['username'] ?? '';
         $status = $params['status'] ?? '';
         $groupId = $params['group_id'] ?? '';
 
         $query = AdminUserModel::with(['authGroupAccess.group']);
 
         if (!empty($keyword)) {
-            $query->scope('keyword', $keyword);
+            $query->where('username', 'like', '%' . $keyword . '%')->whereOr('realname', 'like', '%' . $keyword . '%');
         }
 
         if ($status !== '') {
@@ -29,7 +29,9 @@ class System extends BaseController
         }
 
         if (!empty($groupId)) {
-            $query->scope('groupId', (int)$groupId);
+            $query->whereIn('user_id', function ($query) use ($groupId) {
+                $query->table('auth_group_access')->where('group_id', $groupId)->column('uid');
+            });
         }
 
         $total = $query->count();
@@ -39,9 +41,20 @@ class System extends BaseController
             ->toArray();
 
         foreach ($list as &$item) {
+            $item['id'] = $item['user_id'];
+            $item['nickname'] = $item['realname'];
+            $item['phone'] = $item['mobile'];
+            
             if (isset($item['auth_group_access']) && !empty($item['auth_group_access'])) {
-                $item['group_names'] = array_column($item['auth_group_access'], 'name');
+                $item['groups'] = array_map(function($access) {
+                    return [
+                        'id' => $access['group']['id'],
+                        'name' => $access['group']['name']
+                    ];
+                }, $item['auth_group_access']);
                 unset($item['auth_group_access']);
+            } else {
+                $item['groups'] = [];
             }
         }
 
@@ -58,11 +71,8 @@ class System extends BaseController
         if (empty($data['password'])) {
             return json(Result::validateError('请输入密码'));
         }
-        if (empty($data['realname'])) {
+        if (empty($data['nickname'])) {
             return json(Result::validateError('请输入真实姓名'));
-        }
-        if (empty($data['group_ids'])) {
-            return json(Result::validateError('请选择用户角色'));
         }
 
         $exists = AdminUserModel::where('username', $data['username'])->find();
@@ -77,20 +87,13 @@ class System extends BaseController
             'username' => $data['username'],
             'password' => $password,
             'salt' => $salt,
-            'realname' => $data['realname'],
-            'mobile' => $data['mobile'] ?? '',
+            'realname' => $data['nickname'],
+            'mobile' => $data['phone'] ?? '',
             'email' => $data['email'] ?? '',
-            'status' => $data['status'] ?? 1,
+            'status' => 1,
             'create_user_id' => $this->request->user_id ?? 0,
             'create_time' => date('Y-m-d H:i:s'),
         ]);
-
-        foreach ($data['group_ids'] as $groupId) {
-            \think\facade\Db::name('auth_group_access')->insert([
-                'uid' => $user->user_id,
-                'group_id' => $groupId,
-            ]);
-        }
 
         OperationLogModel::log(
             $this->request->user_id ?? 0,
@@ -100,7 +103,7 @@ class System extends BaseController
             '新增用户：' . $data['username']
         );
 
-        return json(Result::success(['user_id' => $user->user_id], '用户创建成功'));
+        return json(Result::success(['id' => $user->user_id], '用户创建成功'));
     }
 
     public function updateUser($id)
@@ -120,21 +123,17 @@ class System extends BaseController
             $updateData['password'] = password_hash($data['password'] . $salt, PASSWORD_BCRYPT, ['cost' => 10]);
         }
 
-        $fields = ['realname', 'mobile', 'email', 'status'];
-        foreach ($fields as $field) {
-            if (isset($data[$field])) {
-                $updateData[$field] = $data[$field];
-            }
+        if (isset($data['nickname'])) {
+            $updateData['realname'] = $data['nickname'];
         }
-
-        if (!empty($data['group_ids'])) {
-            \think\facade\Db::name('auth_group_access')->where('uid', $id)->delete();
-            foreach ($data['group_ids'] as $groupId) {
-                \think\facade\Db::name('auth_group_access')->insert([
-                    'uid' => $id,
-                    'group_id' => $groupId,
-                ]);
-            }
+        if (isset($data['phone'])) {
+            $updateData['mobile'] = $data['phone'];
+        }
+        if (isset($data['email'])) {
+            $updateData['email'] = $data['email'];
+        }
+        if (isset($data['status'])) {
+            $updateData['status'] = $data['status'];
         }
 
         if (!empty($updateData)) {
@@ -151,6 +150,36 @@ class System extends BaseController
         );
 
         return json(Result::success(null, '用户更新成功'));
+    }
+
+    public function assignRole()
+    {
+        $data = $this->request->post();
+        $uid = $data['uid'] ?? 0;
+        $groupIds = $data['group_ids'] ?? [];
+
+        if (empty($uid)) {
+            return json(Result::validateError('用户ID不能为空'));
+        }
+
+        \think\facade\Db::name('auth_group_access')->where('uid', $uid)->delete();
+
+        foreach ($groupIds as $groupId) {
+            \think\facade\Db::name('auth_group_access')->insert([
+                'uid' => $uid,
+                'group_id' => $groupId,
+            ]);
+        }
+
+        OperationLogModel::log(
+            $this->request->user_id ?? 0,
+            $this->request->username ?? '',
+            '系统管理',
+            '分配角色',
+            '用户ID：' . $uid
+        );
+
+        return json(Result::success(null, '角色分配成功'));
     }
 
     public function deleteUser($id)
@@ -181,6 +210,11 @@ class System extends BaseController
     public function groups()
     {
         $groups = AuthGroupModel::order('id', 'asc')->select()->toArray();
+        
+        foreach ($groups as &$group) {
+            $group['user_count'] = \think\facade\Db::name('auth_group_access')->where('group_id', $group['id'])->count();
+        }
+        
         return json(Result::success($groups));
     }
 

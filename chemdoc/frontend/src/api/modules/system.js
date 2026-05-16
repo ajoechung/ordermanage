@@ -51,7 +51,7 @@ export function createRole(data) {
 
 export function updateRole(data) {
   return request({
-    url: '/system/group',
+    url: `/system/group/${data.id}`,
     method: 'put',
     data
   })
