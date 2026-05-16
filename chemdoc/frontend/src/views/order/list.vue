@@ -252,8 +252,8 @@
             <el-table-column prop="file_size" label="文件大小" width="100" />
             <el-table-column label="操作" width="120">
               <template #default="{ row }">
-                <el-button type="primary" link size="small" icon="Eye" @click="previewInvoice(row)">预览</el-button>
-                <el-button type="danger" link size="small" icon="Delete" @click="deleteInvoice(row)">删除</el-button>
+                <el-button type="primary" link size="small" @click="previewInvoice(row)">预览</el-button>
+                <el-button type="danger" link size="small" :icon="Delete" @click="deleteInvoice(row)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -270,7 +270,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, Upload, Eye } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Upload, Delete } from '@element-plus/icons-vue'
 import { getList, create, update, deleteOrder, updateOrderStatus, getOrderDetail } from '@/api/modules/order'
 import { getAll as getCustomerList } from '@/api/modules/customer'
 import { getAll as getProductList } from '@/api/modules/product'
