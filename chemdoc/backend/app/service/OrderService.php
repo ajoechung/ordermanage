@@ -378,7 +378,10 @@ class OrderService
 
     public function uploadInvoice(): array
     {
-        $orderId = request()->param('order_id', 0, 'intval');
+        $orderId = request()->post('order_id', 0, 'intval');
+        if ($orderId == 0) {
+            $orderId = request()->param('order_id', 0, 'intval');
+        }
         if ($orderId == 0) {
             return Result::validateError('订单ID不能为空');
         }
