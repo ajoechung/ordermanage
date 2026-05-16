@@ -69,7 +69,7 @@ class OrderService
     public function getDetail(int $id): array
     {
         try {
-            $order = OrderModel::with(['customer', 'contact', 'createUser', 'items.product'])->find($id);
+            $order = OrderModel::with(['customer', 'contact', 'createUser'])->find($id);
 
             if (!$order) {
                 return Result::notFound('订单不存在');
@@ -93,20 +93,21 @@ class OrderService
                 unset($data['create_user']);
             }
 
-            if (isset($data['items'])) {
-                foreach ($data['items'] as &$item) {
-                    if (isset($item['product'])) {
-                        $item['product_name'] = $item['product']['name'] ?? '';
-                        $item['product_code'] = $item['product']['code'] ?? '';
-                        unset($item['product']);
-                    }
+            // 手动查询订单明细
+            $items = OrderItemModel::where('order_id', $id)->select()->toArray();
+            $data['items'] = [];
+
+            if (!empty($items)) {
+                foreach ($items as $item) {
+                    $product = ProductModel::find($item['product_id']);
+                    $item['product_name'] = $product ? $product['name'] : '';
+                    $item['product_spec'] = $product ? $product['spec'] : '';
                     // 确保字段存在
                     $item['unit_price'] = $item['unit_price'] ?? 0;
                     $item['quantity'] = $item['quantity'] ?? 0;
                     $item['subtotal'] = $item['subtotal'] ?? 0;
+                    $data['items'][] = $item;
                 }
-            } else {
-                $data['items'] = [];
             }
 
             $data['total_amount'] = round((float)($data['total_amount'] ?? 0), 2);

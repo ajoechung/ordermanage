@@ -227,17 +227,21 @@
     <el-dialog v-model="invoiceDialogVisible" :title="invoiceDialogTitle" width="600px" @close="closeInvoiceDialog">
       <div class="invoice-container">
         <div class="upload-area">
-          <label class="upload-btn">
-            <input 
-              type="file" 
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" 
-              @change="handleInvoiceUpload"
-              style="display: none"
-            />
-            <el-button type="primary" :loading="invoiceUploading" icon="Upload">
-              上传发票
-            </el-button>
-          </label>
+          <el-button 
+            type="primary" 
+            :loading="invoiceUploading" 
+            icon="Upload"
+            @click="triggerInvoiceUpload"
+          >
+            上传发票
+          </el-button>
+          <input 
+            ref="invoiceFileInput"
+            type="file" 
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" 
+            @change="handleInvoiceUpload"
+            style="display: none"
+          />
           <span class="upload-tip">支持 PDF、DOC、DOCX、JPG、PNG 格式</span>
         </div>
 
@@ -266,7 +270,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, Upload } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Upload, FileText, Eye } from '@element-plus/icons-vue'
 import { getList, create, update, deleteOrder, updateOrderStatus, getOrderDetail } from '@/api/modules/order'
 import { getAll as getCustomerList } from '@/api/modules/customer'
 import { getAll as getProductList } from '@/api/modules/product'
@@ -288,6 +292,7 @@ const dialogTitle = ref('')
 const submitLoading = ref(false)
 const formRef = ref(null)
 const currentOrder = ref({})
+const invoiceFileInput = ref(null)
 
 const formData = reactive({
   order_id: null,
@@ -377,6 +382,13 @@ const openInvoiceDialog = async (row) => {
   invoiceDialogTitle.value = `订单 ${row.order_no} - 发票管理`
   await loadInvoiceList(row.order_id)
   invoiceDialogVisible.value = true
+}
+
+// 触发发票上传
+const triggerInvoiceUpload = () => {
+  if (invoiceFileInput.value) {
+    invoiceFileInput.value.click()
+  }
 }
 
 // 加载发票列表
