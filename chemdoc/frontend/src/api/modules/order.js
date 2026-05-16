@@ -46,6 +46,31 @@ export function updateOrderStatus(data) {
   })
 }
 
+export function getInvoiceList(orderId) {
+  return request({
+    url: `/order/invoices/${orderId}`,
+    method: 'get'
+  })
+}
+
+export function uploadInvoice(data) {
+  return request({
+    url: '/order/uploadInvoice',
+    method: 'post',
+    data,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
+export function deleteInvoice(id) {
+  return request({
+    url: `/order/invoice/${id}`,
+    method: 'delete'
+  })
+}
+
 export const getList = getOrderList
 export const create = createOrder
 export const update = updateOrder

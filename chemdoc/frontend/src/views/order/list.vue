@@ -9,7 +9,7 @@
           <el-input v-model="searchForm.customer_name" placeholder="请输入客户名称" clearable @keyup.enter="handleSearch" style="width: 220px" />
         </el-form-item>
         <el-form-item label="订单状态">
-          <el-select v-model="searchForm.order_status" placeholder="请选择" clearable style="width: 150px">
+          <el-select v-model="searchForm.order_status" placeholder="请选择" clearable filterable style="width: 150px">
             <el-option label="待确认" :value="1" />
             <el-option label="已确认" :value="2" />
             <el-option label="生产中" :value="3" />
@@ -48,7 +48,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="create_time" label="创建时间" width="160" />
-        <el-table-column label="操作" width="220" fixed="right">
+        <el-table-column label="操作" width="260" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleView(row)">查看</el-button>
             <el-button v-if="row.order_status === 1" type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
@@ -57,6 +57,7 @@
             <el-button v-if="row.order_status === 3" type="success" link size="small" @click="handleChangeStatus(row, 4)">发货</el-button>
             <el-button v-if="row.order_status === 4" type="success" link size="small" @click="handleChangeStatus(row, 5)">完成</el-button>
             <el-button v-if="[1, 2].includes(row.order_status)" type="danger" link size="small" @click="handleChangeStatus(row, 6)">取消</el-button>
+            <el-button type="primary" link size="small" icon="Upload" @click="openInvoiceDialog(row)">发票</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -207,13 +208,50 @@
         <el-descriptions-item label="创建时间">{{ currentOrder.create_time }}</el-descriptions-item>
       </el-descriptions>
     </el-dialog>
+
+    <el-dialog v-model="invoiceDialogVisible" :title="invoiceDialogTitle" width="600px" @close="closeInvoiceDialog">
+      <div class="invoice-container">
+        <div class="upload-area">
+          <label class="upload-btn">
+            <input 
+              type="file" 
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" 
+              @change="handleInvoiceUpload"
+              style="display: none"
+            />
+            <el-button type="primary" :loading="invoiceUploading" icon="Upload">
+              上传发票
+            </el-button>
+          </label>
+          <span class="upload-tip">支持 PDF、DOC、DOCX、JPG、PNG 格式</span>
+        </div>
+
+        <div class="invoice-list">
+          <el-table v-if="invoiceList.length > 0" :data="invoiceList" border size="small">
+            <el-table-column prop="file_name" label="文件名" min-width="200" />
+            <el-table-column prop="upload_time" label="上传时间" width="160" />
+            <el-table-column prop="file_size" label="文件大小" width="100" />
+            <el-table-column label="操作" width="120">
+              <template #default="{ row }">
+                <el-button type="primary" link size="small" icon="Eye" @click="previewInvoice(row)">预览</el-button>
+                <el-button type="danger" link size="small" icon="Delete" @click="deleteInvoice(row)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div v-else class="empty-tip">
+            <FileText :size="48" style="color: #ccc" />
+            <p>暂无发票，请上传</p>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Upload, FileText, Eye } from '@element-plus/icons-vue'
 import { getList, create, update, deleteOrder, updateOrderStatus } from '@/api/modules/order'
 import { getAll as getCustomerList } from '@/api/modules/customer'
 import { getAll as getProductList } from '@/api/modules/product'
@@ -310,6 +348,98 @@ const loadProducts = async () => {
 
 // 客户对应的联系人列表
 const customerContacts = ref([])
+
+// 发票相关
+const invoiceDialogVisible = ref(false)
+const invoiceDialogTitle = ref('')
+const currentOrderId = ref(null)
+const invoiceList = ref([])
+const invoiceUploading = ref(false)
+
+// 打开发票管理弹窗
+const openInvoiceDialog = async (row) => {
+  currentOrderId.value = row.order_id
+  invoiceDialogTitle.value = `订单 ${row.order_no} - 发票管理`
+  await loadInvoiceList(row.order_id)
+  invoiceDialogVisible.value = true
+}
+
+// 加载发票列表
+const loadInvoiceList = async (orderId) => {
+  try {
+    const { getInvoiceList } = await import('@/api/modules/order')
+    const res = await getInvoiceList(orderId)
+    if (res.code === 200) {
+      invoiceList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取发票列表失败:', error)
+  }
+}
+
+// 上传发票
+const handleInvoiceUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  invoiceUploading.value = true
+  const formData = new FormData()
+  formData.append('order_id', currentOrderId.value)
+  formData.append('file', file)
+  
+  try {
+    const { uploadInvoice } = await import('@/api/modules/order')
+    const res = await uploadInvoice(formData)
+    if (res.code === 200) {
+      ElMessage.success('上传成功')
+      await loadInvoiceList(currentOrderId.value)
+    } else {
+      ElMessage.error(res.msg || '上传失败')
+    }
+  } catch (error) {
+    console.error('上传失败:', error)
+    ElMessage.error('上传失败')
+  } finally {
+    invoiceUploading.value = false
+    event.target.value = ''
+  }
+}
+
+// 预览发票
+const previewInvoice = (invoice) => {
+  if (invoice.file_path) {
+    window.open(invoice.file_path, '_blank')
+  }
+}
+
+// 删除发票
+const deleteInvoice = async (invoice) => {
+  try {
+    await ElMessageBox.confirm('确定要删除该发票吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    const { deleteInvoice } = await import('@/api/modules/order')
+    const res = await deleteInvoice(invoice.invoice_id)
+    if (res.code === 200) {
+      ElMessage.success('删除成功')
+      await loadInvoiceList(currentOrderId.value)
+    } else {
+      ElMessage.error(res.msg || '删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') console.error('删除失败:', error)
+  }
+}
+
+// 关闭发票弹窗
+const closeInvoiceDialog = () => {
+  invoiceDialogVisible.value = false
+  currentOrderId.value = null
+  invoiceList.value = []
+}
+
 // 加载客户对应的联系人
 const loadCustomerContacts = async (customerId) => {
   if (!customerId) {
@@ -559,4 +689,11 @@ onMounted(() => {
 .amount { color: #f56c6c; font-weight: 600; }
 .order-amount :deep(.el-input__inner) { color: #f56c6c; font-weight: 600; font-size: 18px; }
 :deep(.el-table) { font-size: 14px; }
+
+.invoice-container { padding: 10px; }
+.upload-area { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #ebeef5; }
+.upload-tip { font-size: 12px; color: #909399; }
+.invoice-list { margin-top: 10px; }
+.empty-tip { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 0; color: #909399; }
+.empty-tip p { margin-top: 10px; }
 </style>

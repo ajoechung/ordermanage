@@ -66,4 +66,19 @@ class Order extends BaseController
 
         return json($this->orderService->updateStatus($id, $status));
     }
+
+    public function invoices($orderId)
+    {
+        return json($this->orderService->getInvoiceList((int)$orderId));
+    }
+
+    public function uploadInvoice()
+    {
+        return json($this->orderService->uploadInvoice());
+    }
+
+    public function deleteInvoice($id)
+    {
+        return json($this->orderService->deleteInvoice((int)$id));
+    }
 }

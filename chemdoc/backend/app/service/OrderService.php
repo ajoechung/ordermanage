@@ -3,10 +3,12 @@ namespace app\service;
 
 use app\model\OrderModel;
 use app\model\OrderItemModel;
+use app\model\OrderInvoiceModel;
 use app\model\ProductModel;
 use app\model\CustomerModel;
 use app\model\OperationLogModel;
 use think\facade\Db;
+use think\facade\Filesystem;
 
 class OrderService
 {
@@ -262,5 +264,114 @@ class OrderService
             5 => '已取消',
         ];
         return $statusMap[$status] ?? '未知';
+    }
+
+    public function getInvoiceList(int $orderId): array
+    {
+        $order = OrderModel::find($orderId);
+        if (!$order) {
+            return Result::notFound('订单不存在');
+        }
+
+        $invoices = OrderInvoiceModel::where('order_id', $orderId)
+            ->order('create_time', 'desc')
+            ->select()
+            ->toArray();
+
+        foreach ($invoices as &$invoice) {
+            $invoice['file_size'] = $this->formatFileSize($invoice['file_size'] ?? 0);
+        }
+
+        return Result::success($invoices);
+    }
+
+    public function uploadInvoice(): array
+    {
+        $orderId = request()->param('order_id', 0, 'intval');
+        if ($orderId == 0) {
+            return Result::validateError('订单ID不能为空');
+        }
+
+        $order = OrderModel::find($orderId);
+        if (!$order) {
+            return Result::notFound('订单不存在');
+        }
+
+        $file = request()->file('file');
+        if (!$file) {
+            return Result::validateError('请选择要上传的文件');
+        }
+
+        $validate = validate(['file' => 'fileSize:52428800|fileExt:pdf,doc,docx,jpg,jpeg,png']);
+        if (!$validate->check(['file' => $file])) {
+            return Result::validateError($validate->getError());
+        }
+
+        try {
+            $saveName = Filesystem::disk('public')->putFile('invoices', $file);
+            
+            $fileInfo = $file->getInfo();
+            
+            $invoice = OrderInvoiceModel::create([
+                'order_id' => $orderId,
+                'file_name' => $fileInfo['name'],
+                'file_path' => '/uploads/' . $saveName,
+                'file_size' => $fileInfo['size'],
+                'file_type' => $fileInfo['type'],
+                'create_time' => date('Y-m-d H:i:s'),
+            ]);
+
+            OperationLogModel::log(
+                request()->user_id ?? 0,
+                request()->username ?? '',
+                '订单管理',
+                '上传发票',
+                '订单 ' . $order->order_no . ' 上传发票：' . $fileInfo['name']
+            );
+
+            return Result::success(['invoice_id' => $invoice->invoice_id], '上传成功');
+        } catch (\Exception $e) {
+            return Result::error('上传失败：' . $e->getMessage());
+        }
+    }
+
+    public function deleteInvoice(int $id): array
+    {
+        $invoice = OrderInvoiceModel::find($id);
+        if (!$invoice) {
+            return Result::notFound('发票不存在');
+        }
+
+        $order = OrderModel::find($invoice->order_id);
+
+        if ($invoice->file_path) {
+            $filePath = public_path() . $invoice->file_path;
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+
+        $invoice->delete();
+
+        OperationLogModel::log(
+            request()->user_id ?? 0,
+            request()->username ?? '',
+            '订单管理',
+            '删除发票',
+            '订单 ' . ($order->order_no ?? '') . ' 删除发票：' . $invoice->file_name
+        );
+
+        return Result::success(null, '删除成功');
+    }
+
+    protected function formatFileSize(int $bytes): string
+    {
+        if ($bytes < 1024) {
+            return $bytes . ' B';
+        } elseif ($bytes < 1024 * 1024) {
+            return round($bytes / 1024, 2) . ' KB';
+        } else {
+            return round($bytes / (1024 * 1024), 2) . ' MB';
+        }
     }
 }
