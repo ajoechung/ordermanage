@@ -191,7 +191,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="detailVisible" title="订单详情" width="800px">
+    <el-dialog v-model="detailVisible" title="订单详情" width="900px">
       <el-descriptions :column="2" border>
         <el-descriptions-item label="订单号">{{ currentOrder.order_no }}</el-descriptions-item>
         <el-descriptions-item label="状态">
@@ -207,6 +207,21 @@
         <el-descriptions-item label="备注" :span="2">{{ currentOrder.remark }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ currentOrder.create_time }}</el-descriptions-item>
       </el-descriptions>
+      
+      <div v-if="currentOrder.items && currentOrder.items.length > 0" style="margin-top: 20px;">
+        <h4 style="margin-bottom: 10px; font-weight: 600;">订单明细</h4>
+        <el-table :data="currentOrder.items" border size="small">
+          <el-table-column prop="product_name" label="产品名称" min-width="200" />
+          <el-table-column prop="product_spec" label="规格" width="120" />
+          <el-table-column prop="unit_price" label="单价" width="100" align="right">
+            <template #default="{ row }">¥{{ Number(row.unit_price || row.price || 0).toFixed(2) }}</template>
+          </el-table-column>
+          <el-table-column prop="quantity" label="数量" width="100" />
+          <el-table-column label="金额" width="120" align="right">
+            <template #default="{ row }">¥{{ Number(row.subtotal || row.amount || 0).toFixed(2) }}</template>
+          </el-table-column>
+        </el-table>
+      </div>
     </el-dialog>
 
     <el-dialog v-model="invoiceDialogVisible" :title="invoiceDialogTitle" width="600px" @close="closeInvoiceDialog">
@@ -252,7 +267,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus, Upload } from '@element-plus/icons-vue'
-import { getList, create, update, deleteOrder, updateOrderStatus } from '@/api/modules/order'
+import { getList, create, update, deleteOrder, updateOrderStatus, getOrderDetail } from '@/api/modules/order'
 import { getAll as getCustomerList } from '@/api/modules/customer'
 import { getAll as getProductList } from '@/api/modules/product'
 import { useUserStore } from '@/store/modules/user'
@@ -469,33 +484,55 @@ const handleAdd = () => {
 
 const handleEdit = async (row) => {
   dialogTitle.value = '编辑订单'
-  Object.keys(formData).forEach(key => {
-    formData[key] = row[key] ?? formData[key]
-  })
-  if (row.items) {
-    formData.items = row.items.map(item => ({
-      product_id: item.product_id,
-      product_name: item.product_name,
-      product_spec: item.product_spec,
-      unit_price: item.unit_price,
-      quantity: item.quantity,
-      subtotal: item.subtotal
-    }))
-  }
-  // 如果有客户ID，加载该客户的联系人列表
-  if (row.customer_id) {
-    await loadCustomerContacts(row.customer_id)
-    // 尝试找到匹配的联系人
-    const contact = customerContacts.value.find(c => c.name === row.contact_name)
-    if (contact) {
-      formData.selected_contact_id = contact.contact_id
+  
+  try {
+    const res = await getOrderDetail(row.order_id)
+    if (res.code === 200) {
+      const detail = res.data
+      Object.keys(formData).forEach(key => {
+        formData[key] = detail[key] ?? formData[key]
+      })
+      if (detail.items) {
+        formData.items = detail.items.map(item => ({
+          product_id: item.product_id,
+          product_name: item.product_name || item.product?.name || '',
+          product_spec: item.product_spec || item.product?.spec || '',
+          unit_price: item.unit_price || item.price || 0,
+          quantity: item.quantity,
+          subtotal: item.subtotal || item.amount || 0
+        }))
+      } else {
+        formData.items = []
+      }
+      if (detail.customer_id) {
+        await loadCustomerContacts(detail.customer_id)
+        if (detail.contact_id) {
+          formData.selected_contact_id = detail.contact_id
+        } else if (detail.contact_name) {
+          const contact = customerContacts.value.find(c => c.name === detail.contact_name)
+          if (contact) {
+            formData.selected_contact_id = contact.contact_id
+          }
+        }
+      }
     }
+  } catch (error) {
+    console.error('获取订单详情失败:', error)
   }
+  
   dialogVisible.value = true
 }
 
-const handleView = (row) => {
-  currentOrder.value = row
+const handleView = async (row) => {
+  try {
+    const res = await getOrderDetail(row.order_id)
+    if (res.code === 200) {
+      currentOrder.value = res.data
+    }
+  } catch (error) {
+    console.error('获取订单详情失败:', error)
+    currentOrder.value = row
+  }
   detailVisible.value = true
 }
 

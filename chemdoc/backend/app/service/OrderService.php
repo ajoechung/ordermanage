@@ -133,11 +133,12 @@ class OrderService
                         'order_id' => $order->order_id,
                         'product_id' => $item['product_id'],
                         'product_name' => $item['product_name'] ?? '',
-                        'spec' => $item['spec'] ?? '',
-                        'unit' => $item['unit'] ?? '',
+                        'product_spec' => $item['product_spec'] ?? '',
+                        'product_unit' => $item['product_unit'] ?? '',
+                        'unit_price' => $item['unit_price'] ?? 0,
                         'quantity' => $item['quantity'] ?? 1,
-                        'price' => $item['price'] ?? 0,
-                        'amount' => $item['amount'] ?? 0,
+                        'subtotal' => $item['subtotal'] ?? 0,
+                        'create_time' => date('Y-m-d H:i:s'),
                     ]);
                 }
             }
@@ -185,6 +186,23 @@ class OrderService
             ];
 
             $order->save($updateData);
+
+            if (isset($data['items']) && is_array($data['items'])) {
+                OrderItemModel::where('order_id', $id)->delete();
+                foreach ($data['items'] as $item) {
+                    OrderItemModel::create([
+                        'order_id' => $id,
+                        'product_id' => $item['product_id'],
+                        'product_name' => $item['product_name'] ?? '',
+                        'product_spec' => $item['product_spec'] ?? '',
+                        'product_unit' => $item['product_unit'] ?? '',
+                        'unit_price' => $item['unit_price'] ?? 0,
+                        'quantity' => $item['quantity'] ?? 1,
+                        'subtotal' => $item['subtotal'] ?? 0,
+                        'create_time' => date('Y-m-d H:i:s'),
+                    ]);
+                }
+            }
 
             Db::commit();
 
@@ -235,8 +253,10 @@ class OrderService
             return Result::notFound('订单不存在');
         }
 
-        $order->order_status = $status;
-        $order->save();
+        Db::name('order')->where('order_id', $id)->update([
+            'order_status' => $status,
+            'update_time' => date('Y-m-d H:i:s')
+        ]);
 
         OperationLogModel::log(
             request()->user_id ?? 0,

@@ -33,6 +33,9 @@ Route::group('api', function () {
     Route::put('order/:id', 'api.Order/update');
     Route::delete('order/:id', 'api.Order/delete');
     Route::post('order/status', 'api.Order/status');
+    Route::get('order/invoices/:orderId', 'api.Order/invoices');
+    Route::post('order/uploadInvoice', 'api.Order/uploadInvoice');
+    Route::delete('order/invoice/:id', 'api.Order/deleteInvoice');
 
     Route::get('supplier', 'api.Supplier/index');
     Route::get('supplier/:id', 'api.Supplier/read');
