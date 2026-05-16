@@ -399,14 +399,20 @@ class OrderService
         }
 
         try {
-            $saveName = Filesystem::disk('public')->putFile('invoices', $file);
+            $uploadPath = public_path() . '/uploads/invoices/';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            $saveName = $file->hashName();
+            $file->move($uploadPath, $saveName);
             
             $fileInfo = $file->getInfo();
             
             $invoice = OrderInvoiceModel::create([
                 'order_id' => $orderId,
                 'file_name' => $fileInfo['name'],
-                'file_path' => '/uploads/' . $saveName,
+                'file_path' => '/uploads/invoices/' . $saveName,
                 'file_size' => $fileInfo['size'],
                 'file_type' => $fileInfo['type'],
                 'create_time' => date('Y-m-d H:i:s'),
