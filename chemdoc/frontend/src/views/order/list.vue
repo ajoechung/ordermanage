@@ -524,14 +524,15 @@ const handleEdit = async (row) => {
 }
 
 const handleView = async (row) => {
+  currentOrder.value = { ...row }
   try {
     const res = await getOrderDetail(row.order_id)
     if (res.code === 200) {
-      currentOrder.value = res.data
+      // 合并数据，确保既有基本信息又有明细
+      currentOrder.value = { ...currentOrder.value, ...res.data }
     }
   } catch (error) {
     console.error('获取订单详情失败:', error)
-    currentOrder.value = row
   }
   detailVisible.value = true
 }

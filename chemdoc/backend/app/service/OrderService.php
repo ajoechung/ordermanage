@@ -68,44 +68,61 @@ class OrderService
 
     public function getDetail(int $id): array
     {
-        $order = OrderModel::with(['customer', 'contact', 'createUser', 'items.product'])->find($id);
+        try {
+            $order = OrderModel::with(['customer', 'contact', 'createUser', 'items.product'])->find($id);
 
-        if (!$order) {
-            return Result::notFound('订单不存在');
-        }
-
-        $data = $order->toArray();
-
-        if (isset($data['customer'])) {
-            $data['customer_name'] = $data['customer']['name'] ?? '';
-            unset($data['customer']);
-        }
-
-        if (isset($data['contact'])) {
-            $data['contact_name'] = $data['contact']['name'] ?? '';
-            $data['contact_phone'] = $data['contact']['phone'] ?? '';
-            unset($data['contact']);
-        }
-
-        if (isset($data['create_user'])) {
-            $data['create_name'] = $data['create_user']['realname'] ?? '';
-            unset($data['create_user']);
-        }
-
-        if (isset($data['items'])) {
-            foreach ($data['items'] as &$item) {
-                if (isset($item['product'])) {
-                    $item['product_name'] = $item['product']['name'] ?? '';
-                    $item['product_code'] = $item['product']['code'] ?? '';
-                    unset($item['product']);
-                }
+            if (!$order) {
+                return Result::notFound('订单不存在');
             }
+
+            $data = $order->toArray();
+
+            if (isset($data['customer'])) {
+                $data['customer_name'] = $data['customer']['name'] ?? '';
+                unset($data['customer']);
+            }
+
+            if (isset($data['contact'])) {
+                $data['contact_name'] = $data['contact']['name'] ?? '';
+                $data['contact_phone'] = $data['contact']['phone'] ?? '';
+                unset($data['contact']);
+            }
+
+            if (isset($data['create_user'])) {
+                $data['create_name'] = $data['create_user']['realname'] ?? '';
+                unset($data['create_user']);
+            }
+
+            if (isset($data['items'])) {
+                foreach ($data['items'] as &$item) {
+                    if (isset($item['product'])) {
+                        $item['product_name'] = $item['product']['name'] ?? '';
+                        $item['product_code'] = $item['product']['code'] ?? '';
+                        unset($item['product']);
+                    }
+                    // 确保字段存在
+                    $item['unit_price'] = $item['unit_price'] ?? 0;
+                    $item['quantity'] = $item['quantity'] ?? 0;
+                    $item['subtotal'] = $item['subtotal'] ?? 0;
+                }
+            } else {
+                $data['items'] = [];
+            }
+
+            $data['total_amount'] = round((float)($data['total_amount'] ?? 0), 2);
+            $data['actual_amount'] = round((float)($data['actual_amount'] ?? 0), 2);
+
+            return Result::success($data);
+        } catch (\Exception $e) {
+            // 如果关联查询失败，尝试只查询订单基本信息
+            $order = OrderModel::find($id);
+            if (!$order) {
+                return Result::notFound('订单不存在');
+            }
+            $data = $order->toArray();
+            $data['items'] = [];
+            return Result::success($data);
         }
-
-        $data['total_amount'] = round((float)$data['total_amount'], 2);
-        $data['actual_amount'] = round((float)$data['actual_amount'], 2);
-
-        return Result::success($data);
     }
 
     public function create(array $data): array
