@@ -1,1 +1,0 @@
-import{s as e}from"./index-Cq_T2qP6.js";function n(t){return e({url:"/contact",method:"get",params:t})}function o(t){return e({url:"/contact",method:"post",data:t})}function a(t,c){return e({url:`/contact/${t}`,method:"put",data:c})}function u(t){return e({url:`/contact/${t}`,method:"delete"})}const s=n,d=o,i=a;export{i as a,d as b,o as c,u as d,s as g,a as u};
