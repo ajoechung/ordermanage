@@ -251,7 +251,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, Upload, FileText, Eye } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Upload } from '@element-plus/icons-vue'
 import { getList, create, update, deleteOrder, updateOrderStatus } from '@/api/modules/order'
 import { getAll as getCustomerList } from '@/api/modules/customer'
 import { getAll as getProductList } from '@/api/modules/product'
