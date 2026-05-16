@@ -388,14 +388,23 @@ class OrderService
             return Result::notFound('订单不存在');
         }
 
-        $file = request()->file('file');
+        try {
+            $file = request()->file('file');
+        } catch (\Exception $e) {
+            return Result::error('获取上传文件失败：' . $e->getMessage());
+        }
+        
         if (!$file) {
             return Result::validateError('请选择要上传的文件');
         }
 
-        $validate = validate(['file' => 'fileSize:52428800|fileExt:pdf,doc,docx,jpg,jpeg,png']);
-        if (!$validate->check(['file' => $file])) {
-            return Result::validateError($validate->getError());
+        try {
+            $validate = validate(['file' => 'fileSize:52428800|fileExt:pdf,doc,docx,jpg,jpeg,png']);
+            if (!$validate->check(['file' => $file])) {
+                return Result::validateError($validate->getError());
+            }
+        } catch (\Exception $e) {
+            return Result::error('文件验证失败：' . $e->getMessage());
         }
 
         try {
@@ -427,6 +436,8 @@ class OrderService
             );
 
             return Result::success(['invoice_id' => $invoice->invoice_id], '上传成功');
+        } catch (\think\exception\FileException $e) {
+            return Result::error('文件操作失败，请检查服务器临时目录权限：' . $e->getMessage());
         } catch (\Exception $e) {
             return Result::error('上传失败：' . $e->getMessage());
         }
