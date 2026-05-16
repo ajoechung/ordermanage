@@ -251,7 +251,7 @@
           <el-input v-model="followFormData.content" type="textarea" :rows="5" placeholder="请输入跟进内容" />
         </el-form-item>
         <el-form-item label="下次跟进">
-          <el-date-picker v-model="followFormData.next_follow_time" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
+          <el-date-picker v-model="followFormData.next_time" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -336,7 +336,7 @@ const followFormData = ref({
   customer_id: null,
   method: '',
   content: '',
-  next_follow_time: ''
+  next_time: ''
 })
 
 const followFormRules = {
@@ -548,7 +548,7 @@ const handleEditFollow = (row) => {
     customer_id: props.customerId,
     method: row.method || '',
     content: row.content || '',
-    next_follow_time: row.next_follow_time || ''
+    next_time: row.next_time || ''
   })
   followDialogVisible.value = true
 }
@@ -603,7 +603,7 @@ const handleFollowDialogClose = () => {
     customer_id: null,
     method: '',
     content: '',
-    next_follow_time: ''
+    next_time: ''
   })
 }
 

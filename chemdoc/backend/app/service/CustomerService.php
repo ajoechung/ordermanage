@@ -104,7 +104,6 @@ class CustomerService
             ->select()
             ->toArray();
         foreach ($contacts as &$contact) {
-            $contact['phone'] = $contact['mobile'] ?? '';
             $contact['is_primary'] = $contact['is_default'] ?? 0;
         }
         $data['contacts'] = $contacts;
