@@ -102,7 +102,6 @@ class OrderService
                     $product = ProductModel::find($item['product_id']);
                     $item['product_name'] = $product ? $product['name'] : '';
                     $item['product_spec'] = $product ? $product['spec'] : '';
-                    // 确保字段存在
                     $item['unit_price'] = $item['unit_price'] ?? 0;
                     $item['quantity'] = $item['quantity'] ?? 0;
                     $item['subtotal'] = $item['subtotal'] ?? 0;
@@ -121,7 +120,20 @@ class OrderService
                 return Result::notFound('订单不存在');
             }
             $data = $order->toArray();
+            // 即使在 catch 块中也手动查询订单明细
+            $items = OrderItemModel::where('order_id', $id)->select()->toArray();
             $data['items'] = [];
+            if (!empty($items)) {
+                foreach ($items as $item) {
+                    $product = ProductModel::find($item['product_id']);
+                    $item['product_name'] = $product ? $product['name'] : '';
+                    $item['product_spec'] = $product ? $product['spec'] : '';
+                    $item['unit_price'] = $item['unit_price'] ?? 0;
+                    $item['quantity'] = $item['quantity'] ?? 0;
+                    $item['subtotal'] = $item['subtotal'] ?? 0;
+                    $data['items'][] = $item;
+                }
+            }
             return Result::success($data);
         }
     }
