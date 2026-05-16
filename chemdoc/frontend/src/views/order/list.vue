@@ -258,7 +258,7 @@
             </el-table-column>
           </el-table>
           <div v-else class="empty-tip">
-            <FileText :size="48" style="color: #ccc" />
+            <div style="font-size: 48px; color: #ccc; margin-bottom: 10px;">📄</div>
             <p>暂无发票，请上传</p>
           </div>
         </div>
@@ -270,7 +270,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, Upload, FileText, Eye } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Upload, Eye } from '@element-plus/icons-vue'
 import { getList, create, update, deleteOrder, updateOrderStatus, getOrderDetail } from '@/api/modules/order'
 import { getAll as getCustomerList } from '@/api/modules/customer'
 import { getAll as getProductList } from '@/api/modules/product'
