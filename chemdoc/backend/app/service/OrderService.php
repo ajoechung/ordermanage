@@ -392,44 +392,47 @@ class OrderService
         }
 
         try {
-            $file = request()->file('file');
-        } catch (\Exception $e) {
-            return Result::error('获取上传文件失败：' . $e->getMessage());
-        }
-        
-        if (!$file) {
-            return Result::validateError('请选择要上传的文件');
-        }
-
-        try {
-            $validate = validate(['file' => 'fileSize:52428800|fileExt:pdf,doc,docx,jpg,jpeg,png']);
-            if (!$validate->check(['file' => $file])) {
-                return Result::validateError($validate->getError());
+            if (empty($_FILES['file'])) {
+                return Result::validateError('请选择要上传的文件');
             }
-        } catch (\Exception $e) {
-            return Result::error('文件验证失败：' . $e->getMessage());
-        }
 
-        try {
+            $uploadFile = $_FILES['file'];
+            if ($uploadFile['error'] !== UPLOAD_ERR_OK) {
+                return Result::error('文件上传失败，错误码：' . $uploadFile['error']);
+            }
+
+            $allowedExt = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+            $fileExt = strtolower(pathinfo($uploadFile['name'], PATHINFO_EXTENSION));
+            if (!in_array($fileExt, $allowedExt)) {
+                return Result::validateError('文件格式不支持');
+            }
+
+            if ($uploadFile['size'] > 52428800) {
+                return Result::validateError('文件大小不能超过50MB');
+            }
+
             $uploadPath = public_path() . '/uploads/invoices/';
             if (!is_dir($uploadPath)) {
                 mkdir($uploadPath, 0755, true);
             }
 
-            $saveName = $file->hashName();
-            $file->move($uploadPath, $saveName);
+            $saveName = md5(uniqid((string)mt_rand(), true)) . '.' . $fileExt;
+            $targetPath = $uploadPath . $saveName;
             
-            $fileInfo = $file->getInfo();
+            if (!move_uploaded_file($uploadFile['tmp_name'], $targetPath)) {
+                return Result::error('文件保存失败');
+            }
+
             $filePath = '/uploads/invoices/' . $saveName;
             $invoiceId = 0;
             
             try {
                 $invoice = OrderInvoiceModel::create([
                     'order_id' => $orderId,
-                    'file_name' => $fileInfo['name'],
+                    'file_name' => $uploadFile['name'],
                     'file_path' => $filePath,
-                    'file_size' => $fileInfo['size'],
-                    'file_type' => $fileInfo['type'],
+                    'file_size' => $uploadFile['size'],
+                    'file_type' => $uploadFile['type'],
                     'create_time' => date('Y-m-d H:i:s'),
                 ]);
                 $invoiceId = $invoice->invoice_id;
@@ -443,15 +446,13 @@ class OrderService
                     request()->username ?? '',
                     '订单管理',
                     '上传发票',
-                    '订单 ' . $order->order_no . ' 上传发票：' . $fileInfo['name']
+                    '订单 ' . $order->order_no . ' 上传发票：' . $uploadFile['name']
                 );
             } catch (\Exception $e) {
                 // 日志失败不影响主流程
             }
 
             return Result::success(['invoice_id' => $invoiceId], '上传成功');
-        } catch (\think\exception\FileException $e) {
-            return Result::error('文件操作失败，请检查服务器临时目录权限：' . $e->getMessage());
         } catch (\Exception $e) {
             return Result::error('上传失败：' . $e->getMessage());
         }
