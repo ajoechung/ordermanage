@@ -12,6 +12,7 @@ class CustomerFollowModel extends BaseModel
 {
     protected $table = 'customer_follow';
     protected $primaryKey = 'follow_id';
+    protected $autoWriteTimestamp = false;
 
     public function customer(): BelongsTo
     {
