@@ -44,12 +44,10 @@ class OrderService
         if ($hasInvoice !== '') {
             if ($hasInvoice === '1') {
                 // 有发票的订单
-                $subQuery = \app\model\OrderInvoiceModel::field('order_id')->buildSql();
-                $query->whereIn('order_id', $subQuery);
+                $query->has('invoices', '>', 0);
             } elseif ($hasInvoice === '0') {
                 // 没有发票的订单
-                $subQuery = \app\model\OrderInvoiceModel::field('order_id')->buildSql();
-                $query->whereNotIn('order_id', $subQuery);
+                $query->has('invoices', '=', 0);
             }
         }
 
