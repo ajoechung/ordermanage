@@ -17,7 +17,7 @@ export function getCustomerDetail(id) {
 
 export function getCustomerFullDetail(id) {
   return request({
-    url: `/customer/${id}/detail`,
+    url: `/customer/detail/${id}`,
     method: 'get'
   })
 }
