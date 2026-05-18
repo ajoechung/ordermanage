@@ -1,1 +1,0 @@
-import{s as t}from"./index-CRQfdQN1.js";function e(o){return t({url:"/follow",method:"get",params:o})}function l(o){return t({url:"/follow",method:"post",data:o})}function s(o){return t({url:`/follow/${o}`,method:"delete"})}const n=e,c=l;export{c as a,l as c,s as d,n as g};
