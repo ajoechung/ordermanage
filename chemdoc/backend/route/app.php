@@ -11,8 +11,8 @@ Route::group('api', function () {
     Route::get('dashboard', 'api.Statistics/dashboard');
 
     Route::get('customer', 'api.Customer/index');
-    Route::get('customer/:id', 'api.Customer/read');
     Route::get('customer/detail/:id', 'api.Customer/fullDetail');
+    Route::get('customer/:id', 'api.Customer/read');
     Route::post('customer', 'api.Customer/save');
     Route::put('customer/:id', 'api.Customer/update');
     Route::delete('customer/:id', 'api.Customer/delete');
