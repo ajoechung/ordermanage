@@ -23,7 +23,7 @@ class OrderService
         $hasInvoice = $params['has_invoice'] ?? '';
         $dateRange = $params['date_range'] ?? [];
 
-        $query = OrderModel::with(['customer', 'createUser', 'invoices']);
+        $query = OrderModel::with(['customer', 'contact', 'createUser', 'invoices']);
 
         if (!empty($keyword)) {
             $query->scope('keyword', $keyword);
@@ -65,6 +65,14 @@ class OrderService
             if (isset($item['customer'])) {
                 $item['customer_name'] = $item['customer']['name'] ?? '';
                 unset($item['customer']);
+            }
+            // 优先使用订单表中直接存储的联系人信息
+            if (empty($item['contact_name']) && isset($item['contact'])) {
+                $item['contact_name'] = $item['contact']['name'] ?? '';
+                $item['contact_phone'] = $item['contact']['phone'] ?? '';
+            }
+            if (isset($item['contact'])) {
+                unset($item['contact']);
             }
             if (isset($item['create_user'])) {
                 $item['create_name'] = $item['create_user']['realname'] ?? '';
