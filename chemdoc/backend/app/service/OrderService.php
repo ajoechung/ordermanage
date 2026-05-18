@@ -20,9 +20,10 @@ class OrderService
         $customerId = $params['customer_id'] ?? '';
         $orderStatus = $params['order_status'] ?? '';
         $invoiceStatus = $params['invoice_status'] ?? '';
+        $hasInvoice = $params['has_invoice'] ?? '';
         $dateRange = $params['date_range'] ?? [];
 
-        $query = OrderModel::with(['customer', 'createUser']);
+        $query = OrderModel::with(['customer', 'createUser', 'invoices']);
 
         if (!empty($keyword)) {
             $query->scope('keyword', $keyword);
@@ -38,6 +39,18 @@ class OrderService
 
         if (!empty($invoiceStatus)) {
             $query->scope('invoiceStatus', (int)$invoiceStatus);
+        }
+
+        if ($hasInvoice !== '') {
+            if ($hasInvoice === '1') {
+                // 有发票的订单
+                $subQuery = \app\model\OrderInvoiceModel::field('order_id')->buildSql();
+                $query->whereIn('order_id', $subQuery);
+            } elseif ($hasInvoice === '0') {
+                // 没有发票的订单
+                $subQuery = \app\model\OrderInvoiceModel::field('order_id')->buildSql();
+                $query->whereNotIn('order_id', $subQuery);
+            }
         }
 
         if (!empty($dateRange) && is_array($dateRange)) {
@@ -59,6 +72,9 @@ class OrderService
                 $item['create_name'] = $item['create_user']['realname'] ?? '';
                 unset($item['create_user']);
             }
+            // 判断是否有发票
+            $item['has_invoice'] = !empty($item['invoices']) ? 1 : 0;
+            unset($item['invoices']);
             $item['total_amount'] = round((float)$item['total_amount'], 2);
             $item['actual_amount'] = round((float)$item['actual_amount'], 2);
         }

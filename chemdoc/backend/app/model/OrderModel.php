@@ -39,6 +39,11 @@ class OrderModel extends BaseModel
         return $this->hasMany(OrderItemModel::class, 'order_id');
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(OrderInvoiceModel::class, 'order_id');
+    }
+
     public function getOrderStatusTextAttr($value, $data): string
     {
         $status = [

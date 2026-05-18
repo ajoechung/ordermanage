@@ -18,6 +18,12 @@
             <el-option label="已取消" :value="6" />
           </el-select>
         </el-form-item>
+        <el-form-item label="是否已上传发票">
+          <el-select v-model="searchForm.has_invoice" placeholder="请选择" clearable style="width: 150px">
+            <el-option label="是" :value="1" />
+            <el-option label="否" :value="0" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch"><Search />搜索</el-button>
           <el-button @click="handleReset"><Refresh />重置</el-button>
@@ -45,6 +51,12 @@
         <el-table-column prop="order_status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.order_status)">{{ getStatusText(row.order_status) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="发票" width="100">
+          <template #default="{ row }">
+            <el-tag v-if="row.has_invoice === 1" type="success">已上传</el-tag>
+            <el-tag v-else type="info">未上传</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="create_time" label="创建时间" width="160" />
@@ -278,7 +290,7 @@ import { useUserStore } from '@/store/modules/user'
 
 const userStore = useUserStore()
 
-const searchForm = reactive({ keyword: '', customer_name: '', order_status: '' })
+const searchForm = reactive({ keyword: '', customer_name: '', order_status: '', has_invoice: '' })
 const tableLoading = ref(false)
 const orderList = ref([])
 const customerList = ref([])
@@ -334,6 +346,7 @@ const loadData = async () => {
     if (searchForm.keyword) params.keyword = searchForm.keyword
     if (searchForm.customer_name) params.keyword = searchForm.customer_name
     if (searchForm.order_status !== '') params.order_status = searchForm.order_status
+    if (searchForm.has_invoice !== '') params.has_invoice = searchForm.has_invoice
 
     const res = await getList(params)
     if (res.code === 200) {
@@ -489,7 +502,7 @@ const loadCustomerContacts = async (customerId) => {
 
 const handleSearch = () => { pagination.page = 1; loadData() }
 const handleReset = () => {
-  Object.assign(searchForm, { keyword: '', customer_name: '', order_status: '' })
+  Object.assign(searchForm, { keyword: '', customer_name: '', order_status: '', has_invoice: '' })
   pagination.page = 1
   loadData()
 }
