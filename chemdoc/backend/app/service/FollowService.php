@@ -57,7 +57,7 @@ class FollowService
     {
         $follow = CustomerFollowModel::create([
             'customer_id' => $data['customer_id'],
-            'user_id' => request()->user_id ?? 0,
+            'follow_user_id' => request()->user_id ?? 0,
             'follow_time' => $data['follow_time'] ?? date('Y-m-d H:i:s'),
             'method' => $data['method'] ?? '',
             'content' => $data['content'] ?? '',
