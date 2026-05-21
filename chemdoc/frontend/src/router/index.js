@@ -150,6 +150,31 @@ export const constantRoutes = [
             name: 'SystemRole',
             component: () => import('@/views/system/role.vue'),
             meta: { title: '角色管理' }
+          },
+          {
+            path: 'permission',
+            name: 'SystemPermission',
+            component: () => import('@/views/system/permission.vue'),
+            meta: { title: '权限管理' }
+          }
+        ]
+      },
+      {
+        path: 'dict',
+        redirect: '/dict/type',
+        meta: { title: '字典管理', icon: 'List' },
+        children: [
+          {
+            path: 'type',
+            name: 'DictType',
+            component: () => import('@/views/system/dict-type.vue'),
+            meta: { title: '字典类型' }
+          },
+          {
+            path: 'data',
+            name: 'DictData',
+            component: () => import('@/views/system/dict-data.vue'),
+            meta: { title: '字典数据' }
           }
         ]
       },

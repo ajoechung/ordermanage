@@ -55,6 +55,20 @@ Route::group('api', function () {
 
     Route::get('log', 'api.Log/index');
 
+    Route::get('dict/types', 'api.Dict/typeList');
+    Route::get('dict/type/:id', 'api.Dict/typeDetail');
+    Route::post('dict/type', 'api.Dict/createType');
+    Route::put('dict/type/:id', 'api.Dict/updateType');
+    Route::delete('dict/type/:id', 'api.Dict/deleteType');
+
+    Route::get('dict/data', 'api.Dict/dataList');
+    Route::get('dict/data/:id', 'api.Dict/dataDetail');
+    Route::post('dict/data', 'api.Dict/createData');
+    Route::put('dict/data/:id', 'api.Dict/updateData');
+    Route::delete('dict/data/:id', 'api.Dict/deleteData');
+
+    Route::get('dict/code/:code', 'api.Dict/getByCode');
+
     Route::get('system/users', 'api.System/users');
     Route::post('system/user', 'api.System/createUser');
     Route::put('system/user/:id', 'api.System/updateUser');
