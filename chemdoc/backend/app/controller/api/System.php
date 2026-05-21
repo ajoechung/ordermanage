@@ -303,6 +303,19 @@ class System extends BaseController
         return json(Result::success($tree));
     }
 
+    public function ruleTree()
+    {
+        $rules = \think\facade\Db::name('auth_rule')
+            ->where('status', 1)
+            ->order('sort', 'asc')
+            ->select()
+            ->toArray();
+
+        $tree = $this->buildTree($rules);
+
+        return json(Result::success($tree));
+    }
+
     protected function buildTree(array $data, int $pid = 0): array
     {
         $tree = [];
