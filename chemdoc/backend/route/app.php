@@ -79,6 +79,10 @@ Route::group('api', function () {
     Route::put('system/group/:id', 'api.System/updateGroup');
     Route::delete('system/group/:id', 'api.System/deleteGroup');
     Route::get('system/rules', 'api.System/rules');
+    Route::get('system/ruleTree', 'api.System/ruleTree');
+    Route::post('system/rule', 'api.System/createRule');
+    Route::put('system/rule/:id', 'api.System/updateRule');
+    Route::delete('system/rule/:id', 'api.System/deleteRule');
 
     Route::post('upload/image', 'api.Upload/image');
     Route::post('upload/file', 'api.Upload/file');
