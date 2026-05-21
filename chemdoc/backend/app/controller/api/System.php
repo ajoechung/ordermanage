@@ -256,7 +256,11 @@ class System extends BaseController
             $updateData['description'] = $data['description'];
         }
         if (isset($data['rules'])) {
-            $updateData['rules'] = implode(',', $data['rules']);
+            if (is_array($data['rules'])) {
+                $updateData['rules'] = implode(',', $data['rules']);
+            } else {
+                $updateData['rules'] = $data['rules'];
+            }
         }
         if (isset($data['status'])) {
             $updateData['status'] = $data['status'];
