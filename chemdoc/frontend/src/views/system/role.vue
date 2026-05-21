@@ -44,12 +44,9 @@
         <el-table-column prop="user_count" label="用户数" width="100" align="center" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
-            <el-switch
-              v-model="row.status"
-              :active-value="1"
-              :inactive-value="0"
-              @change="handleStatusChange(row)"
-            />
+            <el-tag :type="getStatusType(row.status)">
+              {{ getStatusText(row.status) }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="create_time" label="创建时间" width="160" />
@@ -108,6 +105,13 @@
         <el-form-item label="描述" prop="description">
           <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入描述" />
         </el-form-item>
+
+        <el-form-item label="状态" prop="status">
+          <el-select v-model="formData.status" placeholder="请选择状态">
+            <el-option label="启用" :value="1" />
+            <el-option label="禁用" :value="0" />
+          </el-select>
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -122,8 +126,13 @@
       <el-descriptions :column="2" border>
         <el-descriptions-item label="角色名称">{{ currentRole.name }}</el-descriptions-item>
         <el-descriptions-item label="角色代码">{{ currentRole.code }}</el-descriptions-item>
-        <el-descriptions-item label="描述" :span="2">{{ currentRole.description }}</el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag :type="getStatusType(currentRole.status)">
+            {{ getStatusText(currentRole.status) }}
+          </el-tag>
+        </el-descriptions-item>
         <el-descriptions-item label="用户数">{{ currentRole.user_count }}</el-descriptions-item>
+        <el-descriptions-item label="描述" :span="2">{{ currentRole.description }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ currentRole.create_time }}</el-descriptions-item>
       </el-descriptions>
     </el-dialog>
@@ -140,6 +149,7 @@
             label: 'title',
             children: 'children'
           }"
+          :check-strictly="false"
         />
       </div>
 
@@ -157,7 +167,22 @@
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
-import { getRoleList, createRole, updateRole, deleteRole, getPermissionList, assignPermission } from '@/api/modules/system'
+import { getRoleList, createRole, updateRole, deleteRole, getPermissionTree, assignPermission } from '@/api/modules/system'
+
+// 辅助函数：安全的状态处理
+const getStatusValue = (status) => {
+  if (status == null || status === '') return 1
+  const val = Number(status)
+  return isNaN(val) ? 1 : val
+}
+
+const getStatusType = (status) => {
+  return getStatusValue(status) === 1 ? 'success' : 'danger'
+}
+
+const getStatusText = (status) => {
+  return getStatusValue(status) === 1 ? '启用' : '禁用'
+}
 
 const searchForm = reactive({
   name: ''
@@ -188,7 +213,8 @@ const formData = reactive({
   id: null,
   name: '',
   code: '',
-  description: ''
+  description: '',
+  status: 1
 })
 
 const formRules = {
@@ -196,7 +222,8 @@ const formRules = {
   code: [
     { required: true, message: '请输入角色代码', trigger: 'blur' },
     { pattern: /^[a-z_]+$/, message: '角色代码只能包含小写字母和下划线', trigger: 'blur' }
-  ]
+  ],
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
 const loadData = async () => {
@@ -210,10 +237,8 @@ const loadData = async () => {
     
     const res = await getRoleList(params)
     if (res.code === 200) {
-      // 后端返回的是直接的数组，没有包装在 list 和 total 中
       const allRoles = res.data || []
       
-      // 处理筛选
       let filteredRoles = allRoles
       if (searchForm.name) {
         filteredRoles = allRoles.filter(role => 
@@ -221,7 +246,6 @@ const loadData = async () => {
         )
       }
       
-      // 分页处理
       const start = (pagination.page - 1) * pagination.pageSize
       const end = start + pagination.pageSize
       roleList.value = filteredRoles.slice(start, end)
@@ -237,7 +261,7 @@ const loadData = async () => {
 
 const loadPermissions = async () => {
   try {
-    const res = await getPermissionList()
+    const res = await getPermissionTree()
     if (res.code === 200) {
       permissionTree.value = res.data || []
     }
@@ -261,6 +285,13 @@ const handleReset = () => {
 
 const handleAdd = () => {
   dialogTitle.value = '新增角色'
+  Object.assign(formData, {
+    id: null,
+    name: '',
+    code: '',
+    description: '',
+    status: 1
+  })
   dialogVisible.value = true
 }
 
@@ -270,7 +301,8 @@ const handleEdit = (row) => {
     id: row.id,
     name: row.name,
     code: row.code,
-    description: row.description
+    description: row.description,
+    status: getStatusValue(row.status)
   })
   dialogVisible.value = true
 }
@@ -306,19 +338,6 @@ const handleDelete = async (row) => {
   }
 }
 
-const handleStatusChange = async (row) => {
-  try {
-    const res = await update({ id: row.id, status: row.status })
-    if (res.code === 200) {
-      ElMessage.success(row.status === 1 ? '角色已启用' : '角色已禁用')
-    }
-  } catch (error) {
-    console.error('修改状态失败:', error)
-    ElMessage.error('修改状态失败')
-    row.status = row.status === 1 ? 0 : 1
-  }
-}
-
 const handlePermission = async (row) => {
   currentRoleId.value = row.id
   permissionDialogVisible.value = true
@@ -336,11 +355,8 @@ const handlePermission = async (row) => {
 }
 
 const handlePermissionSubmit = async () => {
-  const checkedNodes = permissionTreeRef.value?.getCheckedNodes() || []
-  const halfCheckedNodes = permissionTreeRef.value?.getHalfCheckedNodes() || []
-  
-  const allChecked = [...checkedNodes, ...halfCheckedNodes]
-  const ruleIds = allChecked.map(node => node.id).join(',')
+  const checkedKeys = permissionTreeRef.value?.getCheckedKeys() || []
+  const ruleIds = checkedKeys.join(',')
   
   permissionSubmitLoading.value = true
   try {
@@ -369,7 +385,10 @@ const handleSubmit = async () => {
     
     submitLoading.value = true
     try {
-      const res = formData.id ? await updateRole(formData) : await createRole(formData)
+      const submitData = {
+        ...formData
+      }
+      const res = formData.id ? await updateRole(submitData) : await createRole(submitData)
       
       if (res.code === 200) {
         ElMessage.success(formData.id ? '编辑成功' : '新增成功')
@@ -393,7 +412,8 @@ const handleDialogClose = () => {
     id: null,
     name: '',
     code: '',
-    description: ''
+    description: '',
+    status: 1
   })
 }
 

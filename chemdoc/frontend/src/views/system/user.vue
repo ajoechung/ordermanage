@@ -75,12 +75,9 @@
         </el-table-column>
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
-            <el-switch
-              v-model="row.status"
-              :active-value="1"
-              :inactive-value="0"
-              @change="handleStatusChange(row)"
-            />
+            <el-tag :type="getStatusType(row.status)">
+              {{ getStatusText(row.status) }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="last_login_time" label="最后登录" width="160" />
@@ -122,7 +119,7 @@
       <el-form
         ref="formRef"
         :model="formData"
-        :rules="formRules"
+        :rules="formData.id ? editFormRules : formRules"
         label-width="100px"
       >
         <el-form-item label="用户名" prop="username">
@@ -152,6 +149,13 @@
 
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="formData.email" placeholder="请输入邮箱" />
+        </el-form-item>
+
+        <el-form-item label="状态" prop="status">
+          <el-select v-model="formData.status" placeholder="请选择状态">
+            <el-option label="启用" :value="1" />
+            <el-option label="禁用" :value="0" />
+          </el-select>
         </el-form-item>
 
         <el-form-item label="备注" prop="remark">
@@ -233,8 +237,24 @@ const formData = reactive({
   nickname: '',
   phone: '',
   email: '',
+  status: 1,
   remark: ''
 })
+
+// 辅助函数：安全的状态处理
+const getStatusValue = (status) => {
+  if (status == null || status === '') return 1
+  const val = Number(status)
+  return isNaN(val) ? 1 : val
+}
+
+const getStatusType = (status) => {
+  return getStatusValue(status) === 1 ? 'success' : 'danger'
+}
+
+const getStatusText = (status) => {
+  return getStatusValue(status) === 1 ? '启用' : '禁用'
+}
 
 const roleFormData = reactive({
   group_ids: []
@@ -249,16 +269,17 @@ const formRules = {
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
   ],
-  nickname: [{ required: true, message: '请输入姓名', trigger: 'blur' }]
+  nickname: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
-// 编辑时密码可以为空
 const editFormRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 3, max: 20, message: '用户名长度为3-20个字符', trigger: 'blur' }
   ],
-  nickname: [{ required: true, message: '请输入姓名', trigger: 'blur' }]
+  nickname: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
 const loadData = async () => {
@@ -309,6 +330,16 @@ const handleReset = () => {
 
 const handleAdd = () => {
   dialogTitle.value = '新增用户'
+  Object.assign(formData, {
+    id: null,
+    username: '',
+    password: '',
+    nickname: '',
+    phone: '',
+    email: '',
+    status: 1,
+    remark: ''
+  })
   dialogVisible.value = true
 }
 
@@ -321,6 +352,7 @@ const handleEdit = (row) => {
     nickname: row.nickname,
     phone: row.phone,
     email: row.email,
+    status: getStatusValue(row.status),
     remark: row.remark
   })
   dialogVisible.value = true
@@ -347,22 +379,10 @@ const handleDelete = async (row) => {
   }
 }
 
-const handleStatusChange = async (row) => {
-  try {
-    const res = await update({ id: row.id, status: row.status })
-    if (res.code === 200) {
-      ElMessage.success(row.status === 1 ? '用户已启用' : '用户已禁用')
-    }
-  } catch (error) {
-    console.error('修改状态失败:', error)
-    ElMessage.error('修改状态失败')
-    row.status = row.status === 1 ? 0 : 1
-  }
-}
-
 const handleAssignRole = (row) => {
   currentUser.value = row
-  roleFormData.group_ids = row.groups?.map(g => g.id) || []
+  // 确保能正确提取已分配的角色ID
+  roleFormData.group_ids = (row.groups || []).map(g => g.id).filter(id => id != null)
   roleDialogVisible.value = true
 }
 
@@ -390,13 +410,22 @@ const handleSubmit = async () => {
   if (!formRef.value) return
   
   const rules = formData.id ? editFormRules : formRules
+  formRef.value?.clearValidate()
   
   await formRef.value.validate(async (valid) => {
     if (!valid) return
     
     submitLoading.value = true
     try {
-      const res = formData.id ? await update(formData) : await create(formData)
+      const submitData = {
+        ...formData
+      }
+      if (!submitData.id && !submitData.password) {
+        ElMessage.error('请输入密码')
+        submitLoading.value = false
+        return
+      }
+      const res = formData.id ? await update(submitData) : await create(submitData)
       
       if (res.code === 200) {
         ElMessage.success(formData.id ? '编辑成功' : '新增成功')
@@ -423,6 +452,7 @@ const handleDialogClose = () => {
     nickname: '',
     phone: '',
     email: '',
+    status: 1,
     remark: ''
   })
 }
