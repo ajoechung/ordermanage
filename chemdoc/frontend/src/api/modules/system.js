@@ -73,19 +73,49 @@ export function assignRole(data) {
   })
 }
 
-export function getPermissionList() {
+export function getPermissionList(params) {
   return request({
     url: '/system/rules',
+    method: 'get',
+    params
+  })
+}
+
+export function getPermissionTree() {
+  return request({
+    url: '/system/ruleTree',
     method: 'get'
+  })
+}
+
+export function createPermission(data) {
+  return request({
+    url: '/system/rule',
+    method: 'post',
+    data
+  })
+}
+
+export function updatePermission(data) {
+  return request({
+    url: `/system/rule/${data.id}`,
+    method: 'put',
+    data
+  })
+}
+
+export function deletePermission(id) {
+  return request({
+    url: `/system/rule/${id}`,
+    method: 'delete'
   })
 }
 
 export function assignPermission(data) {
   return request({
-    url: '/system/group',
+    url: `/system/group/${data.id}`,
     method: 'put',
     data: {
-      id: data.id,
       rules: data.rules
     }
   })
