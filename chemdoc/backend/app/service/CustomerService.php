@@ -220,15 +220,15 @@ class CustomerService
 
             $fields = ['name', 'industry', 'source', 'scale', 'address', 'annual_revenue', 'description', 'status', 'level', 'owner_user_id'];
 
-        foreach ($fields as $field) {
-            if (isset($data[$field])) {
-                $updateData[$field] = $data[$field];
+            foreach ($fields as $field) {
+                if (isset($data[$field])) {
+                    $updateData[$field] = $data[$field];
+                }
             }
-        }
 
-        if (isset($data['code'])) {
-            $updateData['code'] = !empty(trim($data['code'])) ? $data['code'] : null;
-        }
+            if (isset($data['code'])) {
+                $updateData['code'] = !empty(trim($data['code'])) ? $data['code'] : null;
+            }
 
             if (isset($data['attachment'])) {
                 $updateData['attachment'] = is_array($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : $data['attachment'];
@@ -280,14 +280,17 @@ class CustomerService
             $customer->delete();
 
             OperationLogModel::log(
-            request()->user_id ?? 0,
-            request()->username ?? '',
-            '客户管理',
-            '删除',
-            '删除客户：' . $customer->name
-        );
+                request()->user_id ?? 0,
+                request()->username ?? '',
+                '客户管理',
+                '删除',
+                '删除客户：' . $customer->name
+            );
 
-        return Result::success(null, '客户删除成功');
+            return Result::success(null, '客户删除成功');
+        } catch (\Exception $e) {
+            return Result::error('删除失败：' . $e->getMessage());
+        }
     }
 
     private function getFollowTypeCode(string $method): int
