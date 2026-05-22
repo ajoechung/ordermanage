@@ -103,12 +103,12 @@
           <el-col :span="12">
             <el-form-item label="单位" prop="unit">
               <el-select v-model="formData.unit" placeholder="请选择" style="width: 100%">
-                <el-option label="吨" value="吨" />
-                <el-option label="千克" value="千克" />
-                <el-option label="升" value="升" />
-                <el-option label="桶" value="桶" />
-                <el-option label="箱" value="箱" />
-                <el-option label="件" value="件" />
+                <el-option 
+                  v-for="item in unitOptions" 
+                  :key="item.value || item.dict_value" 
+                  :label="item.label || item.dict_label" 
+                  :value="item.value || item.dict_value" 
+                />
               </el-select>
             </el-form-item>
           </el-col>
@@ -223,6 +223,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
 import { getList, create, update, deleteProduct, getCategoryList } from '@/api/modules/product'
+import { getDictByCode } from '@/api/modules/dict'
 
 const searchForm = reactive({
   keyword: '',
@@ -234,6 +235,16 @@ const tableLoading = ref(false)
 const productList = ref([])
 const categoryList = ref([])
 const flatCategoryList = ref([])
+const unitOptions = ref([])
+
+const loadDictData = async () => {
+  try {
+    const res = await getDictByCode('product_unit')
+    unitOptions.value = res.data?.list || res.data || []
+  } catch (error) {
+    console.error('加载字典数据失败:', error)
+  }
+}
 
 const pagination = reactive({
   page: 1,
@@ -643,6 +654,7 @@ const handlePageChange = (page) => {
 
 onMounted(() => {
   loadCategories()
+  loadDictData()
   loadData()
 })
 </script>

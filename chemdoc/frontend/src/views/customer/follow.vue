@@ -9,10 +9,12 @@
         </el-form-item>
         <el-form-item label="跟进方式">
           <el-select v-model="searchForm.method" placeholder="请选择" clearable @change="handleSearch" style="width: 150px">
-            <el-option label="电话" value="电话" />
-            <el-option label="拜访" value="拜访" />
-            <el-option label="邮件" value="邮件" />
-            <el-option label="其他" value="其他" />
+            <el-option 
+              v-for="item in methodOptions" 
+              :key="item.value || item.dict_value" 
+              :label="item.label || item.dict_label" 
+              :value="item.value || item.dict_value" 
+            />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -75,10 +77,12 @@
 
         <el-form-item label="跟进方式" prop="method">
           <el-select v-model="formData.method" placeholder="请选择" style="width: 100%">
-            <el-option label="电话" value="电话" />
-            <el-option label="拜访" value="拜访" />
-            <el-option label="邮件" value="邮件" />
-            <el-option label="其他" value="其他" />
+            <el-option 
+              v-for="item in methodOptions" 
+              :key="item.value || item.dict_value" 
+              :label="item.label || item.dict_label" 
+              :value="item.value || item.dict_value" 
+            />
           </el-select>
         </el-form-item>
 
@@ -105,6 +109,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
 import { getList, create, deleteFollow } from '@/api/modules/follow'
 import { getAll } from '@/api/modules/customer'
+import { getDictByCode } from '@/api/modules/dict'
 
 const searchForm = reactive({
   customer_id: '',
@@ -114,6 +119,16 @@ const searchForm = reactive({
 const tableLoading = ref(false)
 const followList = ref([])
 const customerList = ref([])
+const methodOptions = ref([])
+
+const loadDictData = async () => {
+  try {
+    const res = await getDictByCode('follow_method')
+    methodOptions.value = res.data?.list || res.data || []
+  } catch (error) {
+    console.error('加载字典数据失败:', error)
+  }
+}
 
 const pagination = reactive({
   page: 1,
@@ -249,6 +264,7 @@ const handlePageChange = (page) => {
 
 onMounted(() => {
   loadCustomers()
+  loadDictData()
   loadData()
 })
 </script>

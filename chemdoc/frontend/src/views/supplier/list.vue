@@ -33,6 +33,7 @@
       <el-table v-loading="tableLoading" :data="supplierList" stripe border>
         <el-table-column prop="supplier_id" label="ID" width="80" />
         <el-table-column prop="name" label="供应商名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="type" label="供应商类型" width="120" />
         <el-table-column prop="contact" label="联系人" width="100" />
         <el-table-column prop="phone" label="联系电话" width="130" />
         <el-table-column prop="cooperation_status" label="合作状态" width="100">
@@ -86,6 +87,20 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
+            <el-form-item label="供应商类型" prop="type">
+              <el-select v-model="formData.type" placeholder="请选择" style="width: 100%">
+                <el-option 
+                  v-for="item in typeOptions" 
+                  :key="item.value || item.dict_value" 
+                  :label="item.label || item.dict_label" 
+                  :value="item.value || item.dict_value" 
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
             <el-form-item label="合作状态" prop="cooperation_status">
               <el-select v-model="formData.cooperation_status" placeholder="请选择" style="width: 100%">
                 <el-option label="已合作" value="active" />
@@ -123,12 +138,23 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
 import { getList, create, update, deleteSupplier } from '@/api/modules/supplier'
+import { getDictByCode } from '@/api/modules/dict'
 
 const router = useRouter()
 
 const searchForm = reactive({ name: '', contact: '', cooperation_status: '' })
 const tableLoading = ref(false)
 const supplierList = ref([])
+const typeOptions = ref([])
+
+const loadDictData = async () => {
+  try {
+    const res = await getDictByCode('supplier_type')
+    typeOptions.value = res.data?.list || res.data || []
+  } catch (error) {
+    console.error('加载字典数据失败:', error)
+  }
+}
 
 const pagination = reactive({ page: 1, pageSize: 20, total: 0 })
 
@@ -142,6 +168,7 @@ const formData = reactive({
   name: '',
   contact: '',
   phone: '',
+  type: '',
   cooperation_status: 'pending',
   address: '',
   main_products: '',
@@ -216,13 +243,13 @@ const handleSubmit = async () => {
 
 const handleDialogClose = () => {
   formRef.value?.resetFields()
-  Object.assign(formData, { supplier_id: null, name: '', contact: '', phone: '', cooperation_status: 'pending', address: '', main_products: '', remark: '' })
+  Object.assign(formData, { supplier_id: null, name: '', contact: '', phone: '', type: '', cooperation_status: 'pending', address: '', main_products: '', remark: '' })
 }
 
 const handleSizeChange = (size) => { pagination.pageSize = size; loadData() }
 const handlePageChange = (page) => { pagination.page = page; loadData() }
 
-onMounted(() => { loadData() })
+onMounted(() => { loadDictData(); loadData() })
 </script>
 
 <style scoped>
