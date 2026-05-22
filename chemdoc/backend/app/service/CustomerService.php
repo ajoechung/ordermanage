@@ -184,6 +184,8 @@ class CustomerService
 
         if (!empty(trim($data['code'] ?? ''))) {
             $customerData['code'] = $data['code'];
+        } else {
+            $customerData['code'] = null;
         }
 
         $customer = CustomerModel::create($customerData);
@@ -216,13 +218,17 @@ class CustomerService
 
             $updateData = [];
 
-            $fields = ['name', 'code', 'industry', 'source', 'scale', 'address', 'annual_revenue', 'description', 'status', 'level', 'owner_user_id'];
+            $fields = ['name', 'industry', 'source', 'scale', 'address', 'annual_revenue', 'description', 'status', 'level', 'owner_user_id'];
 
-            foreach ($fields as $field) {
-                if (isset($data[$field])) {
-                    $updateData[$field] = $data[$field];
-                }
+        foreach ($fields as $field) {
+            if (isset($data[$field])) {
+                $updateData[$field] = $data[$field];
             }
+        }
+
+        if (isset($data['code']) && !empty(trim($data['code']))) {
+            $updateData['code'] = $data['code'];
+        }
 
             if (isset($data['attachment'])) {
                 $updateData['attachment'] = is_array($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : $data['attachment'];
