@@ -48,7 +48,7 @@ class Customer extends BaseController
 
     public function update($id)
     {
-        $data = $this->request->put();
+        $data = $this->request->put() ?: $this->request->post();
 
         if (empty($data['name'])) {
             return json(Result::validateError('请输入客户名称'));

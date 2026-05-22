@@ -201,45 +201,49 @@ class CustomerService
 
     public function update(int $id, array $data): array
     {
-        $customer = CustomerModel::find($id);
-        if (!$customer) {
-            return Result::notFound('客户不存在');
-        }
-
-        if (isset($data['name']) && $data['name'] != $customer->name) {
-            $exists = CustomerModel::where('name', $data['name'])->where('customer_id', '<>', $id)->find();
-            if ($exists) {
-                return Result::error('客户名称已存在');
+        try {
+            $customer = CustomerModel::find($id);
+            if (!$customer) {
+                return Result::notFound('客户不存在');
             }
-        }
 
-        $updateData = [];
-
-        $fields = ['name', 'code', 'industry', 'source', 'scale', 'address', 'annual_revenue', 'description', 'status', 'level', 'owner_user_id'];
-
-        foreach ($fields as $field) {
-            if (isset($data[$field])) {
-                $updateData[$field] = $data[$field];
+            if (isset($data['name']) && $data['name'] != $customer->name) {
+                $exists = CustomerModel::where('name', $data['name'])->where('customer_id', '<>', $id)->find();
+                if ($exists) {
+                    return Result::error('客户名称已存在');
+                }
             }
+
+            $updateData = [];
+
+            $fields = ['name', 'code', 'industry', 'source', 'scale', 'address', 'annual_revenue', 'description', 'status', 'level', 'owner_user_id'];
+
+            foreach ($fields as $field) {
+                if (isset($data[$field])) {
+                    $updateData[$field] = $data[$field];
+                }
+            }
+
+            if (isset($data['attachment'])) {
+                $updateData['attachment'] = is_array($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : $data['attachment'];
+            }
+
+            $updateData['update_time'] = date('Y-m-d H:i:s');
+
+            $customer->save($updateData);
+
+            OperationLogModel::log(
+                request()->user_id ?? 0,
+                request()->username ?? '',
+                '客户管理',
+                '编辑',
+                '编辑客户：' . $customer->name
+            );
+
+            return Result::success(null, '客户更新成功');
+        } catch (\Exception $e) {
+            return Result::error('更新失败：' . $e->getMessage());
         }
-
-        if (isset($data['attachment'])) {
-            $updateData['attachment'] = is_array($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : $data['attachment'];
-        }
-
-        $updateData['update_time'] = date('Y-m-d H:i:s');
-
-        $customer->save($updateData);
-
-        OperationLogModel::log(
-            request()->user_id ?? 0,
-            request()->username ?? '',
-            '客户管理',
-            '编辑',
-            '编辑客户：' . $customer->name
-        );
-
-        return Result::success(null, '客户更新成功');
     }
 
     public function delete(int $id): array
