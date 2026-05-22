@@ -38,10 +38,11 @@ export function updateCustomer(id, data) {
   })
 }
 
-export function deleteCustomer(id) {
+export function deleteCustomer(id, force = false) {
   return request({
     url: `/customer/${id}`,
-    method: 'delete'
+    method: 'delete',
+    params: { force }
   })
 }
 

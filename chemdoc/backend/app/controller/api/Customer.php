@@ -59,6 +59,8 @@ class Customer extends BaseController
 
     public function delete($id)
     {
-        return json($this->customerService->delete((int)$id));
+        $params = $this->request->param();
+        $force = $params['force'] ?? false;
+        return json($this->customerService->delete((int)$id, (bool)$force));
     }
 }

@@ -273,14 +273,21 @@ const handleView = (row) => {
 
 const handleDelete = async (row) => {
   try {
-    await ElMessageBox.confirm(`确定要删除客户"${row.name}"吗？`, '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-
     const res = await deleteCustomer(row.customer_id)
-    if (res.code === 200) {
+    if (res.code === 201) {
+      await ElMessageBox.confirm(`该客户存在 ${res.data.contact_count} 个联系人，确认删除将同时删除所有联系人，确定继续吗？`, '提示', {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+      const res2 = await deleteCustomer(row.customer_id, true)
+      if (res2.code === 200) {
+        ElMessage.success('删除成功')
+        loadData()
+      } else {
+        ElMessage.error(res2.msg || '删除失败')
+      }
+    } else if (res.code === 200) {
       ElMessage.success('删除成功')
       loadData()
     } else {

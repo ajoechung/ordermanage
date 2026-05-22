@@ -252,26 +252,34 @@ class CustomerService
         }
     }
 
-    public function delete(int $id): array
+    public function delete(int $id, bool $force = false): array
     {
-        $customer = CustomerModel::find($id);
-        if (!$customer) {
-            return Result::notFound('客户不存在');
-        }
+        try {
+            $customer = CustomerModel::find($id);
+            if (!$customer) {
+                return Result::notFound('客户不存在');
+            }
 
-        $hasContacts = Db::name('contact')->where('customer_id', $id)->whereNull('delete_time')->count();
-        if ($hasContacts > 0) {
-            return Result::error('该客户存在联系人，无法删除');
-        }
+            $hasOrders = Db::name('order')->where('customer_id', $id)->whereNull('delete_time')->count();
+            if ($hasOrders > 0) {
+                return Result::error('该客户存在订单，无法删除');
+            }
 
-        $hasOrders = Db::name('order')->where('customer_id', $id)->whereNull('delete_time')->count();
-        if ($hasOrders > 0) {
-            return Result::error('该客户存在订单，无法删除');
-        }
+            $hasContacts = Db::name('contact')->where('customer_id', $id)->whereNull('delete_time')->count();
+            if ($hasContacts > 0) {
+                if (!$force) {
+                    return [
+                        'code' => 201,
+                        'msg' => '该客户存在联系人，确认删除将同时删除所有联系人',
+                        'data' => ['has_contacts' => true, 'contact_count' => $hasContacts]
+                    ];
+                }
+                Db::name('contact')->where('customer_id', $id)->delete();
+            }
 
-        $customer->delete();
+            $customer->delete();
 
-        OperationLogModel::log(
+            OperationLogModel::log(
             request()->user_id ?? 0,
             request()->username ?? '',
             '客户管理',
