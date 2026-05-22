@@ -6,7 +6,14 @@
           <el-input v-model="searchForm.keyword" placeholder="请输入客户名称" clearable @keyup.enter="handleSearch" style="width: 220px" />
         </el-form-item>
         <el-form-item label="行业">
-          <el-input v-model="searchForm.industry" placeholder="请输入行业" clearable style="width: 220px" />
+          <el-select v-model="searchForm.industry" placeholder="请选择行业" clearable style="width: 220px">
+            <el-option 
+              v-for="item in industryOptions" 
+              :key="item.value || item.dict_value" 
+              :label="item.label || item.dict_label" 
+              :value="item.value || item.dict_value" 
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="客户等级">
           <el-select v-model="searchForm.level" placeholder="请选择" clearable style="width: 150px">
@@ -103,12 +110,26 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="行业" prop="industry">
-              <el-input v-model="formData.industry" placeholder="请输入行业" />
+              <el-select v-model="formData.industry" placeholder="请选择行业" style="width: 100%">
+                <el-option 
+                  v-for="item in industryOptions" 
+                  :key="item.value || item.dict_value" 
+                  :label="item.label || item.dict_label" 
+                  :value="item.value || item.dict_value" 
+                />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="客户来源" prop="source">
-              <el-input v-model="formData.source" placeholder="请输入客户来源" />
+              <el-select v-model="formData.source" placeholder="请选择客户来源" style="width: 100%">
+                <el-option 
+                  v-for="item in sourceOptions" 
+                  :key="item.value || item.dict_value" 
+                  :label="item.label || item.dict_label" 
+                  :value="item.value || item.dict_value" 
+                />
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -125,7 +146,14 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="客户规模" prop="scale">
-              <el-input v-model="formData.scale" placeholder="请输入客户规模" />
+              <el-select v-model="formData.scale" placeholder="请选择客户规模" style="width: 100%">
+                <el-option 
+                  v-for="item in scaleOptions" 
+                  :key="item.value || item.dict_value" 
+                  :label="item.label || item.dict_label" 
+                  :value="item.value || item.dict_value" 
+                />
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -169,6 +197,7 @@ import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
 import { getList, create, update, deleteCustomer } from '@/api/modules/customer'
+import { getDictByCode } from '@/api/modules/dict'
 import CustomerDetail from './detail.vue'
 
 const searchForm = reactive({
@@ -177,6 +206,25 @@ const searchForm = reactive({
   level: '',
   status: ''
 })
+
+const industryOptions = ref([])
+const sourceOptions = ref([])
+const scaleOptions = ref([])
+
+const loadDictData = async () => {
+  try {
+    const [industryRes, sourceRes, scaleRes] = await Promise.all([
+      getDictByCode('customer_industry'),
+      getDictByCode('customer_source'),
+      getDictByCode('customer_scale')
+    ])
+    industryOptions.value = industryRes.data?.list || industryRes.data || []
+    sourceOptions.value = sourceRes.data?.list || sourceRes.data || []
+    scaleOptions.value = scaleRes.data?.list || scaleRes.data || []
+  } catch (error) {
+    console.error('加载字典数据失败:', error)
+  }
+}
 
 const tableLoading = ref(false)
 const customerList = ref([])
@@ -354,6 +402,7 @@ const handlePageChange = (page) => {
 }
 
 onMounted(() => {
+  loadDictData()
   loadData()
 })
 </script>
