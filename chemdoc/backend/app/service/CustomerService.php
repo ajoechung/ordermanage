@@ -226,8 +226,8 @@ class CustomerService
             }
         }
 
-        if (isset($data['code']) && !empty(trim($data['code']))) {
-            $updateData['code'] = $data['code'];
+        if (isset($data['code'])) {
+            $updateData['code'] = !empty(trim($data['code'])) ? $data['code'] : null;
         }
 
             if (isset($data['attachment'])) {
