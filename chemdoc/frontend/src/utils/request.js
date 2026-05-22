@@ -29,8 +29,8 @@ service.interceptors.response.use(
   (response) => {
     const res = response.data
 
-    // 修复：后端返回 code=200，前端需要检查 200
-    if (res.code === 200 || res.code === 1) {
+    // 修复：后端返回 code=200 或 201，前端需要正常处理
+    if (res.code === 200 || res.code === 1 || res.code === 201) {
       return res
     }
 
