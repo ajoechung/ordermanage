@@ -33,6 +33,18 @@ export const constantRoutes = [
         meta: { title: '首页', icon: 'HomeFilled' }
       },
       {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/views/profile/index.vue'),
+        meta: { title: '个人中心', hidden: true }
+      },
+      {
+        path: 'password',
+        name: 'Password',
+        component: () => import('@/views/password/index.vue'),
+        meta: { title: '修改密码', hidden: true }
+      },
+      {
         path: 'customer',
         redirect: '/customer/list',
         meta: { title: '客户管理', icon: 'OfficeBuilding' },
