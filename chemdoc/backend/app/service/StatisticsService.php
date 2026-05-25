@@ -8,6 +8,10 @@ class StatisticsService
     public function getDashboard(): array
     {
         $userId = request()->user_id ?? 0;
+        
+        // 获取数据权限范围
+        $customerIds = DataScopeService::getAccessibleCustomerIds();
+        $supplierIds = DataScopeService::getAccessibleSupplierIds();
 
         $currentMonth = date('Y-m');
         $lastMonth = date('Y-m', strtotime('-1 month'));
@@ -19,18 +23,30 @@ class StatisticsService
             'sales_amount' => Db::name('order')
                 ->where('order_status', 5)
                 ->whereBetweenTime('order_time', $monthStart, $monthEnd)
+                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                    return $q->whereIn('customer_id', $customerIds);
+                })
                 ->sum('actual_amount'),
             'order_count' => Db::name('order')
                 ->where('order_status', 5)
                 ->whereBetweenTime('order_time', $monthStart, $monthEnd)
+                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                    return $q->whereIn('customer_id', $customerIds);
+                })
                 ->count(),
             'deal_customer_count' => Db::name('order')
                 ->where('order_status', 5)
                 ->whereBetweenTime('order_time', $monthStart, $monthEnd)
+                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                    return $q->whereIn('customer_id', $customerIds);
+                })
                 ->distinct(true)
                 ->count('customer_id'),
             'new_customer_count' => Db::name('customer')
                 ->whereBetweenTime('create_time', $monthStart, $monthEnd)
+                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                    return $q->whereIn('customer_id', $customerIds);
+                })
                 ->count(),
         ];
 
@@ -41,10 +57,16 @@ class StatisticsService
             'sales_amount' => Db::name('order')
                 ->where('order_status', 5)
                 ->whereBetweenTime('order_time', $lastMonthStart, $lastMonthEnd)
+                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                    return $q->whereIn('customer_id', $customerIds);
+                })
                 ->sum('actual_amount'),
             'order_count' => Db::name('order')
                 ->where('order_status', 5)
                 ->whereBetweenTime('order_time', $lastMonthStart, $lastMonthEnd)
+                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                    return $q->whereIn('customer_id', $customerIds);
+                })
                 ->count(),
         ];
 
@@ -59,14 +81,23 @@ class StatisticsService
             'pending_order_count' => Db::name('order')
                 ->whereIn('order_status', [1, 2, 3])
                 ->whereNull('delete_time')
+                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                    return $q->whereIn('customer_id', $customerIds);
+                })
                 ->count(),
             'pending_purchase_count' => Db::name('purchase_order')
                 ->whereIn('status', [1, 2, 3])
                 ->whereNull('delete_time')
+                ->when(!empty($supplierIds), function($q) use ($supplierIds) {
+                    return $q->whereIn('supplier_id', $supplierIds);
+                })
                 ->count(),
             'need_follow_count' => Db::name('customer')
                 ->where('status', 1)
                 ->whereNull('delete_time')
+                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                    return $q->whereIn('customer_id', $customerIds);
+                })
                 ->count(),
         ];
 
@@ -75,6 +106,9 @@ class StatisticsService
             ->join('customer c', 'o.customer_id = c.customer_id')
             ->field('o.order_id,o.order_no,o.total_amount,o.order_status,o.order_time,c.name as customer_name')
             ->whereNull('o.delete_time')
+            ->when(!empty($customerIds), function($q) use ($customerIds) {
+                return $q->whereIn('o.customer_id', $customerIds);
+            })
             ->order('o.create_time', 'desc')
             ->limit(5)
             ->select()
@@ -95,11 +129,19 @@ class StatisticsService
     public function getCustomerStats(array $params): array
     {
         $dateRange = $params['date_range'] ?? [];
+        
+        // 获取数据权限范围
+        $customerIds = DataScopeService::getAccessibleCustomerIds();
 
         $query = Db::name('customer')->whereNull('delete_time');
 
         if (!empty($dateRange) && is_array($dateRange) && count($dateRange) == 2) {
             $query->whereBetweenTime('create_time', $dateRange[0], $dateRange[1]);
+        }
+        
+        // 应用数据范围
+        if (!empty($customerIds)) {
+            $query->whereIn('customer_id', $customerIds);
         }
 
         $totalCount = $query->count();
@@ -108,6 +150,9 @@ class StatisticsService
         $industryData = Db::name('customer')
             ->field('industry, count(*) as count')
             ->whereNull('delete_time')
+            ->when(!empty($customerIds), function($q) use ($customerIds) {
+                return $q->whereIn('customer_id', $customerIds);
+            })
             ->group('industry')
             ->select()
             ->toArray();
@@ -115,6 +160,9 @@ class StatisticsService
         $levelData = Db::name('customer')
             ->field('level, count(*) as count')
             ->whereNull('delete_time')
+            ->when(!empty($customerIds), function($q) use ($customerIds) {
+                return $q->whereIn('customer_id', $customerIds);
+            })
             ->group('level')
             ->select()
             ->toArray();
@@ -145,11 +193,19 @@ class StatisticsService
     public function getOrderStats(array $params): array
     {
         $dateRange = $params['date_range'] ?? [];
+        
+        // 获取数据权限范围
+        $customerIds = DataScopeService::getAccessibleCustomerIds();
 
         $query = Db::name('order')->whereNull('delete_time');
 
         if (!empty($dateRange) && is_array($dateRange) && count($dateRange) == 2) {
             $query->whereBetweenTime('order_time', $dateRange[0], $dateRange[1]);
+        }
+        
+        // 应用数据范围
+        if (!empty($customerIds)) {
+            $query->whereIn('customer_id', $customerIds);
         }
 
         $totalAmount = $query->where('order_status', 5)->sum('actual_amount');
@@ -160,6 +216,9 @@ class StatisticsService
         $statusData = Db::name('order')
             ->field('order_status, count(*) as count')
             ->whereNull('delete_time')
+            ->when(!empty($customerIds), function($q) use ($customerIds) {
+                return $q->whereIn('customer_id', $customerIds);
+            })
             ->group('order_status')
             ->select()
             ->toArray();
@@ -176,6 +235,9 @@ class StatisticsService
             ->field('DATE_FORMAT(order_time, "%Y-%m") as month, sum(actual_amount) as amount, count(*) as count')
             ->where('order_status', 5)
             ->whereNull('delete_time')
+            ->when(!empty($customerIds), function($q) use ($customerIds) {
+                return $q->whereIn('customer_id', $customerIds);
+            })
             ->group('month')
             ->order('month', 'desc')
             ->limit(12)
@@ -185,7 +247,12 @@ class StatisticsService
         $productData = Db::name('order_item')
             ->alias('oi')
             ->join('product p', 'oi.product_id = p.product_id')
+            ->join('order o', 'oi.order_id = o.order_id')
             ->field('oi.product_name, sum(oi.quantity) as total_quantity, sum(oi.subtotal) as total_amount')
+            ->whereNull('o.delete_time')
+            ->when(!empty($customerIds), function($q) use ($customerIds) {
+                return $q->whereIn('o.customer_id', $customerIds);
+            })
             ->group('oi.product_id')
             ->order('total_amount', 'desc')
             ->limit(10)

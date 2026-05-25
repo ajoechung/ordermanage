@@ -37,6 +37,9 @@ class PurchaseService
         if (!empty($dateRange) && is_array($dateRange) && count($dateRange) == 2) {
             $query->whereTime('order_time', 'between', $dateRange);
         }
+        
+        // 应用数据范围
+        DataScopeService::applySupplierScope($query);
 
         $total = $query->count();
         $list = $query->order('purchase_id', 'desc')
@@ -70,6 +73,11 @@ class PurchaseService
 
         if (!$order) {
             return Result::notFound('采购单不存在');
+        }
+        
+        // 检查权限
+        if (!DataScopeService::canAccessSupplier($order->supplier_id)) {
+            return Result::error('无权访问此采购单');
         }
 
         $data = $order->toArray();
@@ -165,6 +173,11 @@ class PurchaseService
         if (!$order) {
             return Result::notFound('采购单不存在');
         }
+        
+        // 检查权限
+        if (!DataScopeService::canAccessSupplier($order->supplier_id)) {
+            return Result::error('无权访问此采购单');
+        }
 
         if ($order->status > 1) {
             return Result::error('已确认的采购单无法修改');
@@ -235,6 +248,11 @@ class PurchaseService
         if (!$order) {
             return Result::notFound('采购单不存在');
         }
+        
+        // 检查权限
+        if (!DataScopeService::canAccessSupplier($order->supplier_id)) {
+            return Result::error('无权访问此采购单');
+        }
 
         if ($order->status > 1) {
             return Result::error('已确认的采购单无法删除');
@@ -259,6 +277,11 @@ class PurchaseService
         $order = PurchaseOrderModel::find($id);
         if (!$order) {
             return Result::notFound('采购单不存在');
+        }
+        
+        // 检查权限
+        if (!DataScopeService::canAccessSupplier($order->supplier_id)) {
+            return Result::error('无权访问此采购单');
         }
 
         $updateData = ['status' => $status];

@@ -33,6 +33,9 @@ class SupplierService
         if (!empty($rating)) {
             $query->scope('rating', (int)$rating);
         }
+        
+        // 应用数据范围
+        DataScopeService::applySupplierScope($query);
 
         $total = $query->count();
         $list = $query->order('supplier_id', 'desc')
@@ -51,6 +54,11 @@ class SupplierService
 
     public function getDetail(int $id): array
     {
+        // 检查权限
+        if (!DataScopeService::canAccessSupplier($id)) {
+            return Result::error('无权访问此供应商');
+        }
+        
         $supplier = SupplierModel::find($id);
 
         if (!$supplier) {
@@ -90,6 +98,7 @@ class SupplierService
             'description' => $data['description'] ?? '',
             'attachment' => isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null,
             'status' => $data['status'] ?? 1,
+            'owner_user_id' => $data['owner_user_id'] ?? (request()->user_id ?? 0),
             'create_user_id' => request()->user_id ?? 0,
             'create_time' => date('Y-m-d H:i:s'),
         ]);
@@ -107,6 +116,11 @@ class SupplierService
 
     public function update(int $id, array $data): array
     {
+        // 检查权限
+        if (!DataScopeService::canAccessSupplier($id)) {
+            return Result::error('无权访问此供应商');
+        }
+        
         $supplier = SupplierModel::find($id);
         if (!$supplier) {
             return Result::notFound('供应商不存在');
@@ -121,7 +135,7 @@ class SupplierService
 
         $updateData = [];
 
-        $fields = ['name', 'code', 'type', 'main_products', 'address', 'cooperation_start', 'rating', 'cert_expire_date', 'description', 'status'];
+        $fields = ['name', 'code', 'type', 'main_products', 'address', 'cooperation_start', 'rating', 'cert_expire_date', 'description', 'status', 'owner_user_id'];
 
         foreach ($fields as $field) {
             if (isset($data[$field])) {
@@ -150,6 +164,11 @@ class SupplierService
 
     public function delete(int $id): array
     {
+        // 检查权限
+        if (!DataScopeService::canAccessSupplier($id)) {
+            return Result::error('无权访问此供应商');
+        }
+        
         $supplier = SupplierModel::find($id);
         if (!$supplier) {
             return Result::notFound('供应商不存在');

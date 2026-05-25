@@ -44,6 +44,9 @@ class CustomerService
         if (!empty($dateRange) && is_array($dateRange)) {
             $query->scope('dateRange', $dateRange);
         }
+        
+        // 应用数据范围
+        DataScopeService::applyCustomerScope($query);
 
         $total = $query->count();
         $list = $query->order('customer_id', 'desc')
@@ -63,6 +66,11 @@ class CustomerService
 
     public function getDetail(int $id): array
     {
+        // 检查权限
+        if (!DataScopeService::canAccessCustomer($id)) {
+            return Result::error('无权访问此客户');
+        }
+        
         $customer = CustomerModel::with(['ownerUser'])->find($id);
 
         if (!$customer) {
@@ -85,6 +93,11 @@ class CustomerService
 
     public function getFullDetail(int $id): array
     {
+        // 检查权限
+        if (!DataScopeService::canAccessCustomer($id)) {
+            return Result::error('无权访问此客户');
+        }
+        
         $customer = CustomerModel::with(['ownerUser'])->find($id);
 
         if (!$customer) {
@@ -204,6 +217,11 @@ class CustomerService
     public function update(int $id, array $data): array
     {
         try {
+            // 检查权限
+            if (!DataScopeService::canAccessCustomer($id)) {
+                return Result::error('无权访问此客户');
+            }
+            
             $customer = CustomerModel::find($id);
             if (!$customer) {
                 return Result::notFound('客户不存在');
@@ -255,6 +273,11 @@ class CustomerService
     public function delete(int $id, bool $force = false): array
     {
         try {
+            // 检查权限
+            if (!DataScopeService::canAccessCustomer($id)) {
+                return Result::error('无权访问此客户');
+            }
+            
             $customer = CustomerModel::find($id);
             if (!$customer) {
                 return Result::notFound('客户不存在');

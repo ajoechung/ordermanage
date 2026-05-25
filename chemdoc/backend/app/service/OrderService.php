@@ -54,6 +54,9 @@ class OrderService
         if (!empty($dateRange) && is_array($dateRange)) {
             $query->scope('dateRange', $dateRange);
         }
+        
+        // 应用数据范围
+        DataScopeService::applyCustomerScope($query);
 
         $total = $query->count();
         $list = $query->order('order_id', 'desc')
@@ -95,6 +98,11 @@ class OrderService
 
             if (!$order) {
                 return Result::notFound('订单不存在');
+            }
+            
+            // 检查权限
+            if (!DataScopeService::canAccessCustomer($order->customer_id)) {
+                return Result::error('无权访问此订单');
             }
 
             $data = $order->toArray();
@@ -242,6 +250,11 @@ class OrderService
         if (!$order) {
             return Result::notFound('订单不存在');
         }
+        
+        // 检查权限
+        if (!DataScopeService::canAccessCustomer($order->customer_id)) {
+            return Result::error('无权访问此订单');
+        }
 
         if ($order->order_status > 1) {
             return Result::error('已确认的订单无法修改');
@@ -320,6 +333,11 @@ class OrderService
         if (!$order) {
             return Result::notFound('订单不存在');
         }
+        
+        // 检查权限
+        if (!DataScopeService::canAccessCustomer($order->customer_id)) {
+            return Result::error('无权访问此订单');
+        }
 
         if ($order->order_status > 1) {
             return Result::error('已确认的订单无法删除');
@@ -344,6 +362,11 @@ class OrderService
         $order = OrderModel::find($id);
         if (!$order) {
             return Result::notFound('订单不存在');
+        }
+        
+        // 检查权限
+        if (!DataScopeService::canAccessCustomer($order->customer_id)) {
+            return Result::error('无权访问此订单');
         }
 
         Db::name('order')->where('order_id', $id)->update([

@@ -17,6 +17,11 @@ class SupplierModel extends BaseModel
     {
         return $this->belongsTo(AdminUserModel::class, 'create_user_id', 'user_id');
     }
+    
+    public function ownerUser()
+    {
+        return $this->belongsTo(AdminUserModel::class, 'owner_user_id', 'user_id');
+    }
 
     public function purchaseOrders(): HasMany
     {
@@ -57,6 +62,13 @@ class SupplierModel extends BaseModel
     {
         if ($rating > 0) {
             $query->where('rating', $rating);
+        }
+    }
+    
+    public function scopeOwnerUser($query, int $userId)
+    {
+        if ($userId > 0) {
+            $query->where('owner_user_id', $userId);
         }
     }
 }
