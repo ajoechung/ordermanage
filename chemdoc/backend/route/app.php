@@ -7,97 +7,102 @@ Route::group('api', function () {
     Route::post('login', 'api.Login/index');
     Route::post('logout', 'api.Login/logout');
     Route::get('login/userInfo', 'api.Login/userInfo');
+    Route::post('login/updateInfo', 'api.Login/updateInfo');
+    Route::post('login/changePassword', 'api.Login/changePassword');
 
-    Route::get('dashboard', 'api.Statistics/dashboard');
+    Route::group(function () {
+        Route::get('dashboard', 'api.Statistics/dashboard');
 
-    Route::get('customer', 'api.Customer/index');
-    Route::get('customer/read/:id', 'api.Customer/read');
-    Route::get('customer/full-detail/:id', 'api.Customer/fullDetail');
-    Route::post('customer', 'api.Customer/save');
-    Route::put('customer/:id', 'api.Customer/update');
-    Route::delete('customer/:id', 'api.Customer/delete');
+        Route::get('customer', 'api.Customer/index');
+        Route::get('customer/read/:id', 'api.Customer/read');
+        Route::get('customer/full-detail/:id', 'api.Customer/fullDetail');
+        Route::post('customer', 'api.Customer/save');
+        Route::put('customer/:id', 'api.Customer/update');
+        Route::delete('customer/:id', 'api.Customer/delete');
 
-    Route::get('contact', 'api.Contact/index');
-    Route::get('contact/:id', 'api.Contact/read');
-    Route::post('contact', 'api.Contact/save');
-    Route::put('contact/:id', 'api.Contact/update');
-    Route::delete('contact/:id', 'api.Contact/delete');
+        Route::get('contact', 'api.Contact/index');
+        Route::get('contact/:id', 'api.Contact/read');
+        Route::post('contact', 'api.Contact/save');
+        Route::put('contact/:id', 'api.Contact/update');
+        Route::delete('contact/:id', 'api.Contact/delete');
 
-    Route::get('follow', 'api.Follow/index');
-    Route::post('follow', 'api.Follow/save');
-    Route::delete('follow/:id', 'api.Follow/delete');
+        Route::get('follow', 'api.Follow/index');
+        Route::post('follow', 'api.Follow/save');
+        Route::delete('follow/:id', 'api.Follow/delete');
 
-    Route::post('order/status', 'api.Order/status');
-    Route::get('order/invoices/:orderId', 'api.Order/invoices');
-    Route::post('order/uploadInvoice', 'api.Order/uploadInvoice');
-    Route::delete('order/invoice/:id', 'api.Order/deleteInvoice');
-    Route::get('order/:id', 'api.Order/read');
-    Route::put('order/:id', 'api.Order/update');
-    Route::delete('order/:id', 'api.Order/delete');
-    Route::get('order', 'api.Order/index');
-    Route::post('order', 'api.Order/save');
+        Route::post('order/status', 'api.Order/status');
+        Route::get('order/invoices/:orderId', 'api.Order/invoices');
+        Route::post('order/uploadInvoice', 'api.Order/uploadInvoice');
+        Route::delete('order/invoice/:id', 'api.Order/deleteInvoice');
+        Route::get('order/:id', 'api.Order/read');
+        Route::put('order/:id', 'api.Order/update');
+        Route::delete('order/:id', 'api.Order/delete');
+        Route::get('order', 'api.Order/index');
+        Route::post('order', 'api.Order/save');
 
-    Route::get('supplier', 'api.Supplier/index');
-    Route::get('supplier/:id', 'api.Supplier/read');
-    Route::post('supplier', 'api.Supplier/save');
-    Route::put('supplier/:id', 'api.Supplier/update');
-    Route::delete('supplier/:id', 'api.Supplier/delete');
+        Route::get('supplier', 'api.Supplier/index');
+        Route::get('supplier/:id', 'api.Supplier/read');
+        Route::post('supplier', 'api.Supplier/save');
+        Route::put('supplier/:id', 'api.Supplier/update');
+        Route::delete('supplier/:id', 'api.Supplier/delete');
 
-    Route::get('purchase', 'api.Purchase/index');
-    Route::get('purchase/:id', 'api.Purchase/read');
-    Route::post('purchase', 'api.Purchase/save');
-    Route::put('purchase/:id', 'api.Purchase/update');
-    Route::delete('purchase/:id', 'api.Purchase/delete');
-    Route::post('purchase/status', 'api.Purchase/status');
+        Route::get('purchase', 'api.Purchase/index');
+        Route::get('purchase/:id', 'api.Purchase/read');
+        Route::post('purchase', 'api.Purchase/save');
+        Route::put('purchase/:id', 'api.Purchase/update');
+        Route::delete('purchase/:id', 'api.Purchase/delete');
+        Route::post('purchase/status', 'api.Purchase/status');
 
-    Route::get('statistics/customer', 'api.Statistics/customer');
-    Route::get('statistics/order', 'api.Statistics/order');
+        Route::get('statistics/customer', 'api.Statistics/customer');
+        Route::get('statistics/order', 'api.Statistics/order');
 
-    Route::get('log', 'api.Log/index');
+        Route::get('log', 'api.Log/index');
 
-    Route::get('dict/types', 'api.Dict/typeList');
-    Route::get('dict/type/:id', 'api.Dict/typeDetail');
-    Route::post('dict/type', 'api.Dict/createType');
-    Route::put('dict/type/:id', 'api.Dict/updateType');
-    Route::delete('dict/type/:id', 'api.Dict/deleteType');
+        Route::get('dict/types', 'api.Dict/typeList');
+        Route::get('dict/type/:id', 'api.Dict/typeDetail');
+        Route::post('dict/type', 'api.Dict/createType');
+        Route::put('dict/type/:id', 'api.Dict/updateType');
+        Route::delete('dict/type/:id', 'api.Dict/deleteType');
 
-    Route::get('dict/data', 'api.Dict/dataList');
-    Route::get('dict/data/:id', 'api.Dict/dataDetail');
-    Route::post('dict/data', 'api.Dict/createData');
-    Route::put('dict/data/:id', 'api.Dict/updateData');
-    Route::delete('dict/data/:id', 'api.Dict/deleteData');
+        Route::get('dict/data', 'api.Dict/dataList');
+        Route::get('dict/data/:id', 'api.Dict/dataDetail');
+        Route::post('dict/data', 'api.Dict/createData');
+        Route::put('dict/data/:id', 'api.Dict/updateType');
+        Route::delete('dict/data/:id', 'api.Dict/deleteType');
 
-    Route::get('dict/code/:code', 'api.Dict/getByCode');
+        Route::get('dict/code/:code', 'api.Dict/getByCode');
 
-    Route::get('system/users', 'api.System/users');
-    Route::post('system/user', 'api.System/createUser');
-    Route::put('system/user/:id', 'api.System/updateUser');
-    Route::delete('system/user/:id', 'api.System/deleteUser');
-    Route::post('system/assignRole', 'api.System/assignRole');
-    Route::get('system/groups', 'api.System/groups');
-    Route::get('system/group/:id/users', 'api.System/getUsersByRole');
-    Route::post('system/group', 'api.System/createGroup');
-    Route::put('system/group/:id', 'api.System/updateGroup');
-    Route::delete('system/group/:id', 'api.System/deleteGroup');
-    Route::get('system/rules', 'api.System/rules');
-    Route::get('system/ruleTree', 'api.System/ruleTree');
-    Route::post('system/rule', 'api.System/createRule');
-    Route::put('system/rule/:id', 'api.System/updateRule');
-    Route::delete('system/rule/:id', 'api.System/deleteRule');
+        Route::get('system/users', 'api.System/users');
+        Route::post('system/user', 'api.System/createUser');
+        Route::put('system/user/:id', 'api.System/updateUser');
+        Route::delete('system/user/:id', 'api.System/deleteUser');
+        Route::post('system/assignRole', 'api.System/assignRole');
+        Route::get('system/groups', 'api.System/groups');
+        Route::get('system/usersByRole/:id', 'api.System/getUsersByRole');
+        Route::post('system/group', 'api.System/createGroup');
+        Route::put('system/group/:id', 'api.System/updateGroup');
+        Route::delete('system/group/:id', 'api.System/deleteGroup');
+        Route::get('system/rules', 'api.System/rules');
+        Route::get('system/ruleTree', 'api.System/ruleTree');
+        Route::post('system/rule', 'api.System/createRule');
+        Route::put('system/rule/:id', 'api.System/updateRule');
+        Route::delete('system/rule/:id', 'api.System/deleteRule');
 
-    Route::post('upload/image', 'api.Upload/image');
-    Route::post('upload/file', 'api.Upload/file');
-    Route::post('upload/delete', 'api.Upload/delete');
+        Route::post('upload/image', 'api.Upload/image');
+        Route::post('upload/file', 'api.Upload/file');
+        Route::post('upload/delete', 'api.Upload/delete');
 
-    Route::get('product/categories', 'api.Product/categories');
-    Route::post('product/category', 'api.Product/createCategory');
-    Route::put('product/category/:id', 'api.Product/updateCategory');
-    Route::delete('product/category/:id', 'api.Product/deleteCategory');
+        Route::get('product/categories', 'api.Product/categories');
+        Route::post('product/category', 'api.Product/createCategory');
+        Route::put('product/category/:id', 'api.Product/updateCategory');
+        Route::delete('product/category/:id', 'api.Product/deleteCategory');
 
-    Route::get('product/:id', 'api.Product/read');
-    Route::get('product', 'api.Product/index');
-    Route::post('product', 'api.Product/save');
-    Route::put('product/:id', 'api.Product/update');
-    Route::delete('product/:id', 'api.Product/delete');
+        Route::get('product/:id', 'api.Product/read');
+        Route::get('product', 'api.Product/index');
+        Route::post('product', 'api.Product/save');
+        Route::put('product/:id', 'api.Product/update');
+        Route::delete('product/:id', 'api.Product/delete');
+
+    })->middleware(\app\middleware\AuthMiddleware::class);
 
 })->middleware(\app\middleware\CorsMiddleware::class);
