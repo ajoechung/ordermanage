@@ -75,6 +75,7 @@ Route::group('api', function () {
     Route::delete('system/user/:id', 'api.System/deleteUser');
     Route::post('system/assignRole', 'api.System/assignRole');
     Route::get('system/groups', 'api.System/groups');
+    Route::get('system/group/:id/users', 'api.System/getUsersByRole');
     Route::post('system/group', 'api.System/createGroup');
     Route::put('system/group/:id', 'api.System/updateGroup');
     Route::delete('system/group/:id', 'api.System/deleteGroup');
