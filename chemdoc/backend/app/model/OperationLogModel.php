@@ -57,22 +57,23 @@ class OperationLogModel extends BaseModel
     public static function log(int $userId, string $username, string $module, string $action, string $description = '', array $params = []): bool
     {
         try {
+            $request = \think\facade\Request::instance();
             self::create([
                 'user_id' => $userId,
                 'username' => $username,
                 'module' => $module,
                 'action' => $action,
                 'description' => $description,
-                'request_method' => request()->method(),
-                'request_url' => request()->url(true),
+                'request_method' => $request->method(),
+                'request_url' => $request->url(true),
                 'request_params' => !empty($params) ? json_encode($params, JSON_UNESCAPED_UNICODE) : null,
-                'client_ip' => request()->ip(),
-                'user_agent' => request()->header('user-agent', ''),
+                'client_ip' => $request->ip(),
+                'user_agent' => $request->header('user-agent', ''),
                 'create_time' => date('Y-m-d H:i:s'),
             ]);
             return true;
         } catch (\Exception $e) {
-            trace('日志记录失败：' . $e->getMessage(), 'error');
+            \think\facade\Log::error('日志记录失败：' . $e->getMessage());
             return false;
         }
     }
