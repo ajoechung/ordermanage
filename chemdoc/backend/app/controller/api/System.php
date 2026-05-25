@@ -154,7 +154,7 @@ class System extends BaseController
 
     public function assignRole()
     {
-        $data = $this->request->post();
+        $data = $this->request->json() ?: $this->request->post();
         $uid = $data['uid'] ?? 0;
         $groupIds = $data['group_ids'] ?? [];
 
