@@ -108,6 +108,10 @@ class System extends BaseController
 
     public function updateUser($id)
     {
+        if ($id == 1) {
+            return json(Result::error('不能编辑超级管理员用户'));
+        }
+
         $data = $this->request->put();
 
         $user = AdminUserModel::find($id);
@@ -160,6 +164,10 @@ class System extends BaseController
 
         if (empty($uid)) {
             return json(Result::validateError('用户ID不能为空'));
+        }
+
+        if ($uid == 1) {
+            return json(Result::error('不能为超级管理员分配角色'));
         }
 
         \think\facade\Db::name('auth_group_access')->where('uid', $uid)->delete();
@@ -216,6 +224,29 @@ class System extends BaseController
         }
         
         return json(Result::success($groups));
+    }
+
+    public function getUsersByRole($id)
+    {
+        $userIds = \think\facade\Db::name('auth_group_access')
+            ->where('group_id', $id)
+            ->column('uid');
+        
+        if (empty($userIds)) {
+            return json(Result::success([]));
+        }
+        
+        $users = AdminUserModel::whereIn('user_id', $userIds)
+            ->select()
+            ->toArray();
+        
+        foreach ($users as &$user) {
+            $user['user_id'] = $user['user_id'];
+            $user['realname'] = $user['realname'];
+            $user['phone'] = $user['mobile'];
+        }
+        
+        return json(Result::success($users));
     }
 
     public function createGroup()
@@ -296,15 +327,125 @@ class System extends BaseController
 
     public function rules()
     {
-        $rules = \think\facade\Db::name('auth_rule')
-            ->where('status', 1)
-            ->order('sort', 'asc')
+        $params = $this->request->param();
+        $page = (int)($params['page'] ?? 1);
+        $pageSize = (int)($params['page_size'] ?? 20);
+        
+        $query = \think\facade\Db::name('auth_rule');
+        
+        if (!empty($params['title'])) {
+            $query->where('title', 'like', '%' . $params['title'] . '%');
+        }
+        
+        $total = $query->count();
+        $list = $query->order('sort', 'asc')
+            ->page($page, $pageSize)
             ->select()
             ->toArray();
+        
+        $tree = $this->buildTree($list);
+        
+        return json(Result::paginate($total, $tree, $page, $pageSize));
+    }
 
-        $tree = $this->buildTree($rules);
+    public function createRule()
+    {
+        $data = $this->request->post();
+        
+        if (empty($data['title'])) {
+            return json(Result::validateError('请输入权限名称'));
+        }
+        if (empty($data['name'])) {
+            return json(Result::validateError('请输入规则标识'));
+        }
+        
+        $id = \think\facade\Db::name('auth_rule')->insertGetId([
+            'name' => $data['name'],
+            'title' => $data['title'],
+            'type' => $data['type'] ?? 1,
+            'pid' => $data['pid'] ?? 0,
+            'status' => $data['status'] ?? 1,
+            'is_menu' => $data['is_menu'] ?? 0,
+            'condition' => $data['condition'] ?? '',
+            'remark' => $data['remark'] ?? '',
+            'sort' => $data['sort'] ?? 0,
+            'create_time' => date('Y-m-d H:i:s'),
+        ]);
+        
+        return json(Result::success(['id' => $id], '权限创建成功'));
+    }
 
-        return json(Result::success($tree));
+    public function updateRule($id)
+    {
+        $data = $this->request->put();
+        
+        $rule = \think\facade\Db::name('auth_rule')->find($id);
+        if (!$rule) {
+            return json(Result::notFound('权限不存在'));
+        }
+        
+        $updateData = [];
+        
+        if (isset($data['name'])) {
+            $updateData['name'] = $data['name'];
+        }
+        if (isset($data['title'])) {
+            $updateData['title'] = $data['title'];
+        }
+        if (isset($data['type'])) {
+            $updateData['type'] = $data['type'];
+        }
+        if (isset($data['pid'])) {
+            $updateData['pid'] = $data['pid'];
+        }
+        if (isset($data['status'])) {
+            $updateData['status'] = $data['status'];
+        }
+        if (isset($data['is_menu'])) {
+            $updateData['is_menu'] = $data['is_menu'];
+        }
+        if (isset($data['condition'])) {
+            $updateData['condition'] = $data['condition'];
+        }
+        if (isset($data['remark'])) {
+            $updateData['remark'] = $data['remark'];
+        }
+        if (isset($data['sort'])) {
+            $updateData['sort'] = $data['sort'];
+        }
+        
+        if (!empty($updateData)) {
+            $updateData['update_time'] = date('Y-m-d H:i:s');
+            \think\facade\Db::name('auth_rule')->where('id', $id)->update($updateData);
+        }
+        
+        return json(Result::success(null, '权限更新成功'));
+    }
+
+    public function deleteRule($id)
+    {
+        $rule = \think\facade\Db::name('auth_rule')->find($id);
+        if (!$rule) {
+            return json(Result::notFound('权限不存在'));
+        }
+        
+        $hasChildren = \think\facade\Db::name('auth_rule')->where('pid', $id)->count();
+        if ($hasChildren > 0) {
+            return json(Result::error('存在子权限，无法删除'));
+        }
+        
+        $usedInRoles = \think\facade\Db::name('auth_group')
+            ->where('rules', 'like', '%' . $id . '%')
+            ->whereOr('rules', '=', '*')
+            ->count();
+        
+        if ($usedInRoles > 0) {
+            return json(Result::error('该权限已被角色使用，无法删除'));
+        }
+        
+        \think\facade\Db::name('auth_rule')->where('id', $id)->delete();
+        
+        return json(Result::success(null, '权限删除成功'));
     }
 
     public function ruleTree()
