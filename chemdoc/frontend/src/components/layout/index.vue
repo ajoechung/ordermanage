@@ -144,14 +144,14 @@ const menuItems = computed(() => {
   
   let menuRoutes = []
   
-  if (permissionStore.routesLoaded && permissionStore.routes.length > 0) {
+  if (permissionStore.routesLoaded) {
     const rootRoute = permissionStore.routes.find(r => r.path === '/')
     if (rootRoute && rootRoute.children && rootRoute.children.length > 0) {
       menuRoutes = rootRoute.children.filter(r => !r.meta?.hidden)
     }
   }
   
-  if (menuRoutes.length === 0) {
+  if (menuRoutes.length === 0 && userStore.permissions.length === 0) {
     const rootRoute = constantRoutes.find(r => r.path === '/')
     if (rootRoute && rootRoute.children) {
       menuRoutes = rootRoute.children.filter(r => !r.meta?.hidden)
