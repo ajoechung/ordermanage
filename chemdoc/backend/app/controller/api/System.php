@@ -338,14 +338,18 @@ class System extends BaseController
         }
         
         $total = $query->count();
-        $list = $query->order('sort', 'asc')
-            ->page($page, $pageSize)
+        
+        // 先获取所有数据构建树形结构
+        $allList = $query->order('sort', 'asc')
             ->select()
             ->toArray();
         
-        $tree = $this->buildTree($list);
+        $tree = $this->buildTree($allList);
         
-        return json(Result::paginate($total, $tree, $page, $pageSize));
+        // 对树形结构进行分页
+        $pagedTree = array_slice($tree, ($page - 1) * $pageSize, $pageSize);
+        
+        return json(Result::paginate($total, $pagedTree, $page, $pageSize));
     }
 
     public function createRule()
