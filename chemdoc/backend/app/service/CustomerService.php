@@ -3,13 +3,14 @@ namespace app\service;
 
 use app\model\CustomerModel;
 use app\model\OperationLogModel;
-use think\facade\Db;
-
 use app\model\ContactModel;
 use app\model\CustomerFollowModel;
 use app\model\OrderModel;
 use app\model\OrderItemModel;
 use app\model\ProductModel;
+use app\service\DataScopeService;
+use app\service\Result;
+use think\facade\Db;
 
 class CustomerService
 {
@@ -45,8 +46,7 @@ class CustomerService
             $query->scope('dateRange', $dateRange);
         }
         
-        // 应用数据范围
-        \app\service\DataScopeService::applyCustomerScope($query);
+        DataScopeService::applyCustomerScope($query);
 
         $total = $query->count();
         $list = $query->order('customer_id', 'desc')
@@ -56,16 +56,16 @@ class CustomerService
 
         foreach ($list as &$item) {
             if (isset($item['owner_user'])) {
-                $item['owner_name'] = $item['owner_user']['realname'] ?? '';
+                $item['owner_name'] = $item['owner_user']['realname'] ?? $item['owner_user']['username'] ?? '';
                 unset($item['owner_user']);
             }
             if (isset($item['create_user'])) {
-                $item['create_user_name'] = $item['create_user']['realname'] ?? '';
+                $item['create_user_name'] = $item['create_user']['realname'] ?? $item['create_user']['username'] ?? '';
                 unset($item['create_user']);
             }
         }
 
-        return \app\service\Result::paginate($total, $list, $page, $pageSize);
+        return Result::paginate($total, $list, $page, $pageSize);
     }
 
     public function getDetail(int $id): array
@@ -102,11 +102,7 @@ class CustomerService
             return Result::error('无权访问此客户');
         }
 
-        error_log("getFullDetail called with id: " . $id);
-        
-        $customer = CustomerModel::with(['ownerUser'])->find($id);
-        
-        error_log("Customer found: " . ($customer ? "yes" : "no"));
+        $customer = CustomerModel::with(['ownerUser', 'createUser'])->find($id);
 
         if (!$customer) {
             return Result::notFound('客户不存在');
@@ -115,8 +111,12 @@ class CustomerService
         $data = $customer->toArray();
 
         if (isset($data['owner_user'])) {
-            $data['owner_name'] = $data['owner_user']['realname'] ?? '';
+            $data['owner_name'] = $data['owner_user']['realname'] ?? $data['owner_user']['username'] ?? '';
             unset($data['owner_user']);
+        }
+        if (isset($data['create_user'])) {
+            $data['create_user_name'] = $data['create_user']['realname'] ?? $data['create_user']['username'] ?? '';
+            unset($data['create_user']);
         }
 
         // 获取联系人列表
@@ -184,10 +184,13 @@ class CustomerService
     {
         $exists = CustomerModel::where('name', $data['name'])->find();
         if ($exists) {
-            return \app\service\Result::error('客户名称已存在');
+            return Result::error('客户名称已存在');
         }
 
         $currentUserId = request()->user_id ?? 0;
+        if ($currentUserId == 0) {
+            return Result::error('无法获取当前用户信息');
+        }
 
         $customerData = [
             'name' => $data['name'],
@@ -221,26 +224,25 @@ class CustomerService
             '新增客户：' . $data['name']
         );
 
-        return \app\service\Result::success(['customer_id' => $customer->customer_id], '客户创建成功');
+        return Result::success(['customer_id' => $customer->customer_id], '客户创建成功');
     }
 
     public function update(int $id, array $data): array
     {
         try {
-            // 检查权限
-            if (!\app\service\DataScopeService::canAccessCustomer($id)) {
-                return \app\service\Result::error('无权访问此客户');
+            if (!DataScopeService::canAccessCustomer($id)) {
+                return Result::error('无权访问此客户');
             }
             
             $customer = CustomerModel::find($id);
             if (!$customer) {
-                return \app\service\Result::notFound('客户不存在');
+                return Result::notFound('客户不存在');
             }
 
             if (isset($data['name']) && $data['name'] != $customer->name) {
                 $exists = CustomerModel::where('name', $data['name'])->where('customer_id', '<>', $id)->find();
                 if ($exists) {
-                    return \app\service\Result::error('客户名称已存在');
+                    return Result::error('客户名称已存在');
                 }
             }
 
@@ -274,28 +276,27 @@ class CustomerService
                 '编辑客户：' . $customer->name
             );
 
-            return \app\service\Result::success(null, '客户更新成功');
+            return Result::success(null, '客户更新成功');
         } catch (\Exception $e) {
-            return \app\service\Result::error('更新失败：' . $e->getMessage());
+            return Result::error('更新失败：' . $e->getMessage());
         }
     }
 
     public function delete(int $id, bool $force = false): array
     {
         try {
-            // 检查权限
-            if (!\app\service\DataScopeService::canAccessCustomer($id)) {
-                return \app\service\Result::error('无权访问此客户');
+            if (!DataScopeService::canAccessCustomer($id)) {
+                return Result::error('无权访问此客户');
             }
             
             $customer = CustomerModel::find($id);
             if (!$customer) {
-                return \app\service\Result::notFound('客户不存在');
+                return Result::notFound('客户不存在');
             }
 
             $hasOrders = Db::name('order')->where('customer_id', $id)->count();
             if ($hasOrders > 0) {
-                return \app\service\Result::error('该客户存在订单，无法删除');
+                return Result::error('该客户存在订单，无法删除');
             }
 
             $hasContacts = Db::name('contact')->where('customer_id', $id)->count();
@@ -304,7 +305,7 @@ class CustomerService
                     return [
                         'code' => 201,
                         'msg' => '该客户存在联系人，确认删除将同时删除所有联系人',
-                        'data' => ['has_contacts' => true, 'contact_count' => $hasContacts]
+                        'data' => ['contact_count' => $hasContacts]
                     ];
                 }
                 Db::name('contact')->where('customer_id', $id)->delete();
@@ -320,9 +321,9 @@ class CustomerService
                 '删除客户：' . $customer->name
             );
 
-            return \app\service\Result::success(null, '客户删除成功');
+            return Result::success(null, '客户删除成功');
         } catch (\Exception $e) {
-            return \app\service\Result::error('删除失败：' . $e->getMessage());
+            return Result::error('删除失败：' . $e->getMessage());
         }
     }
 

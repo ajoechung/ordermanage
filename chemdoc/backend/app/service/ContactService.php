@@ -3,6 +3,8 @@ namespace app\service;
 
 use app\model\ContactModel;
 use app\model\OperationLogModel;
+use app\service\DataScopeService;
+use app\service\Result;
 use think\facade\Db;
 
 class ContactService
@@ -24,8 +26,7 @@ class ContactService
             $query->scope('customerId', (int)$customerId);
         }
         
-        // 应用客户数据范围权限
-        \app\service\DataScopeService::applyCustomerScope($query, 'customer_id');
+        DataScopeService::applyCustomerScope($query, 'customer_id');
 
         $total = $query->count();
         $list = $query->order('contact_id', 'desc')
