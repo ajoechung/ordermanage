@@ -138,7 +138,7 @@ class ContactService
             '编辑联系人：' . $contact->name
         );
 
-        return \app\service\Result::success(null, '联系人更新成功');
+        return Result::success(null, '联系人更新成功');
     }
 
     public function delete(int $id): array
