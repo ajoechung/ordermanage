@@ -27,23 +27,26 @@ class CustomerService
         $query = CustomerModel::with(['ownerUser', 'createUser']);
 
         if (!empty($keyword)) {
-            $query->scope('keyword', $keyword);
+            $query->where(function ($q) use ($keyword) {
+                $q->whereLike('name', "%{$keyword}%")
+                    ->whereOr('code', 'like', "%{$keyword}%");
+            });
         }
 
         if (!empty($industry)) {
-            $query->scope('industry', $industry);
+            $query->where('industry', $industry);
         }
 
         if (!empty($level)) {
-            $query->scope('level', (int)$level);
+            $query->where('level', (int)$level);
         }
 
         if (!empty($ownerUserId)) {
-            $query->scope('ownerUser', (int)$ownerUserId);
+            $query->where('owner_user_id', (int)$ownerUserId);
         }
 
-        if (!empty($dateRange) && is_array($dateRange)) {
-            $query->scope('dateRange', $dateRange);
+        if (!empty($dateRange) && is_array($dateRange) && count($dateRange) === 2) {
+            $query->whereBetween('create_time', $dateRange);
         }
         
         DataScopeService::applyCustomerScope($query);
@@ -56,7 +59,7 @@ class CustomerService
 
         foreach ($list as &$item) {
             if (isset($item['owner_user'])) {
-                $item['owner_name'] = $item['owner_user']['realname'] ?? $item['owner_user']['username'] ?? '';
+                $item['owner_user_name'] = $item['owner_user']['realname'] ?? $item['owner_user']['username'] ?? '';
                 unset($item['owner_user']);
             }
             if (isset($item['create_user'])) {

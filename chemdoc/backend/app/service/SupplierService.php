@@ -21,11 +21,15 @@ class SupplierService
         $query = SupplierModel::with(['ownerUser', 'createUser']);
 
         if (!empty($keyword)) {
-            $query->scope('keyword', $keyword);
+            $query->where(function ($q) use ($keyword) {
+                $q->whereLike('name', "%{$keyword}%")
+                    ->whereOr('code', 'like', "%{$keyword}%")
+                    ->whereOr('main_products', 'like', "%{$keyword}%");
+            });
         }
 
         if (!empty($type)) {
-            $query->scope('type', $type);
+            $query->where('type', $type);
         }
 
         if ($status !== '') {
@@ -33,7 +37,7 @@ class SupplierService
         }
 
         if (!empty($rating)) {
-            $query->scope('rating', (int)$rating);
+            $query->where('rating', (int)$rating);
         }
         
         // 应用数据范围
@@ -50,7 +54,7 @@ class SupplierService
                 $item['attachment'] = json_decode($item['attachment'], true) ?? [];
             }
             if (isset($item['owner_user'])) {
-                $item['owner_name'] = $item['owner_user']['realname'] ?? '';
+                $item['owner_user_name'] = $item['owner_user']['realname'] ?? '';
                 unset($item['owner_user']);
             }
             if (isset($item['create_user'])) {
