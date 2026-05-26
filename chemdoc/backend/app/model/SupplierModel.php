@@ -15,9 +15,11 @@ class SupplierModel extends BaseModel
     
     // 允许批量赋值的字段
     protected $fillable = [
-        'name', 'code', 'type', 'main_products', 'address', 'cooperation_start',
-        'rating', 'cert_expire_date', 'description', 'attachment', 'status',
-        'owner_user_id', 'owner_user_name', 'create_user_id', 'create_user_name', 'create_time', 'update_time'
+        'name', 'code', 'type', 'contact', 'phone', 'cooperation_status', 
+        'main_products', 'address', 'cooperation_start', 'rating', 'cert_expire_date', 
+        'description', 'remark', 'attachment', 'status',
+        'owner_user_id', 'owner_user_name', 'create_user_id', 'create_user_name', 
+        'create_time', 'update_time'
     ];
 
     public function createUser()

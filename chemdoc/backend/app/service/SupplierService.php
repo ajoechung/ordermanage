@@ -102,12 +102,16 @@ class SupplierService
         $supplier->name = $data['name'];
         $supplier->code = $data['code'] ?? '';
         $supplier->type = $data['type'] ?? '';
+        $supplier->contact = $data['contact'] ?? '';
+        $supplier->phone = $data['phone'] ?? '';
+        $supplier->cooperation_status = $data['cooperation_status'] ?? 'pending';
         $supplier->main_products = $data['main_products'] ?? '';
         $supplier->address = $data['address'] ?? '';
         $supplier->cooperation_start = $data['cooperation_start'] ?? null;
         $supplier->rating = $data['rating'] ?? null;
         $supplier->cert_expire_date = $data['cert_expire_date'] ?? null;
         $supplier->description = $data['description'] ?? '';
+        $supplier->remark = $data['remark'] ?? '';
         $supplier->attachment = isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null;
         $supplier->status = $data['status'] ?? 1;
         $supplier->owner_user_id = $currentUserId;
@@ -149,7 +153,7 @@ class SupplierService
 
         $updateData = [];
 
-        $fields = ['name', 'code', 'type', 'main_products', 'address', 'cooperation_start', 'rating', 'cert_expire_date', 'description', 'status', 'owner_user_id'];
+        $fields = ['name', 'code', 'type', 'contact', 'phone', 'cooperation_status', 'main_products', 'address', 'cooperation_start', 'rating', 'cert_expire_date', 'description', 'remark', 'status', 'owner_user_id'];
 
         foreach ($fields as $field) {
             if (isset($data[$field])) {
