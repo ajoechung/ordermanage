@@ -228,19 +228,19 @@ class CustomerService
     {
         try {
             // 检查权限
-            if (!DataScopeService::canAccessCustomer($id)) {
-                return Result::error('无权访问此客户');
+            if (!\app\service\DataScopeService::canAccessCustomer($id)) {
+                return \app\service\Result::error('无权访问此客户');
             }
             
             $customer = CustomerModel::find($id);
             if (!$customer) {
-                return Result::notFound('客户不存在');
+                return \app\service\Result::notFound('客户不存在');
             }
 
             if (isset($data['name']) && $data['name'] != $customer->name) {
                 $exists = CustomerModel::where('name', $data['name'])->where('customer_id', '<>', $id)->find();
                 if ($exists) {
-                    return Result::error('客户名称已存在');
+                    return \app\service\Result::error('客户名称已存在');
                 }
             }
 
@@ -274,9 +274,9 @@ class CustomerService
                 '编辑客户：' . $customer->name
             );
 
-            return Result::success(null, '客户更新成功');
+            return \app\service\Result::success(null, '客户更新成功');
         } catch (\Exception $e) {
-            return Result::error('更新失败：' . $e->getMessage());
+            return \app\service\Result::error('更新失败：' . $e->getMessage());
         }
     }
 
@@ -284,18 +284,18 @@ class CustomerService
     {
         try {
             // 检查权限
-            if (!DataScopeService::canAccessCustomer($id)) {
-                return Result::error('无权访问此客户');
+            if (!\app\service\DataScopeService::canAccessCustomer($id)) {
+                return \app\service\Result::error('无权访问此客户');
             }
             
             $customer = CustomerModel::find($id);
             if (!$customer) {
-                return Result::notFound('客户不存在');
+                return \app\service\Result::notFound('客户不存在');
             }
 
             $hasOrders = Db::name('order')->where('customer_id', $id)->count();
             if ($hasOrders > 0) {
-                return Result::error('该客户存在订单，无法删除');
+                return \app\service\Result::error('该客户存在订单，无法删除');
             }
 
             $hasContacts = Db::name('contact')->where('customer_id', $id)->count();
@@ -320,9 +320,9 @@ class CustomerService
                 '删除客户：' . $customer->name
             );
 
-            return Result::success(null, '客户删除成功');
+            return \app\service\Result::success(null, '客户删除成功');
         } catch (\Exception $e) {
-            return Result::error('删除失败：' . $e->getMessage());
+            return \app\service\Result::error('删除失败：' . $e->getMessage());
         }
     }
 
