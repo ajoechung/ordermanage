@@ -192,29 +192,26 @@ class CustomerService
             return Result::error('无法获取当前用户信息');
         }
 
-        $customerData = [
-            'name' => $data['name'],
-            'industry' => $data['industry'] ?? '',
-            'source' => $data['source'] ?? '',
-            'scale' => $data['scale'] ?? '',
-            'address' => $data['address'] ?? '',
-            'annual_revenue' => $data['annual_revenue'] ?? 0,
-            'description' => $data['description'] ?? '',
-            'attachment' => isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null,
-            'status' => $data['status'] ?? 1,
-            'level' => $data['level'] ?? 1,
-            'owner_user_id' => $currentUserId,
-            'create_user_id' => $currentUserId,
-            'create_time' => date('Y-m-d H:i:s'),
-        ];
-
+        $customer = new CustomerModel();
+        $customer->name = $data['name'];
+        $customer->industry = $data['industry'] ?? '';
+        $customer->source = $data['source'] ?? '';
+        $customer->scale = $data['scale'] ?? '';
+        $customer->address = $data['address'] ?? '';
+        $customer->annual_revenue = $data['annual_revenue'] ?? 0;
+        $customer->description = $data['description'] ?? '';
         if (!empty(trim($data['code'] ?? ''))) {
-            $customerData['code'] = $data['code'];
+            $customer->code = $data['code'];
         } else {
-            $customerData['code'] = null;
+            $customer->code = null;
         }
-
-        $customer = CustomerModel::create($customerData);
+        $customer->attachment = isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null;
+        $customer->status = $data['status'] ?? 1;
+        $customer->level = $data['level'] ?? 1;
+        $customer->owner_user_id = $currentUserId;
+        $customer->create_user_id = $currentUserId;
+        $customer->create_time = date('Y-m-d H:i:s');
+        $customer->save();
 
         OperationLogModel::log(
             $currentUserId,

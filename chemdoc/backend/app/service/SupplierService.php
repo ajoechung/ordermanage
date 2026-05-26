@@ -98,22 +98,22 @@ class SupplierService
 
         $currentUserId = request()->user_id ?? 0;
 
-        $supplier = SupplierModel::create([
-            'name' => $data['name'],
-            'code' => $data['code'] ?? '',
-            'type' => $data['type'] ?? '',
-            'main_products' => $data['main_products'] ?? '',
-            'address' => $data['address'] ?? '',
-            'cooperation_start' => $data['cooperation_start'] ?? null,
-            'rating' => $data['rating'] ?? null,
-            'cert_expire_date' => $data['cert_expire_date'] ?? null,
-            'description' => $data['description'] ?? '',
-            'attachment' => isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null,
-            'status' => $data['status'] ?? 1,
-            'owner_user_id' => $currentUserId,
-            'create_user_id' => $currentUserId,
-            'create_time' => date('Y-m-d H:i:s'),
-        ]);
+        $supplier = new SupplierModel();
+        $supplier->name = $data['name'];
+        $supplier->code = $data['code'] ?? '';
+        $supplier->type = $data['type'] ?? '';
+        $supplier->main_products = $data['main_products'] ?? '';
+        $supplier->address = $data['address'] ?? '';
+        $supplier->cooperation_start = $data['cooperation_start'] ?? null;
+        $supplier->rating = $data['rating'] ?? null;
+        $supplier->cert_expire_date = $data['cert_expire_date'] ?? null;
+        $supplier->description = $data['description'] ?? '';
+        $supplier->attachment = isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null;
+        $supplier->status = $data['status'] ?? 1;
+        $supplier->owner_user_id = $currentUserId;
+        $supplier->create_user_id = $currentUserId;
+        $supplier->create_time = date('Y-m-d H:i:s');
+        $supplier->save();
 
         OperationLogModel::log(
             $currentUserId,
