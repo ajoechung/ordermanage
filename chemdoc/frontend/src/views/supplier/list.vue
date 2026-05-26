@@ -178,7 +178,10 @@ const formData = reactive({
 
 const formRules = {
   name: [{ required: true, message: '请输入供应商名称', trigger: 'blur' }],
-  contact: [{ required: true, message: '请输入联系人', trigger: 'blur' }]
+  contact: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
+  phone: [
+    { pattern: /^1[3-9]\d{9}$|^(\d{3,4}-)?\d{7,8}$/, message: '请输入正确的手机号码或座机号码', trigger: 'blur' }
+  ]
 }
 
 const statusMap = { active: { text: '已合作', type: 'success' }, pending: { text: '待合作', type: 'warning' }, terminated: { text: '已终止', type: 'danger' } }

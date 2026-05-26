@@ -254,7 +254,10 @@ const formData = reactive({
 
 const formRules = {
   supplier_id: [{ required: true, message: '请选择供应商', trigger: 'change' }],
-  contact: [{ required: true, message: '请输入联系人', trigger: 'blur' }]
+  contact: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
+  phone: [
+    { pattern: /^1[3-9]\d{9}$|^(\d{3,4}-)?\d{7,8}$/, message: '请输入正确的手机号码或座机号码', trigger: 'blur' }
+  ]
 }
 
 const statusMap = {

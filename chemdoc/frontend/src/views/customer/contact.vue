@@ -174,7 +174,16 @@ const formData = reactive({
 const formRules = {
   customer_id: [{ required: true, message: '请选择客户', trigger: 'change' }],
   name: [{ required: true, message: '请输入联系人姓名', trigger: 'blur' }],
-  mobile: [{ required: true, message: '请输入手机号', trigger: 'blur' }]
+  mobile: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  ],
+  phone: [
+    { pattern: /^(\d{3,4}-)?\d{7,8}$/, message: '请输入正确的座机号码', trigger: 'blur' }
+  ],
+  email: [
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ]
 }
 
 const loadData = async () => {

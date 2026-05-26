@@ -282,6 +282,9 @@ const formRules = {
     { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
   ],
   nickname: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+  phone: [
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  ],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
@@ -291,6 +294,9 @@ const editFormRules = {
     { min: 3, max: 20, message: '用户名长度为3-20个字符', trigger: 'blur' }
   ],
   nickname: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+  phone: [
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  ],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
