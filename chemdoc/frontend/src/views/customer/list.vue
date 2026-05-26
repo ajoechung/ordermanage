@@ -316,8 +316,11 @@ const handleEdit = (row) => {
 
 const handleView = (row) => {
   currentCustomerId.value = row.customer_id
+  detailVisible.value = true
   nextTick(() => {
-    detailVisible.value = true
+    if (detailRef.value) {
+      detailRef.value.loadCustomerDetail(row.customer_id)
+    }
   })
 }
 
