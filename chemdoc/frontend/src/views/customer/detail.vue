@@ -392,9 +392,12 @@ const getOrderStatusTag = (status) => {
 
 const loadCustomerDetail = async (id) => {
   try {
+    console.log('loadCustomerDetail called with id:', id)
     const res = await getCustomerFullDetail(id)
+    console.log('API response:', res)
     if (res.code === 200) {
       const data = res.data
+      console.log('Customer data:', data)
       
       currentCustomer.value = {
         customer_id: data.customer_id,

@@ -88,7 +88,11 @@ class CustomerService
 
     public function getFullDetail(int $id): array
     {
+        error_log("getFullDetail called with id: " . $id);
+        
         $customer = CustomerModel::with(['ownerUser'])->find($id);
+        
+        error_log("Customer found: " . ($customer ? "yes" : "no"));
 
         if (!$customer) {
             return Result::notFound('客户不存在');
