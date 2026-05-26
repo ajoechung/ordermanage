@@ -43,10 +43,6 @@ export const usePermissionStore = defineStore('permission', {
   actions: {
     async generateRoutes(permissions = []) {
       try {
-        if (this.routesLoaded) {
-          return this.routes
-        }
-        
         this.permissions = permissions
         
         if (permissions.includes('*')) {
