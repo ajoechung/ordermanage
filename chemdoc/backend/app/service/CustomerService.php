@@ -209,7 +209,9 @@ class CustomerService
         $customer->status = $data['status'] ?? 1;
         $customer->level = $data['level'] ?? 1;
         $customer->owner_user_id = $currentUserId;
+        $customer->owner_user_name = request()->username ?? '';
         $customer->create_user_id = $currentUserId;
+        $customer->create_user_name = request()->username ?? '';
         $customer->create_time = date('Y-m-d H:i:s');
         $customer->save();
 

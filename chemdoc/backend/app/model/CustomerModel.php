@@ -17,7 +17,7 @@ class CustomerModel extends BaseModel
     protected $fillable = [
         'name', 'code', 'industry', 'source', 'scale', 'address', 
         'annual_revenue', 'description', 'attachment', 'status', 'level', 
-        'owner_user_id', 'create_user_id', 'create_time', 'update_time'
+        'owner_user_id', 'owner_user_name', 'create_user_id', 'create_user_name', 'create_time', 'update_time'
     ];
 
     public function ownerUser()

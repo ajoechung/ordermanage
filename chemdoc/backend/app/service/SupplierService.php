@@ -111,7 +111,9 @@ class SupplierService
         $supplier->attachment = isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null;
         $supplier->status = $data['status'] ?? 1;
         $supplier->owner_user_id = $currentUserId;
+        $supplier->owner_user_name = request()->username ?? '';
         $supplier->create_user_id = $currentUserId;
+        $supplier->create_user_name = request()->username ?? '';
         $supplier->create_time = date('Y-m-d H:i:s');
         $supplier->save();
 

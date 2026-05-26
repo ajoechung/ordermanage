@@ -17,7 +17,7 @@ class SupplierModel extends BaseModel
     protected $fillable = [
         'name', 'code', 'type', 'main_products', 'address', 'cooperation_start',
         'rating', 'cert_expire_date', 'description', 'attachment', 'status',
-        'owner_user_id', 'create_user_id', 'create_time', 'update_time'
+        'owner_user_id', 'owner_user_name', 'create_user_id', 'create_user_name', 'create_time', 'update_time'
     ];
 
     public function createUser()

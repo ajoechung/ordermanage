@@ -69,7 +69,7 @@
         <el-table-column prop="source" label="客户来源" width="100" />
         <el-table-column prop="address" label="地址" min-width="150" show-overflow-tooltip />
         <el-table-column prop="create_user_name" label="创建人" width="100" />
-        <el-table-column prop="owner_name" label="负责人" width="100" />
+        <el-table-column prop="owner_user_name" label="负责人" width="100" />
         <el-table-column prop="create_time" label="创建时间" width="160" />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
