@@ -241,6 +241,7 @@ const handleLogin = async () => {
         userStore.token = res.data.token
         userStore.userInfo = res.data.user_info || {}
         userStore.groups = res.data.user_info?.groups || []
+        userStore.permissions = res.data.user_info?.permissions || []
 
         if (loginForm.remember) {
           localStorage.setItem('username', loginForm.username)
@@ -250,6 +251,7 @@ const handleLogin = async () => {
 
         localStorage.setItem('token', res.data.token)
         localStorage.setItem('userInfo', JSON.stringify(res.data.user_info || {}))
+        localStorage.setItem('permissions', JSON.stringify(res.data.user_info?.permissions || []))
 
         ElMessage.success('登录成功')
 

@@ -142,13 +142,21 @@ const getIcon = (iconName) => {
 const menuItems = computed(() => {
   const items = []
   
-  const rootRoute = constantRoutes.find(r => r.path === '/')
-  if (!rootRoute || !rootRoute.children) {
-    console.error('constantRoutes 结构不正确')
-    return items
-  }
+  // 使用权限路由而不是固定路由
+  let menuRoutes = []
   
-  let menuRoutes = rootRoute.children.filter(r => !r.meta?.hidden)
+  if (permissionStore.routes.length > 0) {
+    const rootRoute = permissionStore.routes.find(r => r.path === '/')
+    if (rootRoute && rootRoute.children) {
+      menuRoutes = rootRoute.children.filter(r => !r.meta?.hidden)
+    }
+  } else {
+    // 回退到固定路由
+    const rootRoute = constantRoutes.find(r => r.path === '/')
+    if (rootRoute && rootRoute.children) {
+      menuRoutes = rootRoute.children.filter(r => !r.meta?.hidden)
+    }
+  }
   
   menuRoutes.sort((a, b) => {
     const sortA = a.meta?.sort || 999
