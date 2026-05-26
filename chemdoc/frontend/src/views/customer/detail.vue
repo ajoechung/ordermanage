@@ -350,6 +350,7 @@ const currentOrderId = ref(null)
 
 // 监听customerId变化，当customerId改变且抽屉开时加载数据
 watch(() => props.customerId, async (newVal) => {
+  console.log('customerId changed:', newVal, 'visible:', visible.value)
   if (newVal && visible.value) {
     await loadCustomerDetail(newVal)
   }
@@ -357,6 +358,7 @@ watch(() => props.customerId, async (newVal) => {
 
 // 监听visible变化
 watch(visible, async (newVal) => {
+  console.log('visible changed:', newVal, 'customerId:', props.customerId)
   if (newVal && props.customerId) {
     await loadCustomerDetail(props.customerId)
   } else if (!newVal) {
