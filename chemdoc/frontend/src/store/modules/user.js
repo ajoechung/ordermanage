@@ -25,10 +25,12 @@ export const useUserStore = defineStore('user', {
         this.token = res.data.token
         this.userInfo = res.data.user_info || {}
         this.groups = res.data.user_info?.groups || []
+        this.permissions = res.data.user_info?.permissions || []
 
         localStorage.setItem('token', this.token)
         localStorage.setItem('userInfo', JSON.stringify(this.userInfo))
         localStorage.setItem('groups', JSON.stringify(this.groups))
+        localStorage.setItem('permissions', JSON.stringify(this.permissions))
 
         return res
       } catch (error) {

@@ -47,7 +47,7 @@
       <el-container>
         <el-header class="header-container">
           <div class="header-left">
-            <el-button class="collapse-btn" icon @click="toggleCollapse">
+            <el-button type="text" class="collapse-btn" @click="toggleCollapse">
               <Fold v-if="!isCollapse" />
               <Expand v-else />
             </el-button>

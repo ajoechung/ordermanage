@@ -27,9 +27,30 @@ class AuthService
             ->join('auth_group ag', 'aga.group_id = ag.id', 'LEFT')
             ->where('aga.uid', $user['user_id'])
             ->where('ag.status', 1)
-            ->column('ag.id') ?: [];
+            ->select()
+            ->toArray() ?: [];
 
-        $token = $this->generateToken($user, $groups);
+        $groupIds = array_column($groups, 'id');
+        $groupNames = array_column($groups, 'name');
+        
+        $permissions = [];
+        foreach ($groups as $group) {
+            if ($group['rules'] === '*') {
+                $permissions = ['*'];
+                break;
+            }
+            if (!empty($group['rules'])) {
+                $ruleIds = explode(',', $group['rules']);
+                $rules = Db::name('auth_rule')
+                    ->whereIn('id', $ruleIds)
+                    ->where('status', 1)
+                    ->column('name');
+                $permissions = array_merge($permissions, $rules);
+            }
+        }
+        $permissions = array_unique($permissions);
+
+        $token = $this->generateToken($user, $groupIds);
 
         Db::name('admin_user')
             ->where('user_id', $user['user_id'])
@@ -47,7 +68,9 @@ class AuthService
                 'username' => $user['username'],
                 'realname' => $user['realname'] ?? '',
                 'avatar' => $user['avatar'] ?? '',
-                'groups' => $groups,
+                'groups' => $groupIds,
+                'group_names' => $groupNames,
+                'permissions' => $permissions,
             ],
         ], '登录成功');
     }
