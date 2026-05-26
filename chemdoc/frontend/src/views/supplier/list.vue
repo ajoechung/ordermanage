@@ -41,7 +41,8 @@
             <el-tag :type="getStatusType(row.cooperation_status)">{{ getStatusText(row.cooperation_status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="地址" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="create_user_name" label="创建人" width="100" />
+        <el-table-column prop="owner_name" label="负责人" width="100" />
         <el-table-column prop="create_time" label="创建时间" width="160" />
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">

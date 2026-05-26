@@ -23,7 +23,7 @@ class CustomerService
         $ownerUserId = $params['owner_user_id'] ?? '';
         $dateRange = $params['date_range'] ?? [];
 
-        $query = CustomerModel::with(['ownerUser']);
+        $query = CustomerModel::with(['ownerUser', 'createUser']);
 
         if (!empty($keyword)) {
             $query->scope('keyword', $keyword);
@@ -46,7 +46,7 @@ class CustomerService
         }
         
         // 应用数据范围
-        DataScopeService::applyCustomerScope($query);
+        \app\service\DataScopeService::applyCustomerScope($query);
 
         $total = $query->count();
         $list = $query->order('customer_id', 'desc')
@@ -59,9 +59,13 @@ class CustomerService
                 $item['owner_name'] = $item['owner_user']['realname'] ?? '';
                 unset($item['owner_user']);
             }
+            if (isset($item['create_user'])) {
+                $item['create_user_name'] = $item['create_user']['realname'] ?? '';
+                unset($item['create_user']);
+            }
         }
 
-        return Result::paginate($total, $list, $page, $pageSize);
+        return \app\service\Result::paginate($total, $list, $page, $pageSize);
     }
 
     public function getDetail(int $id): array
@@ -180,8 +184,10 @@ class CustomerService
     {
         $exists = CustomerModel::where('name', $data['name'])->find();
         if ($exists) {
-            return Result::error('客户名称已存在');
+            return \app\service\Result::error('客户名称已存在');
         }
+
+        $currentUserId = request()->user_id ?? 0;
 
         $customerData = [
             'name' => $data['name'],
@@ -194,8 +200,8 @@ class CustomerService
             'attachment' => isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null,
             'status' => $data['status'] ?? 1,
             'level' => $data['level'] ?? 1,
-            'owner_user_id' => $data['owner_user_id'] ?? 0,
-            'create_user_id' => request()->user_id ?? 0,
+            'owner_user_id' => $currentUserId,
+            'create_user_id' => $currentUserId,
             'create_time' => date('Y-m-d H:i:s'),
         ];
 
@@ -208,14 +214,14 @@ class CustomerService
         $customer = CustomerModel::create($customerData);
 
         OperationLogModel::log(
-            request()->user_id ?? 0,
+            $currentUserId,
             request()->username ?? '',
             '客户管理',
             '新增',
             '新增客户：' . $data['name']
         );
 
-        return Result::success(['customer_id' => $customer->customer_id], '客户创建成功');
+        return \app\service\Result::success(['customer_id' => $customer->customer_id], '客户创建成功');
     }
 
     public function update(int $id, array $data): array

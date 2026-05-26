@@ -16,7 +16,7 @@ class SupplierService
         $status = $params['status'] ?? '';
         $rating = $params['rating'] ?? '';
 
-        $query = SupplierModel::where(true);
+        $query = SupplierModel::with(['ownerUser', 'createUser']);
 
         if (!empty($keyword)) {
             $query->scope('keyword', $keyword);
@@ -35,7 +35,7 @@ class SupplierService
         }
         
         // 应用数据范围
-        DataScopeService::applySupplierScope($query);
+        \app\service\DataScopeService::applySupplierScope($query);
 
         $total = $query->count();
         $list = $query->order('supplier_id', 'desc')
@@ -47,9 +47,17 @@ class SupplierService
             if (isset($item['attachment']) && is_string($item['attachment'])) {
                 $item['attachment'] = json_decode($item['attachment'], true) ?? [];
             }
+            if (isset($item['owner_user'])) {
+                $item['owner_name'] = $item['owner_user']['realname'] ?? '';
+                unset($item['owner_user']);
+            }
+            if (isset($item['create_user'])) {
+                $item['create_user_name'] = $item['create_user']['realname'] ?? '';
+                unset($item['create_user']);
+            }
         }
 
-        return Result::paginate($total, $list, $page, $pageSize);
+        return \app\service\Result::paginate($total, $list, $page, $pageSize);
     }
 
     public function getDetail(int $id): array
@@ -83,8 +91,10 @@ class SupplierService
     {
         $exists = SupplierModel::where('name', $data['name'])->find();
         if ($exists) {
-            return Result::error('供应商名称已存在');
+            return \app\service\Result::error('供应商名称已存在');
         }
+
+        $currentUserId = request()->user_id ?? 0;
 
         $supplier = SupplierModel::create([
             'name' => $data['name'],
@@ -98,20 +108,20 @@ class SupplierService
             'description' => $data['description'] ?? '',
             'attachment' => isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null,
             'status' => $data['status'] ?? 1,
-            'owner_user_id' => $data['owner_user_id'] ?? (request()->user_id ?? 0),
-            'create_user_id' => request()->user_id ?? 0,
+            'owner_user_id' => $currentUserId,
+            'create_user_id' => $currentUserId,
             'create_time' => date('Y-m-d H:i:s'),
         ]);
 
         OperationLogModel::log(
-            request()->user_id ?? 0,
+            $currentUserId,
             request()->username ?? '',
             '供应商管理',
             '新增',
             '新增供应商：' . $data['name']
         );
 
-        return Result::success(['supplier_id' => $supplier->supplier_id], '供应商创建成功');
+        return \app\service\Result::success(['supplier_id' => $supplier->supplier_id], '供应商创建成功');
     }
 
     public function update(int $id, array $data): array
