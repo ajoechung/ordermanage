@@ -22,6 +22,11 @@ class Customer extends BaseController
     public function index()
     {
         $params = $this->request->param();
+        // 支持通过 GET /customer?id=xxx&detail=1 获取客户详情
+        if (!empty($params['id']) && !empty($params['detail'])) {
+            $id = (int)$params['id'];
+            return json($this->customerService->getFullDetail($id));
+        }
         return json($this->customerService->getList($params));
     }
 
