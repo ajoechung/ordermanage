@@ -17,8 +17,12 @@ export function getCustomerDetail(id) {
 
 export function getCustomerFullDetail(id) {
   return request({
-    url: `/customer/full-detail/${id}`,
-    method: 'get'
+    url: '/customer',
+    method: 'get',
+    params: {
+      id,
+      detail: 1
+    }
   })
 }
 
