@@ -142,16 +142,16 @@ const getIcon = (iconName) => {
 const menuItems = computed(() => {
   const items = []
   
-  // 使用权限路由而不是固定路由
   let menuRoutes = []
   
-  if (permissionStore.routes.length > 0) {
+  if (permissionStore.routesLoaded && permissionStore.routes.length > 0) {
     const rootRoute = permissionStore.routes.find(r => r.path === '/')
-    if (rootRoute && rootRoute.children) {
+    if (rootRoute && rootRoute.children && rootRoute.children.length > 0) {
       menuRoutes = rootRoute.children.filter(r => !r.meta?.hidden)
     }
-  } else {
-    // 回退到固定路由
+  }
+  
+  if (menuRoutes.length === 0) {
     const rootRoute = constantRoutes.find(r => r.path === '/')
     if (rootRoute && rootRoute.children) {
       menuRoutes = rootRoute.children.filter(r => !r.meta?.hidden)
