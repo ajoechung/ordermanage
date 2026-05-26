@@ -41,7 +41,13 @@
         <el-table-column prop="name" label="角色名称" width="150" />
         <el-table-column prop="code" label="角色代码" width="150" />
         <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="user_count" label="用户数" width="100" align="center" />
+        <el-table-column prop="user_count" label="用户数" width="100" align="center">
+          <template #default="{ row }">
+            <el-button type="primary" link @click="handleViewUsers(row)">
+              {{ row.user_count || 0 }}
+            </el-button>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)">
@@ -55,13 +61,31 @@
             <el-button type="primary" link size="small" @click="handleView(row)">
               查看
             </el-button>
-            <el-button type="primary" link size="small" @click="handleEdit(row)">
+            <el-button 
+              v-if="row.id !== 1"
+              type="primary" 
+              link 
+              size="small" 
+              @click="handleEdit(row)"
+            >
               编辑
             </el-button>
-            <el-button type="primary" link size="small" @click="handlePermission(row)">
+            <el-button 
+              v-if="row.id !== 1"
+              type="primary" 
+              link 
+              size="small" 
+              @click="handlePermission(row)"
+            >
               权限
             </el-button>
-            <el-button type="danger" link size="small" @click="handleDelete(row)">
+            <el-button 
+              v-if="row.id !== 1"
+              type="danger" 
+              link 
+              size="small" 
+              @click="handleDelete(row)"
+            >
               删除
             </el-button>
           </template>
@@ -160,6 +184,23 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 角色用户列表弹窗 -->
+    <el-dialog v-model="userDialogVisible" :title="`${currentRole.name} - 用户列表`" width="800px">
+      <el-table :data="userList" stripe border>
+        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column prop="username" label="用户名" width="150" />
+        <el-table-column prop="realname" label="真实姓名" width="150" />
+        <el-table-column prop="status" label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'danger'">
+              {{ row.status === 1 ? '启用' : '禁用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="create_time" label="创建时间" width="180" />
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -167,7 +208,7 @@
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
-import { getRoleList, createRole, updateRole, deleteRole, getPermissionTree, assignPermission } from '@/api/modules/system'
+import { getRoleList, createRole, updateRole, deleteRole, getPermissionTree, assignPermission, getUsersByRole } from '@/api/modules/system'
 
 // 辅助函数：安全的状态处理
 const getStatusValue = (status) => {
@@ -201,6 +242,7 @@ const pagination = reactive({
 const dialogVisible = ref(false)
 const detailVisible = ref(false)
 const permissionDialogVisible = ref(false)
+const userDialogVisible = ref(false)
 const dialogTitle = ref('')
 const submitLoading = ref(false)
 const permissionSubmitLoading = ref(false)
@@ -208,6 +250,7 @@ const formRef = ref(null)
 const permissionTreeRef = ref(null)
 const currentRole = ref({})
 const currentRoleId = ref(null)
+const userList = ref([])
 
 const formData = reactive({
   id: null,
@@ -425,6 +468,22 @@ const handleSizeChange = (size) => {
 const handlePageChange = (page) => {
   pagination.page = page
   loadData()
+}
+
+const handleViewUsers = async (row) => {
+  currentRole.value = row
+  try {
+    const res = await getUsersByRole(row.id)
+    if (res.code === 200) {
+      userList.value = res.data || []
+      userDialogVisible.value = true
+    } else {
+      ElMessage.error(res.msg || '获取用户列表失败')
+    }
+  } catch (error) {
+    console.error('获取用户列表失败:', error)
+    ElMessage.error('获取用户列表失败')
+  }
 }
 
 onMounted(() => {

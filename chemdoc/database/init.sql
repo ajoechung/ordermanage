@@ -405,45 +405,48 @@ INSERT INTO `admin_user` (`username`, `password`, `salt`, `realname`, `mobile`, 
 ('lisi', '$2y$10$F95j4zpjbNdhdWRTBdfWNeW9KeGP.ipzGdYgEHH7PuAmKyg6nFR82', 'random_salt_003', '李四', '13800138002', 'lisi@chemdoc.com', 1, NOW());
 
 -- 权限规则
+-- 权限规则
 INSERT INTO `auth_rule` (`name`, `title`, `type`, `pid`, `status`, `is_menu`, `sort`, `create_time`) VALUES
-('dashboard', '首页', 1, 0, 1, 1, 1, NOW()),
-('customer', '客户管理', 1, 0, 1, 1, 2, NOW()),
-('customer/list', '客户列表', 1, 2, 1, 1, 1, NOW()),
-('customer/detail', '客户详情', 1, 2, 1, 1, 2, NOW()),
-('customer/contact', '联系人列表', 1, 2, 1, 1, 3, NOW()),
-('customer/follow', '跟进记录', 1, 2, 1, 1, 4, NOW()),
-('product', '产品管理', 1, 0, 1, 1, 3, NOW()),
-('product/category', '产品分类', 1, 7, 1, 1, 1, NOW()),
-('product/list', '产品信息', 1, 7, 1, 1, 2, NOW()),
-('supplier', '供应商管理', 1, 0, 1, 1, 4, NOW()),
-('supplier/list', '供应商列表', 1, 10, 1, 1, 1, NOW()),
-('order', '订单管理', 1, 0, 1, 1, 5, NOW()),
-('order/list', '订单列表', 1, 12, 1, 1, 1, NOW()),
-('purchase', '采购单管理', 1, 0, 1, 1, 6, NOW()),
-('purchase/list', '采购单列表', 1, 14, 1, 1, 1, NOW()),
-('statistics', '数据统计', 1, 0, 1, 1, 7, NOW()),
-('statistics/customer', '客户统计', 1, 16, 1, 1, 1, NOW()),
-('statistics/order', '订单统计', 1, 16, 1, 1, 2, NOW()),
-('system', '系统管理', 1, 0, 1, 1, 8, NOW()),
-('system/user', '用户管理', 1, 19, 1, 1, 1, NOW()),
-('system/role', '角色管理', 1, 19, 1, 1, 2, NOW()),
-('system/permission', '权限管理', 1, 19, 1, 1, 3, NOW()),
-('dict', '字典管理', 1, 0, 1, 1, 9, NOW()),
-('dict/type', '字典类型', 1, 23, 1, 1, 1, NOW()),
-('dict/data', '字典数据', 1, 23, 1, 1, 2, NOW()),
-('log', '操作日志', 1, 0, 1, 1, 10, NOW()),
-('log/list', '日志列表', 1, 26, 1, 1, 1, NOW());
+(dashboard, 首页, 1, 0, 1, 1, 1, NOW()),
+(customer, 客户管理, 1, 0, 1, 1, 2, NOW()),
+(customer/list, 客户列表, 1, 2, 1, 1, 1, NOW()),
+(customer/detail, 客户详情, 1, 2, 1, 1, 2, NOW()),
+(customer/contact, 联系人列表, 1, 2, 1, 1, 3, NOW()),
+(customer/follow, 跟进记录, 1, 2, 1, 1, 4, NOW()),
+(product, 产品管理, 1, 0, 1, 1, 3, NOW()),
+(product/category, 产品分类, 1, 7, 1, 1, 1, NOW()),
+(product/list, 产品信息, 1, 7, 1, 1, 2, NOW()),
+(supplier, 供应商管理, 1, 0, 1, 1, 4, NOW()),
+(supplier/list, 供应商列表, 1, 10, 1, 1, 1, NOW()),
+(order, 订单管理, 1, 0, 1, 1, 5, NOW()),
+(order/list, 订单列表, 1, 12, 1, 1, 1, NOW()),
+(purchase, 采购单管理, 1, 0, 1, 1, 6, NOW()),
+(purchase/list, 采购单列表, 1, 14, 1, 1, 1, NOW()),
+(statistics, 数据统计, 1, 0, 1, 1, 7, NOW()),
+(statistics/customer, 客户统计, 1, 16, 1, 1, 1, NOW()),
+(statistics/order, 订单统计, 1, 16, 1, 1, 2, NOW()),
+(system, 系统管理, 1, 0, 1, 1, 8, NOW()),
+(system/user, 用户管理, 1, 19, 1, 1, 1, NOW()),
+(system/role, 角色管理, 1, 19, 1, 1, 2, NOW()),
+(system/permission, 权限管理, 1, 19, 1, 1, 3, NOW()),
+(dict, 字典管理, 1, 0, 1, 1, 9, NOW()),
+(dict/type, 字典类型, 1, 23, 1, 1, 1, NOW()),
+(dict/data, 字典数据, 1, 23, 1, 1, 2, NOW()),
+(log, 操作日志, 1, 0, 1, 1, 10, NOW()),
+(log/list, 日志列表, 1, 26, 1, 1, 1, NOW());
 
 -- 角色
 INSERT INTO `auth_group` (`name`, `code`, `description`, `status`, `rules`, `create_time`) VALUES
 ('超级管理员', 'admin', '拥有系统全部权限', 1, '*', NOW()),
-('销售人员', 'sales', '负责客户开发和订单管理', 1, '2,3,4,5,6,12,13', NOW()),
-('采购人员', 'procurement', '负责供应商管理和采购执行', 1, '10,11,14,15', NOW());
+('销售人员', 'sales', '负责客户开发和订单管理', 1, '2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32', NOW()),
+('采购人员', 'procurement', '负责供应商管理和采购执行', 1, '4,6,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32', NOW());
 
 -- 用户角色关联
-INSERT INTO `auth_group_access` (`uid`, `group_id`) VALUES
-(1, 1),
-(2, 2),
+-- 角色
+INSERT INTO `auth_group` (`name`, `code`, `description`, `status`, `rules`, `create_time`) VALUES
+(超级管理员, admin, 拥有系统全部权限, 1, *, NOW()),
+(销售人员, sales, 负责客户开发和订单管理, 1, 2,3,4,5,6,12,13, NOW()),
+(采购人员, procurement, 负责供应商管理和采购执行, 1, 10,11,14,15, NOW());
 (3, 3);
 
 -- 产品分类

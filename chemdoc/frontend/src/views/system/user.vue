@@ -86,10 +86,22 @@
             <el-button type="primary" link size="small" @click="handleEdit(row)">
               编辑
             </el-button>
-            <el-button type="primary" link size="small" @click="handleAssignRole(row)">
+            <el-button 
+              v-if="row.username !== 'admin'"
+              type="primary" 
+              link 
+              size="small" 
+              @click="handleAssignRole(row)"
+            >
               分配角色
             </el-button>
-            <el-button type="danger" link size="small" @click="handleDelete(row)">
+            <el-button 
+              v-if="row.username !== 'admin'"
+              type="danger" 
+              link 
+              size="small" 
+              @click="handleDelete(row)"
+            >
               删除
             </el-button>
           </template>
@@ -359,6 +371,11 @@ const handleEdit = (row) => {
 }
 
 const handleDelete = async (row) => {
+  if (row.username === 'admin') {
+    ElMessage.warning('admin 用户不能删除')
+    return
+  }
+  
   try {
     await ElMessageBox.confirm(`确定要删除用户"${row.username}"吗？`, '提示', {
       confirmButtonText: '确定',
@@ -380,6 +397,11 @@ const handleDelete = async (row) => {
 }
 
 const handleAssignRole = (row) => {
+  if (row.username === 'admin') {
+    ElMessage.warning('admin 用户无需分配角色')
+    return
+  }
+  
   currentUser.value = row
   // 确保能正确提取已分配的角色ID
   roleFormData.group_ids = (row.groups || []).map(g => g.id).filter(id => id != null)

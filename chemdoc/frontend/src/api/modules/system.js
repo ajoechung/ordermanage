@@ -41,6 +41,13 @@ export function getRoleList(params) {
   })
 }
 
+export function getUsersByRole(roleId) {
+  return request({
+    url: `/system/usersByRole/${roleId}`,
+    method: 'get'
+  })
+}
+
 export function createRole(data) {
   return request({
     url: '/system/group',
