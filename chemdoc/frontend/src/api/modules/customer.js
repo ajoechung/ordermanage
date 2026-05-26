@@ -51,3 +51,4 @@ export const getAll = getCustomerList
 export const create = createCustomer
 export const update = updateCustomer
 export const getDetail = getCustomerDetail
+export const getFullDetail = getCustomerFullDetail

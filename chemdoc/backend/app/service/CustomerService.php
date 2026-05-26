@@ -66,11 +66,6 @@ class CustomerService
 
     public function getDetail(int $id): array
     {
-        // 检查权限
-        if (!DataScopeService::canAccessCustomer($id)) {
-            return Result::error('无权访问此客户');
-        }
-        
         $customer = CustomerModel::with(['ownerUser'])->find($id);
 
         if (!$customer) {
@@ -93,11 +88,6 @@ class CustomerService
 
     public function getFullDetail(int $id): array
     {
-        // 检查权限
-        if (!DataScopeService::canAccessCustomer($id)) {
-            return Result::error('无权访问此客户');
-        }
-        
         $customer = CustomerModel::with(['ownerUser'])->find($id);
 
         if (!$customer) {
