@@ -316,7 +316,9 @@ const handleEdit = (row) => {
 
 const handleView = (row) => {
   currentCustomerId.value = row.customer_id
-  detailVisible.value = true
+  nextTick(() => {
+    detailVisible.value = true
+  })
 }
 
 const handleDelete = async (row) => {
