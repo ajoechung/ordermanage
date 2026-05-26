@@ -122,7 +122,11 @@ class SupplierService
 
             $supplier = new SupplierModel();
             $supplier->name = $data['name'];
-            $supplier->code = $data['code'] ?? '';
+            if (!empty(trim($data['code'] ?? ''))) {
+                $supplier->code = $data['code'];
+            } else {
+                $supplier->code = null;
+            }
             $supplier->type = $data['type'] ?? '';
             $supplier->contact = $data['contact'] ?? '';
             $supplier->phone = $data['phone'] ?? '';
@@ -176,23 +180,34 @@ class SupplierService
             }
         }
 
-        $updateData = [];
+        // 处理 code 字段，避免空字符串导致唯一键冲突
+        if (isset($data['code'])) {
+            if (!empty(trim($data['code']))) {
+                // 检查是否与其他供应商的 code 重复
+                $exists = SupplierModel::where('code', $data['code'])->where('supplier_id', '<>', $id)->find();
+                if ($exists) {
+                    return Result::error('供应商编码已存在');
+                }
+                $supplier->code = $data['code'];
+            } else {
+                $supplier->code = null;
+            }
+        }
 
-        $fields = ['name', 'code', 'type', 'contact', 'phone', 'cooperation_status', 'main_products', 'address', 'cooperation_start', 'rating', 'cert_expire_date', 'description', 'remark', 'status', 'owner_user_id'];
+        $fields = ['name', 'type', 'contact', 'phone', 'cooperation_status', 'main_products', 'address', 'cooperation_start', 'rating', 'cert_expire_date', 'description', 'remark', 'status', 'owner_user_id'];
 
         foreach ($fields as $field) {
             if (isset($data[$field])) {
-                $updateData[$field] = $data[$field];
+                $supplier->$field = $data[$field];
             }
         }
 
         if (isset($data['attachment'])) {
-            $updateData['attachment'] = is_array($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : $data['attachment'];
+            $supplier->attachment = is_array($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : $data['attachment'];
         }
 
-        $updateData['update_time'] = date('Y-m-d H:i:s');
-
-        $supplier->save($updateData);
+        $supplier->update_time = date('Y-m-d H:i:s');
+        $supplier->save();
 
         OperationLogModel::log(
             request()->user_id ?? 0,
