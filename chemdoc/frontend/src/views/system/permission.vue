@@ -71,18 +71,6 @@
           </template>
         </el-table-column>
       </el-table>
-
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handlePageChange"
-        />
-      </div>
     </el-card>
 
     <el-dialog
@@ -187,12 +175,6 @@ const tableLoading = ref(false)
 const permissionList = ref([])
 const permissionTree = ref([])
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  total: 0
-})
-
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const submitLoading = ref(false)
@@ -223,16 +205,9 @@ const formRules = {
 const loadData = async () => {
   tableLoading.value = true
   try {
-    const params = {
-      page: pagination.page,
-      page_size: pagination.pageSize,
-      ...searchForm
-    }
-    
-    const res = await getPermissionList(params)
+    const res = await getPermissionList(searchForm)
     if (res.code === 200) {
-      permissionList.value = res.data.list || []
-      pagination.total = res.data.total || 0
+      permissionList.value = res.data || []
     }
   } catch (error) {
     console.error('获取权限列表失败:', error)
@@ -254,7 +229,6 @@ const loadPermissionTree = async () => {
 }
 
 const handleSearch = () => {
-  pagination.page = 1
   loadData()
 }
 
@@ -262,7 +236,6 @@ const handleReset = () => {
   Object.keys(searchForm).forEach(key => {
     searchForm[key] = ''
   })
-  pagination.page = 1
   loadData()
 }
 
@@ -365,16 +338,6 @@ const handleDialogClose = () => {
   })
 }
 
-const handleSizeChange = (size) => {
-  pagination.pageSize = size
-  loadData()
-}
-
-const handlePageChange = (page) => {
-  pagination.page = page
-  loadData()
-}
-
 onMounted(() => {
   loadData()
 })
@@ -408,12 +371,6 @@ onMounted(() => {
 .table-actions {
   display: flex;
   gap: 8px;
-}
-
-.pagination-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 20px;
 }
 
 :deep(.el-table) {

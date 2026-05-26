@@ -328,8 +328,6 @@ class System extends BaseController
     public function rules()
     {
         $params = $this->request->param();
-        $page = (int)($params['page'] ?? 1);
-        $pageSize = (int)($params['page_size'] ?? 20);
         
         $query = \think\facade\Db::name('auth_rule');
         
@@ -337,15 +335,13 @@ class System extends BaseController
             $query->where('title', 'like', '%' . $params['title'] . '%');
         }
         
-        $total = $query->count();
         $list = $query->order('sort', 'asc')
-            ->page($page, $pageSize)
             ->select()
             ->toArray();
         
         $tree = $this->buildTree($list);
         
-        return json(Result::paginate($total, $tree, $page, $pageSize));
+        return json(Result::success($tree));
     }
 
     public function createRule()
