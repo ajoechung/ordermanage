@@ -12,6 +12,13 @@ class SupplierModel extends BaseModel
 {
     protected $table = 'supplier';
     protected $primaryKey = 'supplier_id';
+    
+    // 允许批量赋值的字段
+    protected $fillable = [
+        'name', 'code', 'type', 'main_products', 'address', 'cooperation_start',
+        'rating', 'cert_expire_date', 'description', 'attachment', 'status',
+        'owner_user_id', 'create_user_id', 'create_time', 'update_time'
+    ];
 
     public function createUser()
     {

@@ -12,6 +12,13 @@ class CustomerModel extends BaseModel
 {
     protected $table = 'customer';
     protected $primaryKey = 'customer_id';
+    
+    // 允许批量赋值的字段
+    protected $fillable = [
+        'name', 'code', 'industry', 'source', 'scale', 'address', 
+        'annual_revenue', 'description', 'attachment', 'status', 'level', 
+        'owner_user_id', 'create_user_id', 'create_time', 'update_time'
+    ];
 
     public function ownerUser()
     {
