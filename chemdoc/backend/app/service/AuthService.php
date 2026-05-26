@@ -81,6 +81,24 @@ class AuthService
             ->toArray() ?: [];
 
         $groupNames = array_column($groups, 'name');
+        $groupIds = array_column($groups, 'id');
+        
+        $permissions = [];
+        foreach ($groups as $group) {
+            if ($group['rules'] === '*') {
+                $permissions = ['*'];
+                break;
+            }
+            if (!empty($group['rules'])) {
+                $ruleIds = explode(',', $group['rules']);
+                $rules = Db::name('auth_rule')
+                    ->whereIn('id', $ruleIds)
+                    ->where('status', 1)
+                    ->column('name');
+                $permissions = array_merge($permissions, $rules);
+            }
+        }
+        $permissions = array_unique($permissions);
 
         return Result::success([
             'user_id' => $user['user_id'],
@@ -89,7 +107,9 @@ class AuthService
             'mobile' => $user['mobile'] ?? '',
             'email' => $user['email'] ?? '',
             'avatar' => $user['avatar'] ?? '',
-            'groups' => $groupNames,
+            'groups' => $groupIds,
+            'group_names' => $groupNames,
+            'permissions' => $permissions,
             'last_login_time' => $user['last_login_time'] ?? '',
         ]);
     }

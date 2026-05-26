@@ -1,15 +1,17 @@
 import { defineStore } from 'pinia'
 import router from '@/router/index.js'
 
-function hasPermission(groups, route) {
+function hasPermission(permissions, route) {
   if (route.meta && route.meta.permission) {
-    if (groups.includes(1)) {
+    if (permissions.includes('*')) {
       return true
     }
-    if (groups.length === 0) {
-      return true
+    
+    if (permissions.length === 0) {
+      return false
     }
-    return route.meta.permission.some((p) => groups.includes(p))
+    
+    return route.meta.permission.some((p) => permissions.includes(p))
   }
   return true
 }
@@ -47,8 +49,7 @@ export const usePermissionStore = defineStore('permission', {
         
         this.permissions = permissions
         
-        const adminId = permissions.find(p => p.id === 1 || p === 1)
-        if (adminId) {
+        if (permissions.includes('*')) {
           this.routes = constantRoutes
           this.routesLoaded = true
           return this.routes

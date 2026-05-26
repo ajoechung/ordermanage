@@ -42,9 +42,11 @@ export const useUserStore = defineStore('user', {
         if (res.code === 200) {
           this.userInfo = res.data || {}
           this.groups = res.data?.groups || []
+          this.permissions = res.data?.permissions || []
 
           localStorage.setItem('userInfo', JSON.stringify(this.userInfo))
           localStorage.setItem('groups', JSON.stringify(this.groups))
+          localStorage.setItem('permissions', JSON.stringify(this.permissions))
         }
         return res
       } catch (error) {

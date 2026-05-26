@@ -201,8 +201,8 @@ const menuItems = computed(() => {
 
 onMounted(async () => {
   if (permissionStore.routes.length === 0) {
-    const groups = userStore.groups || []
-    await permissionStore.generateRoutes(groups)
+    const permissions = userStore.permissions || []
+    await permissionStore.generateRoutes(permissions)
   }
 })
 
