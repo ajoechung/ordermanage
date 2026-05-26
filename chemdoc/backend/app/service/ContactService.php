@@ -23,6 +23,9 @@ class ContactService
         if (!empty($customerId)) {
             $query->scope('customerId', (int)$customerId);
         }
+        
+        // 应用客户数据范围权限
+        DataScopeService::applyCustomerScope($query, 'customer_id');
 
         $total = $query->count();
         $list = $query->order('contact_id', 'desc')
@@ -48,6 +51,11 @@ class ContactService
             return Result::notFound('联系人不存在');
         }
 
+        // 检查权限
+        if (!DataScopeService::canAccessCustomer($contact->customer_id)) {
+            return Result::error('无权访问此联系人');
+        }
+
         $data = $contact->toArray();
 
         if (isset($data['customer'])) {
@@ -60,6 +68,11 @@ class ContactService
 
     public function create(array $data): array
     {
+        // 检查权限
+        if (!DataScopeService::canAccessCustomer($data['customer_id'])) {
+            return Result::error('无权访问此客户');
+        }
+
         $contact = ContactModel::create([
             'customer_id' => $data['customer_id'],
             'name' => $data['name'],
@@ -94,6 +107,18 @@ class ContactService
             return Result::notFound('联系人不存在');
         }
 
+        // 检查权限
+        if (!DataScopeService::canAccessCustomer($contact->customer_id)) {
+            return Result::error('无权访问此联系人');
+        }
+
+        // 如果修改了客户ID，检查新客户的权限
+        if (isset($data['customer_id']) && $data['customer_id'] != $contact->customer_id) {
+            if (!DataScopeService::canAccessCustomer($data['customer_id'])) {
+                return Result::error('无权访问目标客户');
+            }
+        }
+
         $updateData = [];
 
         $fields = ['customer_id', 'name', 'position', 'phone', 'mobile', 'email', 'wechat', 'qq', 'gender', 'is_primary', 'remark'];
@@ -124,6 +149,11 @@ class ContactService
         $contact = ContactModel::find($id);
         if (!$contact) {
             return Result::notFound('联系人不存在');
+        }
+
+        // 检查权限
+        if (!DataScopeService::canAccessCustomer($contact->customer_id)) {
+            return Result::error('无权访问此联系人');
         }
 
         $hasOrders = Db::name('order')->where('contact_id', $id)->whereNull('delete_time')->count();

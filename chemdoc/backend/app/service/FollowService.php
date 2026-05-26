@@ -32,6 +32,9 @@ class FollowService
         if (!empty($dateRange) && is_array($dateRange)) {
             $query->scope('dateRange', $dateRange);
         }
+        
+        // 应用客户数据范围权限
+        DataScopeService::applyCustomerScope($query, 'customer_id');
 
         $total = $query->count();
         $list = $query->order('follow_id', 'desc')
@@ -55,6 +58,11 @@ class FollowService
 
     public function create(array $data): array
     {
+        // 检查权限
+        if (!DataScopeService::canAccessCustomer($data['customer_id'])) {
+            return Result::error('无权访问此客户');
+        }
+
         $follow = CustomerFollowModel::create([
             'customer_id' => $data['customer_id'],
             'follow_user_id' => request()->user_id ?? 0,
@@ -82,6 +90,11 @@ class FollowService
         $follow = CustomerFollowModel::find($id);
         if (!$follow) {
             return Result::notFound('跟进记录不存在');
+        }
+
+        // 检查权限
+        if (!DataScopeService::canAccessCustomer($follow->customer_id)) {
+            return Result::error('无权删除此跟进记录');
         }
 
         $follow->delete();
