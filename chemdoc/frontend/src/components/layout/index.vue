@@ -169,8 +169,8 @@ const menuItems = computed(() => {
     // 检查路由路径是否以 '/' 开头
     const basePath = route.path.startsWith('/') ? route.path : '/' + route.path
     
-    // 检查是否有子路由并且子路由数量大于1
-    if (route.children && route.children.length > 1) {
+    // 检查是否有子路由
+    if (route.children && route.children.length > 0) {
       const children = route.children.map(child => ({
         path: basePath + '/' + child.path,
         title: child.meta?.title || child.path
@@ -182,15 +182,6 @@ const menuItems = computed(() => {
         title: route.meta?.title || route.path,
         icon: route.meta?.icon || 'Menu',
         children: children
-      })
-    } else if (route.children && route.children.length === 1) {
-      const child = route.children[0]
-      items.push({
-        key: route.path,
-        type: 'menu',
-        path: basePath + '/' + child.path,
-        title: route.meta?.title || child.meta?.title || route.path,
-        icon: route.meta?.icon || 'Menu'
       })
     } else {
       items.push({
