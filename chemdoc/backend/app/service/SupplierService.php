@@ -11,59 +11,73 @@ class SupplierService
 {
     public function getList(array $params): array
     {
-        $page = (int)($params['page'] ?? 1);
-        $pageSize = (int)($params['page_size'] ?? 20);
-        $keyword = $params['keyword'] ?? '';
-        $type = $params['type'] ?? '';
-        $status = $params['status'] ?? '';
-        $rating = $params['rating'] ?? '';
+        try {
+            $page = (int)($params['page'] ?? 1);
+            $pageSize = (int)($params['page_size'] ?? 20);
+            $name = $params['name'] ?? '';
+            $contact = $params['contact'] ?? '';
+            $cooperationStatus = $params['cooperation_status'] ?? '';
+            $type = $params['type'] ?? '';
+            $status = $params['status'] ?? '';
+            $rating = $params['rating'] ?? '';
 
-        $query = SupplierModel::with(['ownerUser', 'createUser']);
+            $query = SupplierModel::with(['ownerUser', 'createUser']);
 
-        if (!empty($keyword)) {
-            $query->where(function ($q) use ($keyword) {
-                $q->whereLike('name', "%{$keyword}%")
-                    ->whereOr('code', 'like', "%{$keyword}%")
-                    ->whereOr('main_products', 'like', "%{$keyword}%");
-            });
-        }
-
-        if (!empty($type)) {
-            $query->where('type', $type);
-        }
-
-        if ($status !== '') {
-            $query->where('status', $status);
-        }
-
-        if (!empty($rating)) {
-            $query->where('rating', (int)$rating);
-        }
-        
-        // 应用数据范围
-        DataScopeService::applySupplierScope($query);
-
-        $total = $query->count();
-        $list = $query->order('supplier_id', 'desc')
-            ->page($page, $pageSize)
-            ->select()
-            ->toArray();
-
-        foreach ($list as &$item) {
-            if (isset($item['attachment']) && is_string($item['attachment'])) {
-                $item['attachment'] = json_decode($item['attachment'], true) ?? [];
+            if (!empty($name)) {
+                $query->where(function ($q) use ($name) {
+                    $q->whereLike('name', "%{$name}%")
+                        ->whereOr('code', 'like', "%{$name}%")
+                        ->whereOr('main_products', 'like', "%{$name}%");
+                });
             }
-            if (isset($item['owner_user'])) {
-                $item['owner_user_name'] = $item['owner_user']['realname'] ?? '';
-                unset($item['owner_user']);
-            }
-            if (isset($item['create_user'])) {
-                $item['create_user_name'] = $item['create_user']['realname'] ?? '';
-                unset($item['create_user']);
-            }
-        }
 
-        return Result::paginate($total, $list, $page, $pageSize);
+            if (!empty($contact)) {
+                $query->whereLike('contact', "%{$contact}%");
+            }
+
+            if (!empty($cooperationStatus)) {
+                $query->where('cooperation_status', $cooperationStatus);
+            }
+
+            if (!empty($type)) {
+                $query->where('type', $type);
+            }
+
+            if ($status !== '') {
+                $query->where('status', $status);
+            }
+
+            if (!empty($rating)) {
+                $query->where('rating', (int)$rating);
+            }
+            
+            // 应用数据范围
+            DataScopeService::applySupplierScope($query);
+
+            $total = $query->count();
+            $list = $query->order('supplier_id', 'desc')
+                ->page($page, $pageSize)
+                ->select()
+                ->toArray();
+
+            foreach ($list as &$item) {
+                if (isset($item['attachment']) && is_string($item['attachment'])) {
+                    $item['attachment'] = json_decode($item['attachment'], true) ?? [];
+                }
+                if (isset($item['owner_user'])) {
+                    $item['owner_user_name'] = $item['owner_user']['realname'] ?? '';
+                    unset($item['owner_user']);
+                }
+                if (isset($item['create_user'])) {
+                    $item['create_user_name'] = $item['create_user']['realname'] ?? '';
+                    unset($item['create_user']);
+                }
+            }
+
+            return Result::paginate($total, $list, $page, $pageSize);
+        } catch (\Exception $e) {
+            return Result::error('获取供应商列表失败：' . $e->getMessage());
+        }
     }
 
     public function getDetail(int $id): array
@@ -95,45 +109,52 @@ class SupplierService
 
     public function create(array $data): array
     {
-        $exists = SupplierModel::where('name', $data['name'])->find();
-        if ($exists) {
-            return Result::error('供应商名称已存在');
+        try {
+            $exists = SupplierModel::where('name', $data['name'])->find();
+            if ($exists) {
+                return Result::error('供应商名称已存在');
+            }
+
+            $currentUserId = request()->user_id ?? 0;
+            if ($currentUserId == 0) {
+                return Result::error('无法获取当前用户信息');
+            }
+
+            $supplier = new SupplierModel();
+            $supplier->name = $data['name'];
+            $supplier->code = $data['code'] ?? '';
+            $supplier->type = $data['type'] ?? '';
+            $supplier->contact = $data['contact'] ?? '';
+            $supplier->phone = $data['phone'] ?? '';
+            $supplier->cooperation_status = $data['cooperation_status'] ?? 'pending';
+            $supplier->main_products = $data['main_products'] ?? '';
+            $supplier->address = $data['address'] ?? '';
+            $supplier->cooperation_start = $data['cooperation_start'] ?? null;
+            $supplier->rating = $data['rating'] ?? null;
+            $supplier->cert_expire_date = $data['cert_expire_date'] ?? null;
+            $supplier->description = $data['description'] ?? '';
+            $supplier->remark = $data['remark'] ?? '';
+            $supplier->attachment = isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null;
+            $supplier->status = $data['status'] ?? 1;
+            $supplier->owner_user_id = $currentUserId;
+            $supplier->owner_user_name = request()->username ?? '';
+            $supplier->create_user_id = $currentUserId;
+            $supplier->create_user_name = request()->username ?? '';
+            $supplier->create_time = date('Y-m-d H:i:s');
+            $supplier->save();
+
+            OperationLogModel::log(
+                $currentUserId,
+                request()->username ?? '',
+                '供应商管理',
+                '新增',
+                '新增供应商：' . $data['name']
+            );
+
+            return Result::success(['supplier_id' => $supplier->supplier_id], '供应商创建成功');
+        } catch (\Exception $e) {
+            return Result::error('创建供应商失败：' . $e->getMessage());
         }
-
-        $currentUserId = request()->user_id ?? 0;
-
-        $supplier = new SupplierModel();
-        $supplier->name = $data['name'];
-        $supplier->code = $data['code'] ?? '';
-        $supplier->type = $data['type'] ?? '';
-        $supplier->contact = $data['contact'] ?? '';
-        $supplier->phone = $data['phone'] ?? '';
-        $supplier->cooperation_status = $data['cooperation_status'] ?? 'pending';
-        $supplier->main_products = $data['main_products'] ?? '';
-        $supplier->address = $data['address'] ?? '';
-        $supplier->cooperation_start = $data['cooperation_start'] ?? null;
-        $supplier->rating = $data['rating'] ?? null;
-        $supplier->cert_expire_date = $data['cert_expire_date'] ?? null;
-        $supplier->description = $data['description'] ?? '';
-        $supplier->remark = $data['remark'] ?? '';
-        $supplier->attachment = isset($data['attachment']) ? json_encode($data['attachment'], JSON_UNESCAPED_UNICODE) : null;
-        $supplier->status = $data['status'] ?? 1;
-        $supplier->owner_user_id = $currentUserId;
-        $supplier->owner_user_name = request()->username ?? '';
-        $supplier->create_user_id = $currentUserId;
-        $supplier->create_user_name = request()->username ?? '';
-        $supplier->create_time = date('Y-m-d H:i:s');
-        $supplier->save();
-
-        OperationLogModel::log(
-            $currentUserId,
-            request()->username ?? '',
-            '供应商管理',
-            '新增',
-            '新增供应商：' . $data['name']
-        );
-
-        return Result::success(['supplier_id' => $supplier->supplier_id], '供应商创建成功');
     }
 
     public function update(int $id, array $data): array
