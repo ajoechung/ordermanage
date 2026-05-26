@@ -47,10 +47,10 @@
       <el-container>
         <el-header class="header-container">
           <div class="header-left">
-            <el-icon class="collapse-btn" @click="toggleCollapse">
+            <el-button class="collapse-btn" icon @click="toggleCollapse">
               <Fold v-if="!isCollapse" />
               <Expand v-else />
-            </el-icon>
+            </el-button>
             
             <el-breadcrumb separator="/">
               <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
@@ -153,6 +153,13 @@ const menuItems = computed(() => {
     // permissionStore.routes 的结构是扁平化的
     menuRoutes = routes.filter(r => !r.meta?.hidden && !['/login', '/404', '/403'].includes(r.path))
   }
+  
+  // 按 sort 字段排序
+  menuRoutes.sort((a, b) => {
+    const sortA = a.meta?.sort || 999
+    const sortB = b.meta?.sort || 999
+    return sortA - sortB
+  })
   
   for (const route of menuRoutes) {
     if (route.meta?.hidden) {

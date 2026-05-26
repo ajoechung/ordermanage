@@ -30,7 +30,7 @@ export const constantRoutes = [
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
-        meta: { title: '首页', icon: 'HomeFilled' }
+        meta: { title: '首页', icon: 'HomeFilled', sort: 1 }
       },
       {
         path: 'profile',
@@ -47,7 +47,7 @@ export const constantRoutes = [
       {
         path: 'customer',
         redirect: '/customer/list',
-        meta: { title: '客户管理', icon: 'OfficeBuilding' },
+        meta: { title: '客户管理', icon: 'OfficeBuilding', sort: 2 },
         children: [
           {
             path: 'list',
@@ -72,7 +72,7 @@ export const constantRoutes = [
       {
         path: 'product',
         redirect: '/product/category',
-        meta: { title: '产品管理', icon: 'Goods' },
+        meta: { title: '产品管理', icon: 'Goods', sort: 3 },
         children: [
           {
             path: 'category',
@@ -91,7 +91,7 @@ export const constantRoutes = [
       {
         path: 'supplier',
         redirect: '/supplier/list',
-        meta: { title: '供应商管理', icon: 'Box' },
+        meta: { title: '供应商管理', icon: 'Box', sort: 4 },
         children: [
           {
             path: 'list',
@@ -104,7 +104,7 @@ export const constantRoutes = [
       {
         path: 'order',
         redirect: '/order/list',
-        meta: { title: '订单管理', icon: 'Document' },
+        meta: { title: '订单管理', icon: 'Document', sort: 5 },
         children: [
           {
             path: 'list',
@@ -117,7 +117,7 @@ export const constantRoutes = [
       {
         path: 'purchase',
         redirect: '/purchase/list',
-        meta: { title: '采购单管理', icon: 'ShoppingCart' },
+        meta: { title: '采购单管理', icon: 'ShoppingCart', sort: 6 },
         children: [
           {
             path: 'list',
@@ -130,7 +130,7 @@ export const constantRoutes = [
       {
         path: 'statistics',
         redirect: '/statistics/customer',
-        meta: { title: '数据统计', icon: 'DataAnalysis' },
+        meta: { title: '数据统计', icon: 'DataAnalysis', sort: 7 },
         children: [
           {
             path: 'customer',
@@ -149,7 +149,7 @@ export const constantRoutes = [
       {
         path: 'system',
         redirect: '/system/user',
-        meta: { title: '系统管理', icon: 'Setting' },
+        meta: { title: '系统管理', icon: 'Setting', sort: 8 },
         children: [
           {
             path: 'user',
@@ -174,7 +174,7 @@ export const constantRoutes = [
       {
         path: 'dict',
         redirect: '/dict/type',
-        meta: { title: '字典管理', icon: 'List' },
+        meta: { title: '字典管理', icon: 'List', sort: 9 },
         children: [
           {
             path: 'type',
@@ -193,7 +193,7 @@ export const constantRoutes = [
       {
         path: 'log',
         redirect: '/log/list',
-        meta: { title: '操作日志', icon: 'Operation' },
+        meta: { title: '操作日志', icon: 'Operation', sort: 10 },
         children: [
           {
             path: 'list',

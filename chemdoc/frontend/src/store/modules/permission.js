@@ -60,12 +60,12 @@ export const usePermissionStore = defineStore('permission', {
             path: 'dashboard',
             name: 'Dashboard',
             component: () => import('@/views/dashboard/index.vue'),
-            meta: { title: '首页', icon: 'HomeFilled', permission: ['dashboard'] }
+            meta: { title: '首页', icon: 'HomeFilled', permission: ['dashboard'], sort: 1 }
           },
           {
             path: 'customer',
             name: 'Customer',
-            meta: { title: '客户管理', icon: 'OfficeBuilding' },
+            meta: { title: '客户管理', icon: 'OfficeBuilding', sort: 2 },
             children: [
               {
                 path: 'list',
@@ -90,7 +90,7 @@ export const usePermissionStore = defineStore('permission', {
           {
             path: 'product',
             name: 'Product',
-            meta: { title: '产品管理', icon: 'Goods' },
+            meta: { title: '产品管理', icon: 'Goods', sort: 3 },
             children: [
               {
                 path: 'category',
@@ -109,7 +109,7 @@ export const usePermissionStore = defineStore('permission', {
           {
             path: 'supplier',
             name: 'Supplier',
-            meta: { title: '供应商管理', icon: 'Box' },
+            meta: { title: '供应商管理', icon: 'Box', sort: 4 },
             children: [
               {
                 path: 'list',
@@ -122,7 +122,7 @@ export const usePermissionStore = defineStore('permission', {
           {
             path: 'order',
             name: 'Order',
-            meta: { title: '订单管理', icon: 'Document' },
+            meta: { title: '订单管理', icon: 'Document', sort: 5 },
             children: [
               {
                 path: 'list',
@@ -135,7 +135,7 @@ export const usePermissionStore = defineStore('permission', {
           {
             path: 'purchase',
             name: 'Purchase',
-            meta: { title: '采购单管理', icon: 'ShoppingCart' },
+            meta: { title: '采购单管理', icon: 'ShoppingCart', sort: 6 },
             children: [
               {
                 path: 'list',
@@ -148,7 +148,7 @@ export const usePermissionStore = defineStore('permission', {
           {
             path: 'statistics',
             name: 'Statistics',
-            meta: { title: '数据统计', icon: 'DataAnalysis' },
+            meta: { title: '数据统计', icon: 'DataAnalysis', sort: 7 },
             children: [
               {
                 path: 'customer',
@@ -167,7 +167,7 @@ export const usePermissionStore = defineStore('permission', {
           {
             path: 'system',
             name: 'System',
-            meta: { title: '系统管理', icon: 'Setting' },
+            meta: { title: '系统管理', icon: 'Setting', sort: 8 },
             children: [
               {
                 path: 'user',
@@ -192,7 +192,7 @@ export const usePermissionStore = defineStore('permission', {
           {
             path: 'dict',
             name: 'Dict',
-            meta: { title: '字典管理', icon: 'List' },
+            meta: { title: '字典管理', icon: 'List', sort: 9 },
             children: [
               {
                 path: 'type',
@@ -211,7 +211,7 @@ export const usePermissionStore = defineStore('permission', {
           {
             path: 'log',
             name: 'Log',
-            meta: { title: '操作日志', icon: 'Operation' },
+            meta: { title: '操作日志', icon: 'Operation', sort: 10 },
             children: [
               {
                 path: 'list',
