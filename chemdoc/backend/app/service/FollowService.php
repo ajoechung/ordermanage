@@ -3,6 +3,8 @@ namespace app\service;
 
 use app\model\CustomerFollowModel;
 use app\model\OperationLogModel;
+use app\service\DataScopeService;
+use app\service\Result;
 
 class FollowService
 {
@@ -33,8 +35,7 @@ class FollowService
             $query->scope('dateRange', $dateRange);
         }
         
-        // 应用客户数据范围权限
-        \app\service\DataScopeService::applyCustomerScope($query, 'customer_id');
+        DataScopeService::applyCustomerScope($query, 'customer_id');
 
         $total = $query->count();
         $list = $query->order('follow_id', 'desc')
@@ -48,19 +49,18 @@ class FollowService
                 unset($item['customer']);
             }
             if (isset($item['follow_user'])) {
-                $item['follow_user_name'] = $item['follow_user']['realname'] ?? '';
+                $item['follow_user_name'] = $item['follow_user']['realname'] ?? $item['follow_user']['username'] ?? '';
                 unset($item['follow_user']);
             }
         }
 
-        return \app\service\Result::paginate($total, $list, $page, $pageSize);
+        return Result::paginate($total, $list, $page, $pageSize);
     }
 
     public function create(array $data): array
     {
-        // 检查权限
-        if (!\app\service\DataScopeService::canAccessCustomer($data['customer_id'])) {
-            return \app\service\Result::error('无权访问此客户');
+        if (!DataScopeService::canAccessCustomer($data['customer_id'])) {
+            return Result::error('无权访问此客户');
         }
 
         $follow = CustomerFollowModel::create([
@@ -82,19 +82,18 @@ class FollowService
             '新增客户跟进记录'
         );
 
-        return \app\service\Result::success(['follow_id' => $follow->follow_id], '跟进记录创建成功');
+        return Result::success(['follow_id' => $follow->follow_id], '跟进记录创建成功');
     }
 
     public function delete(int $id): array
     {
         $follow = CustomerFollowModel::find($id);
         if (!$follow) {
-            return \app\service\Result::notFound('跟进记录不存在');
+            return Result::notFound('跟进记录不存在');
         }
 
-        // 检查权限
-        if (!\app\service\DataScopeService::canAccessCustomer($follow->customer_id)) {
-            return \app\service\Result::error('无权删除此跟进记录');
+        if (!DataScopeService::canAccessCustomer($follow->customer_id)) {
+            return Result::error('无权删除此跟进记录');
         }
 
         $follow->delete();
@@ -107,6 +106,6 @@ class FollowService
             '删除客户跟进记录'
         );
 
-        return \app\service\Result::success(null, '跟进记录删除成功');
+        return Result::success(null, '跟进记录删除成功');
     }
 }

@@ -3,6 +3,8 @@ namespace app\service;
 
 use app\model\SupplierModel;
 use app\model\OperationLogModel;
+use app\service\DataScopeService;
+use app\service\Result;
 use think\facade\Db;
 
 class SupplierService
@@ -35,7 +37,7 @@ class SupplierService
         }
         
         // 应用数据范围
-        \app\service\DataScopeService::applySupplierScope($query);
+        DataScopeService::applySupplierScope($query);
 
         $total = $query->count();
         $list = $query->order('supplier_id', 'desc')
@@ -57,7 +59,7 @@ class SupplierService
             }
         }
 
-        return \app\service\Result::paginate($total, $list, $page, $pageSize);
+        return Result::paginate($total, $list, $page, $pageSize);
     }
 
     public function getDetail(int $id): array
@@ -91,7 +93,7 @@ class SupplierService
     {
         $exists = SupplierModel::where('name', $data['name'])->find();
         if ($exists) {
-            return \app\service\Result::error('供应商名称已存在');
+            return Result::error('供应商名称已存在');
         }
 
         $currentUserId = request()->user_id ?? 0;
@@ -121,7 +123,7 @@ class SupplierService
             '新增供应商：' . $data['name']
         );
 
-        return \app\service\Result::success(['supplier_id' => $supplier->supplier_id], '供应商创建成功');
+        return Result::success(['supplier_id' => $supplier->supplier_id], '供应商创建成功');
     }
 
     public function update(int $id, array $data): array

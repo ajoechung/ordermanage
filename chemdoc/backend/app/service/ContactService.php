@@ -41,7 +41,7 @@ class ContactService
             }
         }
 
-        return \app\service\Result::paginate($total, $list, $page, $pageSize);
+        return Result::paginate($total, $list, $page, $pageSize);
     }
 
     public function getDetail(int $id): array
@@ -49,12 +49,11 @@ class ContactService
         $contact = ContactModel::with(['customer'])->find($id);
 
         if (!$contact) {
-            return \app\service\Result::notFound('联系人不存在');
+            return Result::notFound('联系人不存在');
         }
 
-        // 检查权限
-        if (!\app\service\DataScopeService::canAccessCustomer($contact->customer_id)) {
-            return \app\service\Result::error('无权访问此联系人');
+        if (!DataScopeService::canAccessCustomer($contact->customer_id)) {
+            return Result::error('无权访问此联系人');
         }
 
         $data = $contact->toArray();
@@ -64,14 +63,13 @@ class ContactService
             unset($data['customer']);
         }
 
-        return \app\service\Result::success($data);
+        return Result::success($data);
     }
 
     public function create(array $data): array
     {
-        // 检查权限
-        if (!\app\service\DataScopeService::canAccessCustomer($data['customer_id'])) {
-            return \app\service\Result::error('无权访问此客户');
+        if (!DataScopeService::canAccessCustomer($data['customer_id'])) {
+            return Result::error('无权访问此客户');
         }
 
         $contact = ContactModel::create([
@@ -98,25 +96,23 @@ class ContactService
             '新增联系人：' . $data['name']
         );
 
-        return \app\service\Result::success(['contact_id' => $contact->contact_id], '联系人创建成功');
+        return Result::success(['contact_id' => $contact->contact_id], '联系人创建成功');
     }
 
     public function update(int $id, array $data): array
     {
         $contact = ContactModel::find($id);
         if (!$contact) {
-            return \app\service\Result::notFound('联系人不存在');
+            return Result::notFound('联系人不存在');
         }
 
-        // 检查权限
-        if (!\app\service\DataScopeService::canAccessCustomer($contact->customer_id)) {
-            return \app\service\Result::error('无权访问此联系人');
+        if (!DataScopeService::canAccessCustomer($contact->customer_id)) {
+            return Result::error('无权访问此联系人');
         }
 
-        // 如果修改了客户ID，检查新客户的权限
         if (isset($data['customer_id']) && $data['customer_id'] != $contact->customer_id) {
-            if (!\app\service\DataScopeService::canAccessCustomer($data['customer_id'])) {
-                return \app\service\Result::error('无权访问目标客户');
+            if (!DataScopeService::canAccessCustomer($data['customer_id'])) {
+                return Result::error('无权访问目标客户');
             }
         }
 
@@ -149,17 +145,16 @@ class ContactService
     {
         $contact = ContactModel::find($id);
         if (!$contact) {
-            return \app\service\Result::notFound('联系人不存在');
+            return Result::notFound('联系人不存在');
         }
 
-        // 检查权限
-        if (!\app\service\DataScopeService::canAccessCustomer($contact->customer_id)) {
-            return \app\service\Result::error('无权访问此联系人');
+        if (!DataScopeService::canAccessCustomer($contact->customer_id)) {
+            return Result::error('无权访问此联系人');
         }
 
         $hasOrders = Db::name('order')->where('contact_id', $id)->whereNull('delete_time')->count();
         if ($hasOrders > 0) {
-            return \app\service\Result::error('该联系人存在关联订单，无法删除');
+            return Result::error('该联系人存在关联订单，无法删除');
         }
 
         $contact->delete();
@@ -172,6 +167,6 @@ class ContactService
             '删除联系人：' . $contact->name
         );
 
-        return \app\service\Result::success(null, '联系人删除成功');
+        return Result::success(null, '联系人删除成功');
     }
 }
