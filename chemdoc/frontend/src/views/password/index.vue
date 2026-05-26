@@ -49,7 +49,7 @@
 
         <el-form-item prop="confirmPassword">
           <label class="form-label">
-            <el-icon><CheckCircle /></el-icon>
+            <el-icon><Check /></el-icon>
             确认密码
           </label>
           <el-input
@@ -83,7 +83,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Lock, Key, CheckCircle } from '@element-plus/icons-vue'
+import { Lock, Key, Check } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
 
 const router = useRouter()
