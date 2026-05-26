@@ -28,27 +28,41 @@ function filterAsyncRoutes(routes, permissions) {
   return res
 }
 
+import { constantRoutes } from '@/router/index.js'
+
 export const usePermissionStore = defineStore('permission', {
   state: () => ({
     routes: [],
     dynamicRoutes: [],
-    permissions: []
+    permissions: [],
+    routesLoaded: false
   }),
 
   actions: {
     async generateRoutes(permissions = []) {
       try {
+        if (this.routesLoaded) {
+          return this.routes
+        }
+        
         this.permissions = permissions
+        
+        const adminId = permissions.find(p => p.id === 1 || p === 1)
+        if (adminId) {
+          this.routes = constantRoutes
+          this.routesLoaded = true
+          return this.routes
+        }
         
         const allRoutes = [
           {
-            path: '/dashboard',
+            path: 'dashboard',
             name: 'Dashboard',
             component: () => import('@/views/dashboard/index.vue'),
             meta: { title: '首页', icon: 'HomeFilled', permission: ['dashboard'] }
           },
           {
-            path: '/customer',
+            path: 'customer',
             name: 'Customer',
             meta: { title: '客户管理', icon: 'OfficeBuilding' },
             children: [
@@ -73,7 +87,7 @@ export const usePermissionStore = defineStore('permission', {
             ]
           },
           {
-            path: '/product',
+            path: 'product',
             name: 'Product',
             meta: { title: '产品管理', icon: 'Goods' },
             children: [
@@ -92,7 +106,7 @@ export const usePermissionStore = defineStore('permission', {
             ]
           },
           {
-            path: '/supplier',
+            path: 'supplier',
             name: 'Supplier',
             meta: { title: '供应商管理', icon: 'Box' },
             children: [
@@ -105,7 +119,7 @@ export const usePermissionStore = defineStore('permission', {
             ]
           },
           {
-            path: '/order',
+            path: 'order',
             name: 'Order',
             meta: { title: '订单管理', icon: 'Document' },
             children: [
@@ -118,7 +132,7 @@ export const usePermissionStore = defineStore('permission', {
             ]
           },
           {
-            path: '/purchase',
+            path: 'purchase',
             name: 'Purchase',
             meta: { title: '采购单管理', icon: 'ShoppingCart' },
             children: [
@@ -131,7 +145,7 @@ export const usePermissionStore = defineStore('permission', {
             ]
           },
           {
-            path: '/statistics',
+            path: 'statistics',
             name: 'Statistics',
             meta: { title: '数据统计', icon: 'DataAnalysis' },
             children: [
@@ -150,7 +164,7 @@ export const usePermissionStore = defineStore('permission', {
             ]
           },
           {
-            path: '/system',
+            path: 'system',
             name: 'System',
             meta: { title: '系统管理', icon: 'Setting' },
             children: [
@@ -165,11 +179,36 @@ export const usePermissionStore = defineStore('permission', {
                 name: 'SystemRole',
                 component: () => import('@/views/system/role.vue'),
                 meta: { title: '角色管理', permission: ['system'] }
+              },
+              {
+                path: 'permission',
+                name: 'SystemPermission',
+                component: () => import('@/views/system/permission.vue'),
+                meta: { title: '权限管理', permission: ['system'] }
               }
             ]
           },
           {
-            path: '/log',
+            path: 'dict',
+            name: 'Dict',
+            meta: { title: '字典管理', icon: 'List' },
+            children: [
+              {
+                path: 'type',
+                name: 'DictType',
+                component: () => import('@/views/system/dict-type.vue'),
+                meta: { title: '字典类型', permission: ['system'] }
+              },
+              {
+                path: 'data',
+                name: 'DictData',
+                component: () => import('@/views/system/dict-data.vue'),
+                meta: { title: '字典数据', permission: ['system'] }
+              }
+            ]
+          },
+          {
+            path: 'log',
             name: 'Log',
             meta: { title: '操作日志', icon: 'Operation' },
             children: [
@@ -186,12 +225,20 @@ export const usePermissionStore = defineStore('permission', {
         const accessedRoutes = filterAsyncRoutes(allRoutes, permissions)
 
         this.dynamicRoutes = accessedRoutes
-        this.routes = accessedRoutes
+        this.routes = [{
+          path: '/',
+          component: () => import('@/components/layout/index.vue'),
+          redirect: '/dashboard',
+          children: accessedRoutes
+        }]
+        this.routesLoaded = true
 
-        return accessedRoutes
+        return this.routes
       } catch (error) {
         console.error('Generate routes error:', error)
-        return []
+        this.routes = constantRoutes
+        this.routesLoaded = true
+        return this.routes
       }
     },
 
@@ -199,6 +246,7 @@ export const usePermissionStore = defineStore('permission', {
       this.routes = []
       this.dynamicRoutes = []
       this.permissions = []
+      this.routesLoaded = false
     }
   }
 })

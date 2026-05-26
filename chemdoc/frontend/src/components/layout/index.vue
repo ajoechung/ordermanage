@@ -125,12 +125,13 @@ const iconComponents = {
   'HomeFilled': markRaw(HomeFilled),
   'OfficeBuilding': markRaw(OfficeBuilding),
   'Goods': markRaw(Goods),
-  'Box': markRaw(ShoppingCart),
+  'Box': markRaw(Box),
   'Document': markRaw(Document),
   'ShoppingCart': markRaw(ShoppingCart),
   'DataAnalysis': markRaw(DataAnalysis),
   'Setting': markRaw(Setting),
   'Operation': markRaw(Operation),
+  'List': markRaw(Menu),
   'Menu': markRaw(Menu)
 }
 
