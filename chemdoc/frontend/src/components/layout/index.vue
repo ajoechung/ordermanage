@@ -141,20 +141,15 @@ const getIcon = (iconName) => {
 
 const menuItems = computed(() => {
   const items = []
-  const routes = permissionStore.routes.length > 0 ? permissionStore.routes : constantRoutes
   
-  let menuRoutes = []
-  
-  // 检查是否有根路由 '/'（constantRoutes 的结构）
-  const rootRoute = routes.find(r => r.path === '/')
-  if (rootRoute && rootRoute.children) {
-    menuRoutes = rootRoute.children
-  } else {
-    // permissionStore.routes 的结构是扁平化的
-    menuRoutes = routes.filter(r => !r.meta?.hidden && !['/login', '/404', '/403'].includes(r.path))
+  const rootRoute = constantRoutes.find(r => r.path === '/')
+  if (!rootRoute || !rootRoute.children) {
+    console.error('constantRoutes 结构不正确')
+    return items
   }
   
-  // 按 sort 字段排序
+  let menuRoutes = rootRoute.children.filter(r => !r.meta?.hidden)
+  
   menuRoutes.sort((a, b) => {
     const sortA = a.meta?.sort || 999
     const sortB = b.meta?.sort || 999
@@ -166,10 +161,8 @@ const menuItems = computed(() => {
       continue
     }
     
-    // 检查路由路径是否以 '/' 开头
     const basePath = route.path.startsWith('/') ? route.path : '/' + route.path
     
-    // 检查是否有子路由
     if (route.children && route.children.length > 0) {
       const children = route.children.map(child => ({
         path: basePath + '/' + child.path,
