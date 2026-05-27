@@ -18,7 +18,7 @@ class FollowService
             $method = $params['method'] ?? '';
             $dateRange = $params['date_range'] ?? [];
 
-            $query = CustomerFollowModel::with(['customer', 'followUser', 'createUser']);
+            $query = CustomerFollowModel::with(['customer', 'followUser']);
 
             if (!empty($customerId)) {
                 $query->scope('customerId', (int)$customerId);
@@ -53,10 +53,7 @@ class FollowService
                     $item['follow_user_name'] = $item['follow_user']['realname'] ?? $item['follow_user']['username'] ?? '';
                     unset($item['follow_user']);
                 }
-                if (isset($item['create_user'])) {
-                    $item['create_user_name'] = $item['create_user']['realname'] ?? $item['create_user']['username'] ?? '';
-                    unset($item['create_user']);
-                }
+                // create_user_name 直接从表中读取，不需要关联查询
             }
 
             return Result::paginate($total, $list, $page, $pageSize);

@@ -16,7 +16,7 @@ class ContactService
         $keyword = $params['keyword'] ?? '';
         $customerId = $params['customer_id'] ?? '';
 
-        $query = ContactModel::with(['customer', 'createUser']);
+        $query = ContactModel::with(['customer']);
 
         if (!empty($keyword)) {
             $query->scope('keyword', $keyword);
@@ -39,10 +39,7 @@ class ContactService
                 $item['customer_name'] = $item['customer']['name'] ?? '';
                 unset($item['customer']);
             }
-            if (isset($item['create_user'])) {
-                $item['create_user_name'] = $item['create_user']['realname'] ?? $item['create_user']['username'] ?? '';
-                unset($item['create_user']);
-            }
+            // create_user_name 直接从表中读取，不需要关联查询
         }
 
         return Result::paginate($total, $list, $page, $pageSize);
