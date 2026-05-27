@@ -10,51 +10,55 @@ class FollowService
 {
     public function getList(array $params): array
     {
-        $page = (int)($params['page'] ?? 1);
-        $pageSize = (int)($params['page_size'] ?? 20);
-        $customerId = $params['customer_id'] ?? '';
-        $userId = $params['user_id'] ?? '';
-        $method = $params['method'] ?? '';
-        $dateRange = $params['date_range'] ?? [];
+        try {
+            $page = (int)($params['page'] ?? 1);
+            $pageSize = (int)($params['page_size'] ?? 20);
+            $customerId = $params['customer_id'] ?? '';
+            $userId = $params['user_id'] ?? '';
+            $method = $params['method'] ?? '';
+            $dateRange = $params['date_range'] ?? [];
 
-        $query = CustomerFollowModel::with(['customer', 'followUser']);
+            $query = CustomerFollowModel::with(['customer', 'followUser']);
 
-        if (!empty($customerId)) {
-            $query->scope('customerId', (int)$customerId);
-        }
-
-        if (!empty($userId)) {
-            $query->scope('followUser', (int)$userId);
-        }
-
-        if (!empty($method)) {
-            $query->scope('method', $method);
-        }
-
-        if (!empty($dateRange) && is_array($dateRange)) {
-            $query->scope('dateRange', $dateRange);
-        }
-        
-        DataScopeService::applyCustomerScope($query, 'customer_id');
-
-        $total = $query->count();
-        $list = $query->order('follow_id', 'desc')
-            ->page($page, $pageSize)
-            ->select()
-            ->toArray();
-
-        foreach ($list as &$item) {
-            if (isset($item['customer'])) {
-                $item['customer_name'] = $item['customer']['name'] ?? '';
-                unset($item['customer']);
+            if (!empty($customerId)) {
+                $query->scope('customerId', (int)$customerId);
             }
-            if (isset($item['follow_user'])) {
-                $item['follow_user_name'] = $item['follow_user']['realname'] ?? $item['follow_user']['username'] ?? '';
-                unset($item['follow_user']);
-            }
-        }
 
-        return Result::paginate($total, $list, $page, $pageSize);
+            if (!empty($userId)) {
+                $query->scope('followUser', (int)$userId);
+            }
+
+            if (!empty($method)) {
+                $query->scope('method', $method);
+            }
+
+            if (!empty($dateRange) && is_array($dateRange)) {
+                $query->scope('dateRange', $dateRange);
+            }
+            
+            DataScopeService::applyCustomerScope($query, 'customer_id');
+
+            $total = $query->count();
+            $list = $query->order('follow_id', 'desc')
+                ->page($page, $pageSize)
+                ->select()
+                ->toArray();
+
+            foreach ($list as &$item) {
+                if (isset($item['customer'])) {
+                    $item['customer_name'] = $item['customer']['name'] ?? '';
+                    unset($item['customer']);
+                }
+                if (isset($item['follow_user'])) {
+                    $item['follow_user_name'] = $item['follow_user']['realname'] ?? $item['follow_user']['username'] ?? '';
+                    unset($item['follow_user']);
+                }
+            }
+
+            return Result::paginate($total, $list, $page, $pageSize);
+        } catch (\Exception $e) {
+            return Result::error('获取跟进记录失败：' . $e->getMessage());
+        }
     }
 
     public function create(array $data): array

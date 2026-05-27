@@ -33,10 +33,18 @@ class DataScopeService
         
         $userId = request()->user_id ?? 0;
         
-        return Db::name('customer')
-            ->where('owner_user_id', $userId)
-            ->whereNull('delete_time')
-            ->column('customer_id');
+        if (empty($userId)) {
+            return [];
+        }
+        
+        try {
+            return Db::name('customer')
+                ->where('owner_user_id', $userId)
+                ->whereNull('delete_time')
+                ->column('customer_id');
+        } catch (\Exception $e) {
+            return [];
+        }
     }
     
     /**
