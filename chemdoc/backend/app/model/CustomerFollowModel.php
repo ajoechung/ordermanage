@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace app\model;
 
+use app\model\AdminUserModel;
+use app\model\CustomerModel;
 use think\model\Relation\BelongsTo;
 
 /**

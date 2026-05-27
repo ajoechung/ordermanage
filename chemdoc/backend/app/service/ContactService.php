@@ -89,6 +89,7 @@ class ContactService
             'is_default' => $data['is_default'] ?? 0,
             'remark' => $data['remark'] ?? '',
             'create_user_id' => request()->user_id ?? 0,
+            'create_user_name' => request()->username ?? '',
             'create_time' => date('Y-m-d H:i:s'),
         ]);
 
