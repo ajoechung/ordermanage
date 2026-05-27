@@ -133,14 +133,14 @@
 
         <el-form-item label="订单产品">
           <el-table :data="formData.items" border size="small">
-            <el-table-column label="产品" min-width="200">
+            <el-table-column label="产品" min-width="220">
               <template #default="{ row, $index }">
                 <el-select v-model="row.product_id" filterable placeholder="请选择" @change="(val) => handleProductChange(val, $index)">
                   <el-option v-for="p in productList" :key="p.product_id" :label="p.name" :value="p.product_id" />
                 </el-select>
               </template>
             </el-table-column>
-            <el-table-column label="规格" width="100">
+            <el-table-column label="规格" width="120">
               <template #default="{ row }">{{ row.product_spec || '-' }}</template>
             </el-table-column>
             <el-table-column label="单价" width="120" align="right">
@@ -156,12 +156,13 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column label="数量" width="140">
+            <el-table-column label="数量" width="150">
               <template #default="{ row, $index }">
                 <el-input-number v-model="row.quantity" :min="1" size="small" @change="() => calculateAmount($index)" />
+                <span style="margin-left: 5px; color: #909399; font-size: 12px">{{ row.product_unit || '-' }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="金额" width="100" align="right">
+            <el-table-column label="金额" width="120" align="right">
               <template #default="{ row }">¥{{ Number(row.subtotal || 0).toFixed(2) }}</template>
             </el-table-column>
             <el-table-column label="操作" width="60" align="center">
@@ -534,6 +535,7 @@ const handleEdit = async (row) => {
                         product_id: item.product_id,
                         product_name: item.product_name || item.product?.name || '',
                         product_spec: item.product_spec || item.product?.spec || '',
+                        product_unit: item.product_unit || item.product?.unit || '',
                         unit_price: item.unit_price || item.price || 0,
                         quantity: item.quantity,
                         subtotal: item.subtotal || item.amount || 0
@@ -656,6 +658,7 @@ const handleProductChange = (id, index) => {
   if (p) {
     formData.items[index].product_name = p.name
     formData.items[index].product_spec = p.spec || ''
+    formData.items[index].product_unit = p.unit || ''
     formData.items[index].unit_price = p.price || 0
     calculateAmount(index)
   }
@@ -680,6 +683,7 @@ const addItem = () => {
     product_id: null,
     product_name: '',
     product_spec: '',
+    product_unit: '',
     unit_price: 0,
     quantity: 1,
     subtotal: 0
