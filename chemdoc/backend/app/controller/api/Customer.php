@@ -66,6 +66,10 @@ class Customer extends BaseController
     {
         $params = $this->request->param();
         $force = $params['force'] ?? false;
+        // 正确处理字符串 "false" 和 "true" 值
+        if (is_string($force)) {
+            $force = strtolower($force) === 'true';
+        }
         return json($this->customerService->delete((int)$id, (bool)$force));
     }
 }
