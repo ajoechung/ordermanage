@@ -240,7 +240,11 @@ const handleAdd = () => {
 const handleEdit = (row) => {
   dialogTitle.value = '编辑联系人'
   Object.keys(formData).forEach(key => {
-    formData[key] = row[key] ?? formData[key]
+    if (key === 'is_default') {
+      formData[key] = Boolean(row[key])
+    } else {
+      formData[key] = row[key] ?? formData[key]
+    }
   })
   dialogVisible.value = true
 }

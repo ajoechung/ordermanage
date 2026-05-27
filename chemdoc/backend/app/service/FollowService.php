@@ -75,7 +75,7 @@ class FollowService
             'method' => $data['method'] ?? '',
             'content' => $data['content'] ?? '',
             'next_plan' => $data['next_plan'] ?? '',
-            'next_time' => $data['next_time'] ?? null,
+            'next_follow_time' => $data['next_follow_time'] ?? null,
             'create_user_id' => request()->user_id ?? 0,
             'create_user_name' => request()->username ?? '',
             'create_time' => date('Y-m-d H:i:s'),

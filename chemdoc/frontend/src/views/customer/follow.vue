@@ -92,7 +92,7 @@
         </el-form-item>
 
         <el-form-item label="下次跟进">
-          <el-date-picker v-model="formData.next_time" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
+          <el-date-picker v-model="formData.next_follow_time" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
         </el-form-item>
       </el-form>
 
@@ -146,7 +146,7 @@ const formData = reactive({
   customer_id: null,
   method: '',
   content: '',
-  next_time: ''
+  next_follow_time: ''
 })
 
 const formRules = {
@@ -250,7 +250,7 @@ const handleSubmit = async () => {
 
 const handleDialogClose = () => {
   formRef.value?.resetFields()
-  Object.assign(formData, { customer_id: null, method: '', content: '', next_time: '' })
+  Object.assign(formData, { customer_id: null, method: '', content: '', next_follow_time: '' })
 }
 
 const handleSizeChange = (size) => {
