@@ -16,7 +16,7 @@ class ContactService
         $keyword = $params['keyword'] ?? '';
         $customerId = $params['customer_id'] ?? '';
 
-        $query = ContactModel::with(['customer']);
+        $query = ContactModel::with(['customer', 'createUser']);
 
         if (!empty($keyword)) {
             $query->scope('keyword', $keyword);
@@ -38,6 +38,10 @@ class ContactService
             if (isset($item['customer'])) {
                 $item['customer_name'] = $item['customer']['name'] ?? '';
                 unset($item['customer']);
+            }
+            if (isset($item['create_user'])) {
+                $item['create_user_name'] = $item['create_user']['realname'] ?? $item['create_user']['username'] ?? '';
+                unset($item['create_user']);
             }
         }
 

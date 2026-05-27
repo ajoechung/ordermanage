@@ -38,6 +38,7 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
+        <el-table-column prop="create_user_name" label="创建人" width="100" />
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>

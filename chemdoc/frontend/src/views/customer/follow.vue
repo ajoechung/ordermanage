@@ -47,6 +47,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="create_time" label="跟进时间" width="160" />
+        <el-table-column prop="create_user_name" label="创建人" width="100" />
         <el-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }">
             <el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>

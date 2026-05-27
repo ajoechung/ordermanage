@@ -18,7 +18,7 @@ class FollowService
             $method = $params['method'] ?? '';
             $dateRange = $params['date_range'] ?? [];
 
-            $query = CustomerFollowModel::with(['customer', 'followUser']);
+            $query = CustomerFollowModel::with(['customer', 'followUser', 'createUser']);
 
             if (!empty($customerId)) {
                 $query->scope('customerId', (int)$customerId);
@@ -52,6 +52,10 @@ class FollowService
                 if (isset($item['follow_user'])) {
                     $item['follow_user_name'] = $item['follow_user']['realname'] ?? $item['follow_user']['username'] ?? '';
                     unset($item['follow_user']);
+                }
+                if (isset($item['create_user'])) {
+                    $item['create_user_name'] = $item['create_user']['realname'] ?? $item['create_user']['username'] ?? '';
+                    unset($item['create_user']);
                 }
             }
 
