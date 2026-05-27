@@ -133,14 +133,14 @@
 
         <el-form-item label="订单产品">
           <el-table :data="formData.items" border size="small">
-            <el-table-column label="产品" min-width="220">
+            <el-table-column label="产品" min-width="200">
               <template #default="{ row, $index }">
                 <el-select v-model="row.product_id" filterable placeholder="请选择" @change="(val) => handleProductChange(val, $index)">
                   <el-option v-for="p in productList" :key="p.product_id" :label="p.name" :value="p.product_id" />
                 </el-select>
               </template>
             </el-table-column>
-            <el-table-column label="规格" width="120">
+            <el-table-column label="规格" width="100">
               <template #default="{ row }">{{ row.product_spec || '-' }}</template>
             </el-table-column>
             <el-table-column label="单价" width="120" align="right">
@@ -156,13 +156,12 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column label="数量" width="150">
+            <el-table-column label="数量" width="140">
               <template #default="{ row, $index }">
                 <el-input-number v-model="row.quantity" :min="1" size="small" @change="() => calculateAmount($index)" />
-                <span style="margin-left: 5px; color: #909399; font-size: 12px">{{ row.product_unit || '-' }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="金额" width="120" align="right">
+            <el-table-column label="金额" width="100" align="right">
               <template #default="{ row }">¥{{ Number(row.subtotal || 0).toFixed(2) }}</template>
             </el-table-column>
             <el-table-column label="操作" width="60" align="center">
@@ -327,10 +326,7 @@ const formData = reactive({
 
 const formRules = {
   customer_id: [{ required: true, message: '请选择客户', trigger: 'change' }],
-  contact_name: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
-  contact_phone: [
-    { pattern: /^1[3-9]\d{9}$|^(\d{3,4}-)?\d{7,8}$/, message: '请输入正确的手机号码或座机号码', trigger: 'blur' }
-  ]
+  contact_name: [{ required: true, message: '请输入联系人', trigger: 'blur' }]
 }
 
 const statusMap = {
@@ -662,7 +658,6 @@ const handleProductChange = (id, index) => {
   if (p) {
     formData.items[index].product_name = p.name
     formData.items[index].product_spec = p.spec || ''
-    formData.items[index].product_unit = p.unit || ''
     formData.items[index].unit_price = p.price || 0
     calculateAmount(index)
   }
@@ -687,7 +682,6 @@ const addItem = () => {
     product_id: null,
     product_name: '',
     product_spec: '',
-    product_unit: '',
     unit_price: 0,
     quantity: 1,
     subtotal: 0
