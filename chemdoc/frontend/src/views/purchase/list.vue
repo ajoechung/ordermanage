@@ -203,7 +203,11 @@
           <el-table-column prop="price" label="单价" width="120" align="right">
             <template #default="{ row }">¥{{ Number(row.price || 0).toFixed(2) }}</template>
           </el-table-column>
-          <el-table-column prop="quantity" label="数量" width="100" align="right" />
+          <el-table-column label="数量" width="120">
+            <template #default="{ row }">
+              {{ row.quantity }}<span style="margin-left: 5px; color: #909399; font-size: 12px;">{{ row.product_unit || '-' }}</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="amount" label="金额" width="120" align="right">
             <template #default="{ row }">¥{{ Number(row.amount || 0).toFixed(2) }}</template>
           </el-table-column>
