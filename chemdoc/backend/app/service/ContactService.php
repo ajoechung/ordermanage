@@ -82,7 +82,7 @@ class ContactService
             'wechat' => $data['wechat'] ?? '',
             'qq' => $data['qq'] ?? '',
             'gender' => $data['gender'] ?? 1,
-            'is_primary' => $data['is_primary'] ?? 0,
+            'is_default' => $data['is_default'] ?? 0,
             'remark' => $data['remark'] ?? '',
             'create_user_id' => request()->user_id ?? 0,
             'create_time' => date('Y-m-d H:i:s'),
@@ -118,7 +118,7 @@ class ContactService
 
         $updateData = [];
 
-        $fields = ['customer_id', 'name', 'position', 'phone', 'mobile', 'email', 'wechat', 'qq', 'gender', 'is_primary', 'remark'];
+        $fields = ['customer_id', 'name', 'position', 'phone', 'mobile', 'email', 'wechat', 'qq', 'gender', 'is_default', 'remark'];
 
         foreach ($fields as $field) {
             if (isset($data[$field])) {

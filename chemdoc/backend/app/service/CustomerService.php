@@ -296,7 +296,7 @@ class CustomerService
                 return Result::notFound('客户不存在');
             }
 
-            $hasOrders = Db::name('order')->where('customer_id', $id)->count();
+            $hasOrders = Db::name('order')->where('customer_id', $id)->whereNull('delete_time')->count();
             if ($hasOrders > 0) {
                 return Result::error('该客户存在订单，无法删除');
             }
