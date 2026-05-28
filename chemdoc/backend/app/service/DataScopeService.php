@@ -70,19 +70,38 @@ class DataScopeService
      */
     public static function applyCustomerScope($query, string $customerIdField = 'customer_id')
     {
+        $userId = request()->user_id ?? 0;
+        $username = request()->username ?? '';
+        
+        // 记录日志到文件
+        $logFile = __DIR__ . '/../runtime/logs/data_scope.log';
+        if (!file_exists(dirname($logFile))) {
+            mkdir(dirname($logFile), 0755, true);
+        }
+        
+        $log = date('Y-m-d H:i:s') . " | applyCustomerScope | userId: {$userId}, username: {$username}\n";
+        
         // 如果是管理员，可以查看全部数据，不需要过滤
         if (self::canViewAllData()) {
+            $log .= date('Y-m-d H:i:s') . " | applyCustomerScope | User is admin, returning all data\n";
+            file_put_contents($logFile, $log, FILE_APPEND);
             return $query;
         }
         
         $customerIds = self::getAccessibleCustomerIds();
         
+        $log .= date('Y-m-d H:i:s') . " | applyCustomerScope | customerIds count: " . count($customerIds) . "\n";
+        
         if (!empty($customerIds)) {
+            $log .= date('Y-m-d H:i:s') . " | applyCustomerScope | Applying whereIn filter with customerIds\n";
             $query->whereIn($customerIdField, $customerIds);
         } else {
+            $log .= date('Y-m-d H:i:s') . " | applyCustomerScope | No customerIds, applying where(" . $customerIdField . ", 0)\n";
             // 如果用户不是管理员且没有负责任何客户，返回空结果
             $query->where($customerIdField, 0);
         }
+        
+        file_put_contents($logFile, $log, FILE_APPEND);
         
         return $query;
     }
