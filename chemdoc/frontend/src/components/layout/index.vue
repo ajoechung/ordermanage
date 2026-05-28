@@ -6,8 +6,7 @@
         class="sidebar-container"
       >
         <div class="logo-container">
-          <img v-if="!isCollapse" src="@/assets/logo.png" alt="logo" class="logo" />
-          <span v-if="!isCollapse" class="logo-title">化工单据</span>
+          <span v-if="!isCollapse" class="logo-title">泰锋化工</span>
           <el-icon v-else class="collapse-icon"><Box /></el-icon>
         </div>
         

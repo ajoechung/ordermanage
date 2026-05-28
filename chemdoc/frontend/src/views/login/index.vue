@@ -15,8 +15,8 @@
               <path d="M30 50 L45 65 L70 35" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <h1 class="brand-title">化工单据管理系统</h1>
-          <p class="brand-subtitle">Chemical Document Management System</p>
+          <h1 class="brand-title">泰锋化工单据管理系统</h1>
+          <p class="brand-subtitle">TaiFeng Chemical Document Management System</p>
         </div>
 
         <div class="features-section">
@@ -151,12 +151,7 @@
             </el-form-item>
           </el-form>
 
-          <div class="login-footer">
-            <p class="demo-tip">
-              <el-icon><InfoFilled /></el-icon>
-              演示账号：admin / 123456
-            </p>
-          </div>
+
         </div>
       </div>
     </div>
@@ -181,8 +176,8 @@ const captchaLoading = ref(false)
 const captchaData = ref(null)
 
 const loginForm = reactive({
-  username: 'admin',
-  password: '123456',
+  username: '',
+  password: '',
   captcha: '',
   captcha_key: '',
   remember: false
