@@ -719,8 +719,12 @@ const handleSubmit = async () => {
         actual_amount: formData.actual_amount,
         items: formData.items.map(item => ({
           product_id: item.product_id,
+          product_name: item.product_name,
+          product_spec: item.product_spec,
+          product_unit: item.product_unit,
           unit_price: item.unit_price,
-          quantity: item.quantity
+          quantity: item.quantity,
+          subtotal: item.subtotal
         })),
         remark: formData.remark
       }

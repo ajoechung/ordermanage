@@ -98,6 +98,9 @@ class PurchaseService
                     $item['product_name'] = $item['product']['name'] ?? '';
                     $item['product_code'] = $item['product']['code'] ?? '';
                     $item['product_unit'] = $item['product_unit'] ?? ($item['product']['unit'] ?? '');
+                    $item['spec'] = $item['product_spec'] ?? '';
+                    $item['price'] = $item['unit_price'] ?? 0;
+                    $item['amount'] = $item['subtotal'] ?? 0;
                     unset($item['product']);
                 }
             }
