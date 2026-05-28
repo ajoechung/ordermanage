@@ -24,6 +24,11 @@ class CustomerService
         $ownerUserId = $params['owner_user_id'] ?? '';
         $dateRange = $params['date_range'] ?? [];
 
+        // 调试日志
+        $userId = request()->user_id ?? 0;
+        $username = request()->username ?? '';
+        error_log("CustomerService::getList - userId: {$userId}, username: {$username}");
+
         $query = CustomerModel::with(['ownerUser', 'createUser']);
 
         if (!empty($keyword)) {
