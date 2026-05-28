@@ -24,11 +24,6 @@ class CustomerService
         $ownerUserId = $params['owner_user_id'] ?? '';
         $dateRange = $params['date_range'] ?? [];
 
-        // 调试日志
-        $userId = request()->user_id ?? 0;
-        $username = request()->username ?? '';
-        error_log("CustomerService::getList - userId: {$userId}, username: {$username}");
-
         $query = CustomerModel::with(['ownerUser', 'createUser']);
 
         if (!empty($keyword)) {
@@ -73,7 +68,11 @@ class CustomerService
             }
         }
 
-        return Result::paginate($total, $list, $page, $pageSize);
+        $result = Result::paginate($total, $list, $page, $pageSize);
+        // 添加调试信息
+        $result['_debug'] = DataScopeService::getDebugInfo();
+        
+        return $result;
     }
 
     public function getDetail(int $id): array

@@ -70,40 +70,50 @@ class DataScopeService
      */
     public static function applyCustomerScope($query, string $customerIdField = 'customer_id')
     {
+        // 调试信息 - 通过静态变量存储用于返回
+        static $debugInfo = [];
+        
         $userId = request()->user_id ?? 0;
         $username = request()->username ?? '';
         
-        // 记录日志到文件
-        $logFile = __DIR__ . '/../runtime/logs/data_scope.log';
-        if (!file_exists(dirname($logFile))) {
-            mkdir(dirname($logFile), 0755, true);
-        }
-        
-        $log = date('Y-m-d H:i:s') . " | applyCustomerScope | userId: {$userId}, username: {$username}\n";
+        $debugInfo['userId'] = $userId;
+        $debugInfo['username'] = $username;
+        $debugInfo['appliedAt'] = date('Y-m-d H:i:s');
         
         // 如果是管理员，可以查看全部数据，不需要过滤
         if (self::canViewAllData()) {
-            $log .= date('Y-m-d H:i:s') . " | applyCustomerScope | User is admin, returning all data\n";
-            file_put_contents($logFile, $log, FILE_APPEND);
+            $debugInfo['isAdmin'] = true;
+            $debugInfo['message'] = '管理员身份，返回全部数据';
             return $query;
         }
         
+        $debugInfo['isAdmin'] = false;
+        
         $customerIds = self::getAccessibleCustomerIds();
         
-        $log .= date('Y-m-d H:i:s') . " | applyCustomerScope | customerIds count: " . count($customerIds) . "\n";
+        $debugInfo['customerIdsCount'] = count($customerIds);
         
         if (!empty($customerIds)) {
-            $log .= date('Y-m-d H:i:s') . " | applyCustomerScope | Applying whereIn filter with customerIds\n";
+            $debugInfo['message'] = '应用了数据过滤，仅显示' . count($customerIds) . '个负责的客户';
             $query->whereIn($customerIdField, $customerIds);
         } else {
-            $log .= date('Y-m-d H:i:s') . " | applyCustomerScope | No customerIds, applying where(" . $customerIdField . ", 0)\n";
+            $debugInfo['message'] = '用户不是管理员且没有负责任何客户，返回空结果';
             // 如果用户不是管理员且没有负责任何客户，返回空结果
             $query->where($customerIdField, 0);
         }
         
-        file_put_contents($logFile, $log, FILE_APPEND);
+        // 将调试信息存储到全局变量
+        $GLOBALS['dataScopeDebug'] = $debugInfo;
         
         return $query;
+    }
+    
+    /**
+     * 获取调试信息
+     */
+    public static function getDebugInfo()
+    {
+        return $GLOBALS['dataScopeDebug'] ?? ['message' => '未调用数据权限过滤'];
     }
     
     /**
