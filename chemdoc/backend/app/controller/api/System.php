@@ -18,7 +18,7 @@ class System extends BaseController
         $status = $params['status'] ?? '';
         $groupId = $params['group_id'] ?? '';
 
-        $query = AdminUserModel::with(['authGroupAccess.group']);
+        $query = AdminUserModel::with(['authGroupAccess']);
 
         if (!empty($keyword)) {
             $query->where('username', 'like', '%' . $keyword . '%')->whereOr('realname', 'like', '%' . $keyword . '%');
@@ -40,23 +40,51 @@ class System extends BaseController
             ->select()
             ->toArray();
 
-        foreach ($list as &$item) {
-            $item['id'] = $item['user_id'];
-            $item['nickname'] = $item['realname'];
-            $item['phone'] = $item['mobile'];
-            $item['groups'] = [];
+        if (!empty($list)) {
+            $userIds = array_column($list, 'user_id');
+            $groupAccessList = \think\facade\Db::name('auth_group_access')
+                ->whereIn('uid', $userIds)
+                ->select()
+                ->toArray();
             
-            if (isset($item['auth_group_access']) && is_array($item['auth_group_access']) && !empty($item['auth_group_access'])) {
-                foreach ($item['auth_group_access'] as $access) {
-                    if (isset($access['group']) && !empty($access['group'])) {
-                        $item['groups'][] = [
-                            'id' => $access['group']['id'] ?? '',
-                            'name' => $access['group']['name'] ?? ''
-                        ];
-                    }
+            $groupIds = array_unique(array_column($groupAccessList, 'group_id'));
+            $groups = [];
+            if (!empty($groupIds)) {
+                $groupList = \think\facade\Db::name('auth_group')
+                    ->whereIn('id', $groupIds)
+                    ->select()
+                    ->toArray();
+                foreach ($groupList as $g) {
+                    $groups[$g['id']] = $g;
                 }
             }
-            unset($item['auth_group_access']);
+            
+            $userGroups = [];
+            foreach ($groupAccessList as $access) {
+                if (!isset($userGroups[$access['uid']])) {
+                    $userGroups[$access['uid']] = [];
+                }
+                if (isset($groups[$access['group_id']])) {
+                    $userGroups[$access['uid']][] = [
+                        'id' => $groups[$access['group_id']]['id'],
+                        'name' => $groups[$access['group_id']]['name']
+                    ];
+                }
+            }
+            
+            foreach ($list as &$item) {
+                $item['id'] = $item['user_id'];
+                $item['nickname'] = $item['realname'];
+                $item['phone'] = $item['mobile'];
+                $item['groups'] = isset($userGroups[$item['user_id']]) ? $userGroups[$item['user_id']] : [];
+            }
+        } else {
+            foreach ($list as &$item) {
+                $item['id'] = $item['user_id'];
+                $item['nickname'] = $item['realname'];
+                $item['phone'] = $item['mobile'];
+                $item['groups'] = [];
+            }
         }
 
         return json(Result::paginate($total, $list, $page, $pageSize));
