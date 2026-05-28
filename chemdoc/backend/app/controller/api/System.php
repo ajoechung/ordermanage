@@ -160,9 +160,21 @@ class System extends BaseController
     public function assignRole()
     {
         try {
+            $rawContent = file_get_contents('php://input');
+            
             $jsonData = $this->request->json();
             $postData = $this->request->post();
             $data = !empty($jsonData) ? $jsonData : $postData;
+            
+            if (empty($data)) {
+                $data = [];
+                if (!empty($rawContent)) {
+                    $decoded = json_decode($rawContent, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $data = $decoded;
+                    }
+                }
+            }
             
             if (empty($data)) {
                 return json(Result::validateError('请求数据不能为空'));
@@ -193,17 +205,21 @@ class System extends BaseController
                 }
             }
 
-            OperationLogModel::log(
-                $this->request->user_id ?? 0,
-                $this->request->username ?? '',
-                '系统管理',
-                '分配角色',
-                '用户ID：' . $uid
-            );
+            try {
+                OperationLogModel::log(
+                    $this->request->user_id ?? 0,
+                    $this->request->username ?? '',
+                    '系统管理',
+                    '分配角色',
+                    '用户ID：' . $uid
+                );
+            } catch (\Exception $logEx) {
+                \think\facade\Log::error('记录操作日志失败: ' . $logEx->getMessage());
+            }
 
             return json(Result::success(null, '角色分配成功'));
         } catch (\Exception $e) {
-            \think\facade\Log::error('分配角色失败: ' . $e->getMessage());
+            \think\facade\Log::error('分配角色失败: ' . $e->getMessage() . ', 堆栈: ' . $e->getTraceAsString());
             return json(Result::error('分配角色失败: ' . $e->getMessage()));
         }
     }
