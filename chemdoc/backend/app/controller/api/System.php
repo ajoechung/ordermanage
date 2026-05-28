@@ -44,18 +44,19 @@ class System extends BaseController
             $item['id'] = $item['user_id'];
             $item['nickname'] = $item['realname'];
             $item['phone'] = $item['mobile'];
+            $item['groups'] = [];
             
-            if (isset($item['auth_group_access']) && !empty($item['auth_group_access'])) {
-                $item['groups'] = array_map(function($access) {
-                    return [
-                        'id' => $access['group']['id'],
-                        'name' => $access['group']['name']
-                    ];
-                }, $item['auth_group_access']);
-                unset($item['auth_group_access']);
-            } else {
-                $item['groups'] = [];
+            if (isset($item['auth_group_access']) && is_array($item['auth_group_access']) && !empty($item['auth_group_access'])) {
+                foreach ($item['auth_group_access'] as $access) {
+                    if (isset($access['group']) && !empty($access['group'])) {
+                        $item['groups'][] = [
+                            'id' => $access['group']['id'] ?? '',
+                            'name' => $access['group']['name'] ?? ''
+                        ];
+                    }
+                }
             }
+            unset($item['auth_group_access']);
         }
 
         return json(Result::paginate($total, $list, $page, $pageSize));
