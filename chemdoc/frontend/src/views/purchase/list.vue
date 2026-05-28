@@ -219,7 +219,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
 import { getList as getSupplierList } from '@/api/modules/supplier'
@@ -228,6 +228,7 @@ import { getAll as getOrderList } from '@/api/modules/order'
 import { getPurchaseList, createPurchase, updatePurchase, deletePurchase, updatePurchaseStatus } from '@/api/modules/purchase'
 
 const route = useRoute()
+const router = useRouter()
 
 const searchForm = reactive({ keyword: '', supplier_id: '', status: '' })
 const tableLoading = ref(false)
@@ -511,12 +512,50 @@ const handleDialogClose = () => {
 const handleSizeChange = (size) => { pagination.pageSize = size; loadData() }
 const handlePageChange = (page) => { pagination.page = page; loadData() }
 
+const handleFromOrder = () => {
+  if (route.query.fromOrder) {
+    try {
+      const orderData = JSON.parse(route.query.fromOrder)
+      
+      // 设置关联订单
+      formData.order_id = orderData.order_id
+      
+      // 填充产品信息
+      if (orderData.items && orderData.items.length > 0) {
+        formData.items = orderData.items.map(item => ({
+          product_id: item.product_id,
+          product_name: item.product_name,
+          product_spec: item.product_spec,
+          product_unit: item.product_unit,
+          unit_price: item.unit_price,
+          quantity: item.quantity,
+          subtotal: item.subtotal
+        }))
+      }
+      
+      // 打开新增采购单弹窗
+      dialogTitle.value = '新增采购单'
+      dialogVisible.value = true
+      
+      // 清除 query 参数，避免刷新页面时重复触发
+      router.replace({ query: {} })
+      
+      ElMessage.success(`已关联订单 ${orderData.order_no}`)
+    } catch (error) {
+      console.error('解析订单数据失败:', error)
+    }
+  }
+}
+
 onMounted(() => {
   loadSuppliers()
   loadProducts()
   loadOrders()
   if (route.query.supplier_id) searchForm.supplier_id = Number(route.query.supplier_id)
   loadData()
+  
+  // 处理从订单跳转过来的情况
+  handleFromOrder()
 })
 </script>
 

@@ -60,10 +60,12 @@
           </template>
         </el-table-column>
         <el-table-column prop="create_time" label="创建时间" width="160" />
-        <el-table-column label="操作" width="260" fixed="right">
+        <el-table-column label="操作" width="400" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleView(row)">查看</el-button>
             <el-button v-if="row.order_status === 1" type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button type="primary" link size="small" :icon="DocumentCopy" @click="handleReorder(row)">再来一单</el-button>
+            <el-button type="primary" link size="small" :icon="ShoppingCart" @click="handleGoPurchase(row)">去采购</el-button>
             <el-button v-if="row.order_status === 1" type="success" link size="small" @click="handleChangeStatus(row, 2)">确认</el-button>
             <el-button v-if="row.order_status === 2" type="success" link size="small" @click="handleChangeStatus(row, 3)">生产</el-button>
             <el-button v-if="row.order_status === 3" type="success" link size="small" @click="handleChangeStatus(row, 4)">发货</el-button>
@@ -288,14 +290,16 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, Upload, Delete } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Upload, Delete, ShoppingCart, DocumentCopy } from '@element-plus/icons-vue'
 import { getList, create, update, deleteOrder, updateOrderStatus, getOrderDetail } from '@/api/modules/order'
 import { getAll as getCustomerList } from '@/api/modules/customer'
 import { getAll as getProductList } from '@/api/modules/product'
 import { useUserStore } from '@/store/modules/user'
 
 const userStore = useUserStore()
+const router = useRouter()
 
 const searchForm = reactive({ keyword: '', customer_name: '', order_status: '', has_invoice: '' })
 const tableLoading = ref(false)
@@ -517,6 +521,89 @@ const handleReset = () => {
 const handleAdd = () => {
   dialogTitle.value = '新增订单'
   dialogVisible.value = true
+}
+
+const handleReorder = async (row) => {
+  dialogTitle.value = '新增订单'
+  
+  try {
+    const res = await getOrderDetail(row.order_id)
+    if (res.code === 200) {
+      const detail = res.data
+      
+      // 填充表单，但清除 order_id
+      Object.keys(formData).forEach(key => {
+        if (key !== 'order_id') {
+          formData[key] = detail[key] ?? formData[key]
+        }
+      })
+      
+      // 处理 items
+      if (detail.items) {
+        formData.items = detail.items.map(item => ({
+          product_id: item.product_id,
+          product_name: item.product_name || item.product?.name || '',
+          product_spec: item.product_spec || item.product?.spec || '',
+          product_unit: item.product_unit || item.product?.unit || '',
+          unit_price: item.unit_price || item.price || 0,
+          quantity: item.quantity,
+          subtotal: item.subtotal || item.amount || 0
+        }))
+      }
+      
+      // 加载客户联系人
+      if (detail.customer_id) {
+        await loadCustomerContacts(detail.customer_id)
+        if (detail.contact_id) {
+          formData.selected_contact_id = detail.contact_id
+        } else if (detail.contact_name) {
+          const contact = customerContacts.value.find(c => c.name === detail.contact_name)
+          if (contact) {
+            formData.selected_contact_id = contact.contact_id
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('获取订单详情失败:', error)
+  }
+  
+  dialogVisible.value = true
+}
+
+const handleGoPurchase = async (row) => {
+  try {
+    const res = await getOrderDetail(row.order_id)
+    if (res.code === 200) {
+      const detail = res.data
+      
+      // 准备要传递的数据
+      const purchaseData = {
+        order_id: row.order_id,
+        order_no: row.order_no,
+        items: detail.items?.map(item => ({
+          product_id: item.product_id,
+          product_name: item.product_name || item.product?.name || '',
+          product_spec: item.product_spec || item.product?.spec || '',
+          product_unit: item.product_unit || item.product?.unit || '',
+          unit_price: item.unit_price || item.price || 0,
+          quantity: item.quantity,
+          subtotal: item.subtotal || item.amount || 0
+        })) || []
+      }
+      
+      // 跳转到采购单页面，通过 query 参数传递数据
+      router.push({
+        name: 'PurchaseList',
+        query: {
+          fromOrder: JSON.stringify(purchaseData)
+        }
+      })
+    }
+  } catch (error) {
+    console.error('获取订单详情失败:', error)
+    ElMessage.error('获取订单详情失败')
+  }
 }
 
 const handleEdit = async (row) => {
