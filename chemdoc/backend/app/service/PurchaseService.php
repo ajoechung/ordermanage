@@ -97,6 +97,7 @@ class PurchaseService
                 if (isset($item['product'])) {
                     $item['product_name'] = $item['product']['name'] ?? '';
                     $item['product_code'] = $item['product']['code'] ?? '';
+                    $item['product_unit'] = $item['product_unit'] ?? ($item['product']['unit'] ?? '');
                     unset($item['product']);
                 }
             }
@@ -143,6 +144,7 @@ class PurchaseService
                         'product_id' => $item['product_id'],
                         'product_name' => $item['product_name'] ?? '',
                         'spec' => $item['product_spec'] ?? $item['spec'] ?? '',
+                        'product_unit' => $item['product_unit'] ?? '',
                         'quantity' => $item['quantity'] ?? 1,
                         'price' => $item['unit_price'] ?? $item['price'] ?? 0,
                         'amount' => ($item['unit_price'] ?? $item['price'] ?? 0) * ($item['quantity'] ?? 0),
@@ -218,6 +220,7 @@ class PurchaseService
                         'product_id' => $item['product_id'],
                         'product_name' => $item['product_name'] ?? '',
                         'spec' => $item['product_spec'] ?? $item['spec'] ?? '',
+                        'product_unit' => $item['product_unit'] ?? '',
                         'quantity' => $item['quantity'] ?? 1,
                         'price' => $item['unit_price'] ?? $item['price'] ?? 0,
                         'amount' => ($item['unit_price'] ?? $item['price'] ?? 0) * ($item['quantity'] ?? 0),
