@@ -159,36 +159,53 @@ class System extends BaseController
 
     public function assignRole()
     {
-        $data = $this->request->json() ?: $this->request->post();
-        $uid = $data['uid'] ?? 0;
-        $groupIds = $data['group_ids'] ?? [];
+        try {
+            $jsonData = $this->request->json();
+            $postData = $this->request->post();
+            $data = !empty($jsonData) ? $jsonData : $postData;
+            
+            if (empty($data)) {
+                return json(Result::validateError('请求数据不能为空'));
+            }
 
-        if (empty($uid)) {
-            return json(Result::validateError('用户ID不能为空'));
+            $uid = isset($data['uid']) ? (int)$data['uid'] : 0;
+            $groupIds = isset($data['group_ids']) ? $data['group_ids'] : [];
+
+            if (empty($uid)) {
+                return json(Result::validateError('用户ID不能为空'));
+            }
+
+            if ($uid == 1) {
+                return json(Result::error('不能为超级管理员分配角色'));
+            }
+
+            \think\facade\Db::name('auth_group_access')->where('uid', $uid)->delete();
+
+            if (!empty($groupIds) && is_array($groupIds)) {
+                foreach ($groupIds as $groupId) {
+                    $groupId = (int)$groupId;
+                    if ($groupId > 0) {
+                        \think\facade\Db::name('auth_group_access')->insert([
+                            'uid' => $uid,
+                            'group_id' => $groupId,
+                        ]);
+                    }
+                }
+            }
+
+            OperationLogModel::log(
+                $this->request->user_id ?? 0,
+                $this->request->username ?? '',
+                '系统管理',
+                '分配角色',
+                '用户ID：' . $uid
+            );
+
+            return json(Result::success(null, '角色分配成功'));
+        } catch (\Exception $e) {
+            \think\facade\Log::error('分配角色失败: ' . $e->getMessage());
+            return json(Result::error('分配角色失败: ' . $e->getMessage()));
         }
-
-        if ($uid == 1) {
-            return json(Result::error('不能为超级管理员分配角色'));
-        }
-
-        \think\facade\Db::name('auth_group_access')->where('uid', $uid)->delete();
-
-        foreach ($groupIds as $groupId) {
-            \think\facade\Db::name('auth_group_access')->insert([
-                'uid' => $uid,
-                'group_id' => $groupId,
-            ]);
-        }
-
-        OperationLogModel::log(
-            $this->request->user_id ?? 0,
-            $this->request->username ?? '',
-            '系统管理',
-            '分配角色',
-            '用户ID：' . $uid
-        );
-
-        return json(Result::success(null, '角色分配成功'));
     }
 
     public function deleteUser($id)
