@@ -139,6 +139,7 @@ class OrderService
                     $product = ProductModel::find($item['product_id']);
                     $item['product_name'] = $product ? $product['name'] : '';
                     $item['product_spec'] = $product ? $product['spec'] : '';
+                    $item['product_unit'] = $item['product_unit'] ?? ($product ? $product['unit'] : '');
                     $item['unit_price'] = $item['unit_price'] ?? 0;
                     $item['quantity'] = $item['quantity'] ?? 0;
                     $item['subtotal'] = $item['subtotal'] ?? 0;
@@ -165,6 +166,7 @@ class OrderService
                     $product = ProductModel::find($item['product_id']);
                     $item['product_name'] = $product ? $product['name'] : '';
                     $item['product_spec'] = $product ? $product['spec'] : '';
+                    $item['product_unit'] = $item['product_unit'] ?? ($product ? $product['unit'] : '');
                     $item['unit_price'] = $item['unit_price'] ?? 0;
                     $item['quantity'] = $item['quantity'] ?? 0;
                     $item['subtotal'] = $item['subtotal'] ?? 0;

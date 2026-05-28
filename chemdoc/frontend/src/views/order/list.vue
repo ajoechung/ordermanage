@@ -156,9 +156,12 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column label="数量" width="140">
+            <el-table-column label="数量" width="150">
               <template #default="{ row, $index }">
-                <el-input-number v-model="row.quantity" :min="1" size="small" @change="() => calculateAmount($index)" />
+                <div style="display: flex; align-items: center;">
+                  <el-input-number v-model="row.quantity" :min="1" size="small" @change="() => calculateAmount($index)" style="width: 80px" />
+                  <span style="margin-left: 5px; color: #909399; font-size: 12px;">{{ row.product_unit || '-' }}</span>
+                </div>
               </template>
             </el-table-column>
             <el-table-column label="金额" width="100" align="right">
@@ -658,6 +661,7 @@ const handleProductChange = (id, index) => {
   if (p) {
     formData.items[index].product_name = p.name
     formData.items[index].product_spec = p.spec || ''
+    formData.items[index].product_unit = p.unit || ''
     formData.items[index].unit_price = p.price || 0
     calculateAmount(index)
   }
@@ -682,6 +686,7 @@ const addItem = () => {
     product_id: null,
     product_name: '',
     product_spec: '',
+    product_unit: '',
     unit_price: 0,
     quantity: 1,
     subtotal: 0
