@@ -160,28 +160,12 @@ class System extends BaseController
     public function assignRole()
     {
         try {
-            $rawContent = file_get_contents('php://input');
+            $uid = (int)$this->request->param('uid', 0);
+            $groupIds = $this->request->param('group_ids', []);
             
-            $jsonData = $this->request->json();
-            $postData = $this->request->post();
-            $data = !empty($jsonData) ? $jsonData : $postData;
-            
-            if (empty($data)) {
-                $data = [];
-                if (!empty($rawContent)) {
-                    $decoded = json_decode($rawContent, true);
-                    if (json_last_error() === JSON_ERROR_NONE) {
-                        $data = $decoded;
-                    }
-                }
+            if (!is_array($groupIds)) {
+                $groupIds = [];
             }
-            
-            if (empty($data)) {
-                return json(Result::validateError('请求数据不能为空'));
-            }
-
-            $uid = isset($data['uid']) ? (int)$data['uid'] : 0;
-            $groupIds = isset($data['group_ids']) ? $data['group_ids'] : [];
 
             if (empty($uid)) {
                 return json(Result::validateError('用户ID不能为空'));
@@ -193,15 +177,13 @@ class System extends BaseController
 
             \think\facade\Db::name('auth_group_access')->where('uid', $uid)->delete();
 
-            if (!empty($groupIds) && is_array($groupIds)) {
-                foreach ($groupIds as $groupId) {
-                    $groupId = (int)$groupId;
-                    if ($groupId > 0) {
-                        \think\facade\Db::name('auth_group_access')->insert([
-                            'uid' => $uid,
-                            'group_id' => $groupId,
-                        ]);
-                    }
+            foreach ($groupIds as $groupId) {
+                $groupId = (int)$groupId;
+                if ($groupId > 0) {
+                    \think\facade\Db::name('auth_group_access')->insert([
+                        'uid' => $uid,
+                        'group_id' => $groupId,
+                    ]);
                 }
             }
 
@@ -214,12 +196,10 @@ class System extends BaseController
                     '用户ID：' . $uid
                 );
             } catch (\Exception $logEx) {
-                \think\facade\Log::error('记录操作日志失败: ' . $logEx->getMessage());
             }
 
             return json(Result::success(null, '角色分配成功'));
         } catch (\Exception $e) {
-            \think\facade\Log::error('分配角色失败: ' . $e->getMessage() . ', 堆栈: ' . $e->getTraceAsString());
             return json(Result::error('分配角色失败: ' . $e->getMessage()));
         }
     }
