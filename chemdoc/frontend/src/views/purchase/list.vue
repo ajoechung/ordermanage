@@ -128,7 +128,7 @@
             <el-table-column label="规格" width="120">
               <template #default="{ row }">{{ row.product_spec || '-' }}</template>
             </el-table-column>
-            <el-table-column label="单价" width="120" align="right">
+            <el-table-column label="单价" width="100" align="right">
               <template #default="{ row, $index }">
                 <el-input-number
                   v-model="row.unit_price"
@@ -136,14 +136,14 @@
                   :precision="2"
                   :controls="false"
                   size="small"
-                  style="width: 100%"
+                  style="width: 80px"
                   @change="() => handleUnitPriceChange($index)"
                 />
               </template>
             </el-table-column>
-            <el-table-column label="数量" width="150">
+            <el-table-column label="数量" width="160">
               <template #default="{ row, $index }">
-                <el-input-number v-model="row.quantity" :min="1" size="small" @change="() => calculateAmount($index)" />
+                <el-input-number v-model="row.quantity" :min="1" size="small" @change="() => calculateAmount($index)" style="width: 100px" />
                 <span style="margin-left: 5px; color: #909399; font-size: 12px">{{ row.product_unit || '-' }}</span>
               </template>
             </el-table-column>
