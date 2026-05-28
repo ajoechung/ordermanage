@@ -12,6 +12,9 @@ class StatisticsService
         // 获取数据权限范围
         $customerIds = DataScopeService::getAccessibleCustomerIds();
         $supplierIds = DataScopeService::getAccessibleSupplierIds();
+        
+        // 判断是否为管理员
+        $isAdmin = DataScopeService::canViewAllData();
 
         $currentMonth = date('Y-m');
         $lastMonth = date('Y-m', strtotime('-1 month'));
@@ -23,29 +26,41 @@ class StatisticsService
             'sales_amount' => Db::name('order')
                 ->where('order_status', 5)
                 ->whereBetweenTime('order_time', $monthStart, $monthEnd)
-                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                     return $q->whereIn('customer_id', $customerIds);
+                })
+                ->when(!$isAdmin && empty($customerIds), function($q) {
+                    return $q->where('customer_id', 0);
                 })
                 ->sum('actual_amount'),
             'order_count' => Db::name('order')
                 ->where('order_status', 5)
                 ->whereBetweenTime('order_time', $monthStart, $monthEnd)
-                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                     return $q->whereIn('customer_id', $customerIds);
+                })
+                ->when(!$isAdmin && empty($customerIds), function($q) {
+                    return $q->where('customer_id', 0);
                 })
                 ->count(),
             'deal_customer_count' => Db::name('order')
                 ->where('order_status', 5)
                 ->whereBetweenTime('order_time', $monthStart, $monthEnd)
-                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                     return $q->whereIn('customer_id', $customerIds);
+                })
+                ->when(!$isAdmin && empty($customerIds), function($q) {
+                    return $q->where('customer_id', 0);
                 })
                 ->distinct(true)
                 ->count('customer_id'),
             'new_customer_count' => Db::name('customer')
                 ->whereBetweenTime('create_time', $monthStart, $monthEnd)
-                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                     return $q->whereIn('customer_id', $customerIds);
+                })
+                ->when(!$isAdmin && empty($customerIds), function($q) {
+                    return $q->where('customer_id', 0);
                 })
                 ->count(),
         ];
@@ -57,15 +72,21 @@ class StatisticsService
             'sales_amount' => Db::name('order')
                 ->where('order_status', 5)
                 ->whereBetweenTime('order_time', $lastMonthStart, $lastMonthEnd)
-                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                     return $q->whereIn('customer_id', $customerIds);
+                })
+                ->when(!$isAdmin && empty($customerIds), function($q) {
+                    return $q->where('customer_id', 0);
                 })
                 ->sum('actual_amount'),
             'order_count' => Db::name('order')
                 ->where('order_status', 5)
                 ->whereBetweenTime('order_time', $lastMonthStart, $lastMonthEnd)
-                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                     return $q->whereIn('customer_id', $customerIds);
+                })
+                ->when(!$isAdmin && empty($customerIds), function($q) {
+                    return $q->where('customer_id', 0);
                 })
                 ->count(),
         ];
@@ -81,22 +102,31 @@ class StatisticsService
             'pending_order_count' => Db::name('order')
                 ->whereIn('order_status', [1, 2, 3])
                 ->whereNull('delete_time')
-                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                     return $q->whereIn('customer_id', $customerIds);
+                })
+                ->when(!$isAdmin && empty($customerIds), function($q) {
+                    return $q->where('customer_id', 0);
                 })
                 ->count(),
             'pending_purchase_count' => Db::name('purchase_order')
                 ->whereIn('status', [1, 2, 3])
                 ->whereNull('delete_time')
-                ->when(!empty($supplierIds), function($q) use ($supplierIds) {
+                ->when(!$isAdmin && !empty($supplierIds), function($q) use ($supplierIds) {
                     return $q->whereIn('supplier_id', $supplierIds);
+                })
+                ->when(!$isAdmin && empty($supplierIds), function($q) {
+                    return $q->where('supplier_id', 0);
                 })
                 ->count(),
             'need_follow_count' => Db::name('customer')
                 ->where('status', 1)
                 ->whereNull('delete_time')
-                ->when(!empty($customerIds), function($q) use ($customerIds) {
+                ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                     return $q->whereIn('customer_id', $customerIds);
+                })
+                ->when(!$isAdmin && empty($customerIds), function($q) {
+                    return $q->where('customer_id', 0);
                 })
                 ->count(),
         ];
@@ -106,8 +136,11 @@ class StatisticsService
             ->join('customer c', 'o.customer_id = c.customer_id')
             ->field('o.order_id,o.order_no,o.total_amount,o.order_status,o.order_time,c.name as customer_name')
             ->whereNull('o.delete_time')
-            ->when(!empty($customerIds), function($q) use ($customerIds) {
+            ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                 return $q->whereIn('o.customer_id', $customerIds);
+            })
+            ->when(!$isAdmin && empty($customerIds), function($q) {
+                return $q->where('o.customer_id', 0);
             })
             ->order('o.create_time', 'desc')
             ->limit(5)
@@ -132,6 +165,9 @@ class StatisticsService
         
         // 获取数据权限范围
         $customerIds = DataScopeService::getAccessibleCustomerIds();
+        
+        // 判断是否为管理员
+        $isAdmin = DataScopeService::canViewAllData();
 
         $query = Db::name('customer')->whereNull('delete_time');
 
@@ -140,8 +176,10 @@ class StatisticsService
         }
         
         // 应用数据范围
-        if (!empty($customerIds)) {
+        if (!$isAdmin && !empty($customerIds)) {
             $query->whereIn('customer_id', $customerIds);
+        } elseif (!$isAdmin && empty($customerIds)) {
+            $query->where('customer_id', 0);
         }
 
         $totalCount = $query->count();
@@ -150,8 +188,11 @@ class StatisticsService
         $industryData = Db::name('customer')
             ->field('industry, count(*) as count')
             ->whereNull('delete_time')
-            ->when(!empty($customerIds), function($q) use ($customerIds) {
+            ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                 return $q->whereIn('customer_id', $customerIds);
+            })
+            ->when(!$isAdmin && empty($customerIds), function($q) {
+                return $q->where('customer_id', 0);
             })
             ->group('industry')
             ->select()
@@ -160,8 +201,11 @@ class StatisticsService
         $levelData = Db::name('customer')
             ->field('level, count(*) as count')
             ->whereNull('delete_time')
-            ->when(!empty($customerIds), function($q) use ($customerIds) {
+            ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                 return $q->whereIn('customer_id', $customerIds);
+            })
+            ->when(!$isAdmin && empty($customerIds), function($q) {
+                return $q->where('customer_id', 0);
             })
             ->group('level')
             ->select()
@@ -175,6 +219,12 @@ class StatisticsService
         $monthlyData = Db::name('customer')
             ->field('DATE_FORMAT(create_time, "%Y-%m") as month, count(*) as count')
             ->whereNull('delete_time')
+            ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
+                return $q->whereIn('customer_id', $customerIds);
+            })
+            ->when(!$isAdmin && empty($customerIds), function($q) {
+                return $q->where('customer_id', 0);
+            })
             ->group('month')
             ->order('month', 'desc')
             ->limit(12)
@@ -196,6 +246,9 @@ class StatisticsService
         
         // 获取数据权限范围
         $customerIds = DataScopeService::getAccessibleCustomerIds();
+        
+        // 判断是否为管理员
+        $isAdmin = DataScopeService::canViewAllData();
 
         $query = Db::name('order')->whereNull('delete_time');
 
@@ -204,8 +257,10 @@ class StatisticsService
         }
         
         // 应用数据范围
-        if (!empty($customerIds)) {
+        if (!$isAdmin && !empty($customerIds)) {
             $query->whereIn('customer_id', $customerIds);
+        } elseif (!$isAdmin && empty($customerIds)) {
+            $query->where('customer_id', 0);
         }
 
         $totalAmount = $query->where('order_status', 5)->sum('actual_amount');
@@ -216,8 +271,11 @@ class StatisticsService
         $statusData = Db::name('order')
             ->field('order_status, count(*) as count')
             ->whereNull('delete_time')
-            ->when(!empty($customerIds), function($q) use ($customerIds) {
+            ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                 return $q->whereIn('customer_id', $customerIds);
+            })
+            ->when(!$isAdmin && empty($customerIds), function($q) {
+                return $q->where('customer_id', 0);
             })
             ->group('order_status')
             ->select()
@@ -235,8 +293,11 @@ class StatisticsService
             ->field('DATE_FORMAT(order_time, "%Y-%m") as month, sum(actual_amount) as amount, count(*) as count')
             ->where('order_status', 5)
             ->whereNull('delete_time')
-            ->when(!empty($customerIds), function($q) use ($customerIds) {
+            ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                 return $q->whereIn('customer_id', $customerIds);
+            })
+            ->when(!$isAdmin && empty($customerIds), function($q) {
+                return $q->where('customer_id', 0);
             })
             ->group('month')
             ->order('month', 'desc')
@@ -250,8 +311,11 @@ class StatisticsService
             ->join('order o', 'oi.order_id = o.order_id')
             ->field('oi.product_name, sum(oi.quantity) as total_quantity, sum(oi.subtotal) as total_amount')
             ->whereNull('o.delete_time')
-            ->when(!empty($customerIds), function($q) use ($customerIds) {
+            ->when(!$isAdmin && !empty($customerIds), function($q) use ($customerIds) {
                 return $q->whereIn('o.customer_id', $customerIds);
+            })
+            ->when(!$isAdmin && empty($customerIds), function($q) {
+                return $q->where('o.customer_id', 0);
             })
             ->group('oi.product_id')
             ->order('total_amount', 'desc')

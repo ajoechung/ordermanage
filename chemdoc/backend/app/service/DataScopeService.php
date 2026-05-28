@@ -70,10 +70,18 @@ class DataScopeService
      */
     public static function applyCustomerScope($query, string $customerIdField = 'customer_id')
     {
+        // 如果是管理员，可以查看全部数据，不需要过滤
+        if (self::canViewAllData()) {
+            return $query;
+        }
+        
         $customerIds = self::getAccessibleCustomerIds();
         
         if (!empty($customerIds)) {
             $query->whereIn($customerIdField, $customerIds);
+        } else {
+            // 如果用户不是管理员且没有负责任何客户，返回空结果
+            $query->where($customerIdField, 0);
         }
         
         return $query;
@@ -84,10 +92,18 @@ class DataScopeService
      */
     public static function applySupplierScope($query, string $supplierIdField = 'supplier_id')
     {
+        // 如果是管理员，可以查看全部数据，不需要过滤
+        if (self::canViewAllData()) {
+            return $query;
+        }
+        
         $supplierIds = self::getAccessibleSupplierIds();
         
         if (!empty($supplierIds)) {
             $query->whereIn($supplierIdField, $supplierIds);
+        } else {
+            // 如果用户不是管理员且没有负责任何供应商，返回空结果
+            $query->where($supplierIdField, 0);
         }
         
         return $query;
